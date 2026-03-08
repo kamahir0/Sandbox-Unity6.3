@@ -6,7 +6,25 @@
     --surface-color: #34495e;
     --text-color: #ecf0f1;
     --border-radius: 8px;
-    --padding: 12px;
+    --padding: 40px;
+}
+
+/* Base text size for all elements */
+.unity-text-element,
+Button,
+Toggle,
+Label,
+TextField,
+Slider,
+DropdownField,
+RadioButtonGroup {
+    font-size: 40px !important;
+}
+
+/* Labels and inputs for fields (Toggle, Slider, TextField, etc.) */
+.unity-base-field__label,
+.unity-base-field__input {
+    font-size: 40px !important;
 }
 
 .container {
@@ -14,11 +32,11 @@
     background-color: var(--background-color);
     padding: var(--padding);
     color: var(--text-color);
-    font-size: 14px;
+    font-size: 40px !important;
 }
 
 .header {
-    font-size: 24px;
+    font-size: 80px !important;
     -unity-font-style: bold;
     margin-bottom: 20px;
     border-bottom-width: 2px;
@@ -34,7 +52,7 @@
 }
 
 .section-title {
-    font-size: 18px;
+    font-size: 54px !important;
     -unity-font-style: bold;
     margin-bottom: 10px;
     color: var(--secondary-color);
