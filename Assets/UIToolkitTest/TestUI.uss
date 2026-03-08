@@ -142,7 +142,10 @@ RadioButtonGroup {
 .unity-dropdown-field__input:focus,
 .unity-text-field__input:focus {
     border-color: #3b79bb !important;
-    border-width: 1px;
+    border-width: 3px;
+    outline-width: 2px;
+    outline-color: #3b79bb;
+    outline-offset: 1px;
 }
 
 /* Button focus text highlight */
@@ -159,6 +162,10 @@ RadioButtonGroup {
 .unity-toggle:focus .unity-toggle__checkmark,
 .unity-radio-button:focus .unity-radio-button__checkmark-background {
     border-color: #3b79bb !important;
+    border-width: 3px;
+    outline-width: 2px;
+    outline-color: #3b79bb;
+    outline-offset: 1px;
 }
 
 .scroll-view {
