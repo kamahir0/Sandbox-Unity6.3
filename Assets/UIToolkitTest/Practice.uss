@@ -1,0 +1,106 @@
+/* Practice.uss - Flexbox Visualization Styles */
+:root {
+    --bg-color: #2b2b2b;
+    --container-bg: #3c3c3c;
+    --section-header-bg: #4a4a4a;
+    --border-color: #242424;
+    
+    /* Box Colors */
+    --red: #e74c3c;
+    --blue: #3498db;
+    --green: #2ecc71;
+    --yellow: #f1c40f;
+    --purple: #9b59b6;
+    --orange: #e67e22;
+    --teal: #1abc9c;
+    --pink: #e84393;
+    --indigo: #6c5ce7;
+}
+
+.root-container {
+    flex-grow: 1;
+    background-color: var(--bg-color);
+    padding: 20px;
+}
+
+.main-title {
+    font-size: 32px;
+    -unity-font-style: bold;
+    color: white;
+    margin-bottom: 20px;
+    border-bottom-width: 2px;
+    border-bottom-color: #555;
+    padding-bottom: 10px;
+}
+
+.section {
+    margin-bottom: 30px;
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    border-width: 1px;
+    border-color: var(--border-color);
+}
+
+.section-header {
+    background-color: var(--section-header-bg);
+    padding: 8px 15px;
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: #eee;
+}
+
+.example-container {
+    padding: 15px;
+    min-height: 120px;
+}
+
+/* Base Box Style */
+.box {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    border-radius: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-label {
+    color: white;
+    -unity-font-style: bold;
+    font-size: 16px;
+}
+
+/* Box Color Variants */
+.bg-red { background-color: var(--red); }
+.bg-blue { background-color: var(--blue); }
+.bg-green { background-color: var(--green); }
+.bg-yellow { background-color: var(--yellow); }
+.bg-purple { background-color: var(--purple); }
+.bg-orange { background-color: var(--orange); }
+.bg-teal { background-color: var(--teal); }
+.bg-pink { background-color: var(--pink); }
+.bg-indigo { background-color: var(--indigo); }
+
+/* Flex Utility Classes */
+.row { flex-direction: row; }
+.row-reverse { flex-direction: row-reverse; }
+.column { flex-direction: column; }
+.column-reverse { flex-direction: column-reverse; }
+
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+
+.align-start { align-items: flex-start; }
+.align-center { align-items: center; }
+.align-end { align-items: flex-end; }
+.align-stretch { align-items: stretch; }
+
+.wrap { flex-wrap: wrap; }
+.no-wrap { flex-wrap: nowrap; }
+
+.grow-1 { flex-grow: 1; }
+.shrink-0 { flex-shrink: 0; }
