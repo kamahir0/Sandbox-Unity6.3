@@ -123,13 +123,27 @@ RadioButtonGroup {
     -unity-background-image-tint-color: white !important;
 }
 
-.unity-base-slider__tracker {
+/* Slider and Range Styles */
+.unity-base-slider__tracker,
+.unity-min-max-slider__tracker {
     background-color: #242424;
 }
 
 .unity-base-slider__dragger {
-    background-color: #888888;
+    background-color: #c1c1c1; /* Brighter color to match Range */
     border-radius: var(--border-radius);
+    height: 46px; /* Increased height */
+    width: 10px;
+    margin-top: -23px; /* Center alignment adjustment (46px / 2) */
+}
+
+/* MinMaxSlider specific handles */
+.unity-min-max-slider__min-thumb,
+.unity-min-max-slider__max-thumb {
+    background-color: #c1c1c1;
+    height: 46px;
+    width: 10px;
+    margin-top: -23px;
 }
 
 /* Focus States - Highlighting selection like Unity Editor */
