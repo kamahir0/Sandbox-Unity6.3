@@ -1,15 +1,16 @@
-/* TestUI.uss */
+/* TestUI.uss - Inspector Aesthetics Update */
 :root {
-    --primary-color: #3498db;
-    --secondary-color: #2ecc71;
-    --background-color: #2c3e50;
-    --surface-color: #34495e;
-    --text-color: #ecf0f1;
-    --border-radius: 8px;
-    --padding: 40px;
+    --primary-color: #4d4d4d;
+    --secondary-color: #2c5d87;
+    --background-color: #383838;
+    --surface-color: #2c2c2c;
+    --text-color: #e4e4e4;
+    --border-radius: 3px; /* Inspector uses sharper corners */
+    --padding: 24px; /* Slightly reduced from 40px for balance */
+    --border-color: #242424;
 }
 
-/* Base text size for all elements */
+/* Base text size for all elements - keeping it large for visibility as requested before */
 .unity-text-element,
 Button,
 Toggle,
@@ -18,83 +19,146 @@ TextField,
 Slider,
 DropdownField,
 RadioButtonGroup {
-    font-size: 40px !important;
+    font-size: 32px !important; /* Slightly adjusted for inspector proportions */
+    color: var(--text-color);
 }
 
-/* Labels and inputs for fields (Toggle, Slider, TextField, etc.) */
 .unity-base-field__label,
 .unity-base-field__input {
-    font-size: 40px !important;
+    font-size: 32px !important;
 }
 
 .container {
     flex-grow: 1;
     background-color: var(--background-color);
     padding: var(--padding);
-    color: var(--text-color);
-    font-size: 40px !important;
 }
 
 .header {
-    font-size: 80px !important;
+    font-size: 48px !important;
     -unity-font-style: bold;
-    margin-bottom: 20px;
-    border-bottom-width: 2px;
-    border-bottom-color: var(--primary-color);
-    padding-bottom: 5px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background-color: #2a2a2a;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--border-color);
 }
 
 .section {
-    margin-bottom: 20px;
-    padding: var(--padding);
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius);
+    margin-bottom: 32px;
+    padding: 0;
+    background-color: transparent;
 }
 
 .section-title {
-    font-size: 54px !important;
+    font-size: 36px !important;
     -unity-font-style: bold;
-    margin-bottom: 10px;
-    color: var(--secondary-color);
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background-color: var(--surface-color);
+    color: #bdbdbd;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--border-color);
 }
 
+/* Layout: 2-column like PropertyDrawers */
+.unity-base-field {
+    flex-direction: row !important;
+    margin-bottom: 8px;
+    padding-left: 12px;
+}
+
+.unity-base-field__label {
+    width: 40%;
+    min-width: 150px;
+    padding-right: 12px;
+    -unity-text-align: middle-left;
+}
+
+.unity-base-field__input {
+    flex-grow: 1;
+    background-color: #2a2a2a;
+    border-width: 1px;
+    border-color: var(--border-color);
+    padding: 4px 8px;
+}
+
+/* Remove dark background base from Toggles and RadioButtonGroups (including children) */
+.unity-toggle__input,
+.unity-radio-button-group .unity-base-field__input,
+.unity-radio-button__input {
+    background-color: transparent !important;
+    border-width: 0 !important;
+}
+
+/* Specific component styles to match Inspector */
 .unity-button {
     background-color: var(--primary-color);
     border-radius: var(--border-radius);
     padding: 8px 16px;
-    color: white;
-    border-width: 0;
-    transition: background-color 0.2s, scale 0.1s;
+    border-width: 1px;
+    border-color: var(--border-color);
+    margin: 8px 0;
 }
 
 .unity-button:hover {
-    background-color: #2980b9;
+    background-color: #585858;
 }
 
-.unity-button:active {
-    scale: 0.95;
+.unity-toggle__checkmark {
+    background-color: #2a2a2a;
+    border-radius: 2px;
+    border-width: 1px;
+    border-color: var(--border-color);
+    width: 40px;
+    height: 40px;
+    align-self: center;
 }
 
-.unity-toggle {
-    margin-bottom: 8px;
+.unity-toggle:checked .unity-toggle__checkmark {
+    -unity-background-image-tint-color: white !important;
 }
 
-.unity-text-field {
-    margin-bottom: 12px;
+.unity-radio-button:checked .unity-radio-button__checkmark {
+    -unity-background-image-tint-color: white !important;
 }
 
 .unity-base-slider__tracker {
-    background-color: #455a64;
+    background-color: #242424;
 }
 
 .unity-base-slider__dragger {
-    background-color: var(--primary-color);
+    background-color: #888888;
     border-radius: var(--border-radius);
 }
 
-/* Specific adjustment for scroller handles to ensure they don't stretch circles */
-.unity-scroller .unity-base-slider__dragger {
-    border-radius: var(--border-radius);
+/* Focus States - Highlighting selection like Unity Editor */
+.unity-base-field:focus > .unity-base-field__label {
+    color: #3b79bb !important;
+}
+
+.unity-base-field__input:focus,
+.unity-button:focus,
+.unity-dropdown-field__input:focus,
+.unity-text-field__input:focus {
+    border-color: #3b79bb !important;
+    border-width: 1px;
+}
+
+/* Button focus text highlight */
+.unity-button:focus {
+    color: #3b79bb !important;
+}
+
+/* Radio button and Toggle focus */
+.unity-toggle:focus > .unity-base-field__label,
+.unity-radio-button:focus > .unity-base-field__label {
+    color: #3b79bb !important;
+}
+
+.unity-toggle:focus .unity-toggle__checkmark,
+.unity-radio-button:focus .unity-radio-button__checkmark-background {
+    border-color: #3b79bb !important;
 }
 
 .scroll-view {
