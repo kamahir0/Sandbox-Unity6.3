@@ -89,7 +89,12 @@ RadioButtonGroup {
 
 .unity-base-slider__dragger {
     background-color: var(--primary-color);
-    border-radius: 50%;
+    border-radius: var(--border-radius);
+}
+
+/* Specific adjustment for scroller handles to ensure they don't stretch circles */
+.unity-scroller .unity-base-slider__dragger {
+    border-radius: var(--border-radius);
 }
 
 .scroll-view {
