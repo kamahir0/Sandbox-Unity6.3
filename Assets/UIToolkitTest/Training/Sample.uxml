@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd"
+>
+    <ui:Style src="Sample.uss" />
+    <ui:VisualElement class="root-container">
+        <ui:VisualElement class="sample-container">
+            <ui:TextField label="ユーザー名" class="standard-control input-standard" />
+            <ui:IntegerField label="年齢" value="20" class="standard-control input-standard" />
+            <ui:VisualElement class="button-row">
+                <ui:Button text="キャンセル" class="standard-control button-standard button-cancel" />
+                <ui:Button text="決定" class="standard-control button-standard button-decide" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

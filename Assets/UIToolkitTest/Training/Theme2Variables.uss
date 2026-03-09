@@ -1,0 +1,25 @@
+:root {
+    /* グローバル配色: 黒背景 / 白文字 */
+    --color-window-bg: #121212;
+    --color-window-text: #FFFFFF;
+
+    /* レイアウト定数 (サンプルとして少し大きく設定) */
+    --size-control-height: 80px;
+    --font-size-standard: 30px;
+
+    /* 決定ボタン: オレンジ */
+    --color-decide-bg: #FF9800;
+    --color-decide-text: #FFFFFF;
+    --color-decide-border: #F57C00;
+
+    /* キャンセルボタン: グレー */
+    --color-cancel-bg: #444444;
+    --color-cancel-text: #FFFFFF;
+    --color-cancel-border: #666666;
+
+    /* TextField: 暗い背景 */
+    --color-input-bg: #2A2A2A;
+    --color-input-text: #FFFFFF;
+    --color-input-border: #444444;
+    --color-input-cursor: #FFFFFF;
+}

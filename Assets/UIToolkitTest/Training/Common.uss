@@ -1,0 +1,54 @@
+/* 全体の背景と文字色 */
+.root-container {
+    background-color: var(--color-window-bg);
+    color: var(--color-window-text);
+    width: 100%;
+    height: 100%;
+}
+
+/* 共通のレイアウト設定 */
+.standard-control {
+    height: var(--size-control-height);
+    font-size: var(--font-size-standard);
+    margin: 8px;
+    padding: 4px 12px;
+}
+
+.button-standard {
+    /* standard-control の設定を継承しつつボタン固有の設定 */
+    border-radius: 4px;
+    border-width: 1px;
+    -unity-font-style: bold;
+}
+
+/* TextField / IntegerField 等の入力フィールドのスタイル */
+.input-standard .unity-base-field__input {
+    background-color: var(--color-input-bg);
+    color: var(--color-input-text);
+    border-color: var(--color-input-border);
+    border-radius: 4px;
+    border-width: 1px;
+    padding: 0 8px;
+
+    /* キャレット（カーソル）の色設定 */
+    /* 標準プロパティと、Unity 6以降で有効なCSS変数の両方を設定して確実性を高める */
+    -unity-cursor-color: var(--color-input-cursor);
+    --unity-cursor-color: var(--color-input-cursor);
+}
+
+
+/* 決定ボタンのスタイル（色は変数を使用） */
+.button-decide {
+    background-color: var(--color-decide-bg);
+    color: var(--color-decide-text);
+    border-color: var(--color-decide-border);
+}
+
+/* キャンセルボタンのスタイル（色は変数を使用） */
+.button-cancel {
+    background-color: var(--color-cancel-bg);
+    color: var(--color-cancel-text);
+    border-color: var(--color-cancel-border);
+}
+
+
