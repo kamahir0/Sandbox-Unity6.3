@@ -31,24 +31,29 @@
     padding: 0 8px;
 
     /* キャレット（カーソル）の色設定 */
-    /* 標準プロパティと、Unity 6以降で有効なCSS変数の両方を設定して確実性を高める */
     -unity-cursor-color: var(--color-input-cursor);
     --unity-cursor-color: var(--color-input-cursor);
 }
 
+/* --- セマンティック・ボタン・スタイル --- */
 
-/* 決定ボタンのスタイル（色は変数を使用） */
-.button-decide {
-    background-color: var(--color-decide-bg);
-    color: var(--color-decide-text);
-    border-color: var(--color-decide-border);
+/* 主要なアクション（決定など） */
+.button-primary {
+    background-color: var(--color-primary-bg);
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border);
 }
 
-/* キャンセルボタンのスタイル（色は変数を使用） */
-.button-cancel {
-    background-color: var(--color-cancel-bg);
-    color: var(--color-cancel-text);
-    border-color: var(--color-cancel-border);
+/* 補助的なアクション（キャンセルなど） */
+.button-secondary {
+    background-color: var(--color-secondary-bg);
+    color: var(--color-secondary-text);
+    border-color: var(--color-secondary-border);
 }
 
-
+/* 危険なアクション（削除など） */
+.button-danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border-color: var(--color-danger-border);
+}

@@ -7,15 +7,20 @@
     --size-control-height: 64px;
     --font-size-standard: 26px;
 
-    /* 決定ボタン: 青 */
-    --color-decide-bg: #2196F3;
-    --color-decide-text: #FFFFFF;
-    --color-decide-border: #1976D2;
+    /* プライマリ（決定など）: 青 */
+    --color-primary-bg: #2196F3;
+    --color-primary-text: #FFFFFF;
+    --color-primary-border: #1976D2;
 
-    /* キャンセルボタン: 白 */
-    --color-cancel-bg: #FFFFFF;
-    --color-cancel-text: #333333;
-    --color-cancel-border: #DDDDDD;
+    /* セカンダリ（キャンセルなど）: 白 */
+    --color-secondary-bg: #FFFFFF;
+    --color-secondary-text: #333333;
+    --color-secondary-border: #DDDDDD;
+
+    /* デンジャー（削除など）: 赤 */
+    --color-danger-bg: #F44336;
+    --color-danger-text: #FFFFFF;
+    --color-danger-border: #D32F2F;
 
     /* TextField: 薄いグレー背景 */
     --color-input-bg: #F0F0F0;

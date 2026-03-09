@@ -10,9 +10,12 @@
         <ui:VisualElement class="sample-container">
             <ui:TextField label="ユーザー名" class="standard-control input-standard" />
             <ui:IntegerField label="年齢" value="20" class="standard-control input-standard" />
+            
             <ui:VisualElement class="button-row">
-                <ui:Button text="キャンセル" class="standard-control button-standard button-cancel" />
-                <ui:Button text="決定" class="standard-control button-standard button-decide" />
+                <!-- セマンティックなクラス名を使用して役割を区別 -->
+                <ui:Button text="削除" class="standard-control button-standard button-danger" />
+                <ui:Button text="キャンセル" class="standard-control button-standard button-secondary" />
+                <ui:Button text="決定" class="standard-control button-standard button-primary" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
