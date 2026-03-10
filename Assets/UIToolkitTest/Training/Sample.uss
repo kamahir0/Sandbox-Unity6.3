@@ -8,14 +8,15 @@
 /* Sample.uxml 固有のスタイル */
 .button-row {
     flex-direction: row;
-    justify-content: space-around;
     width: 100%;
-    /* flex-grow: 1; を削除して縦に広がらないように修正 */
+    column-gap: 16px; /* ボタン間の隙間を少し広げた */
+    margin-top: 16px;
+    padding: 8px; /* コンテナ内の余白 */
 }
 
-/* コンテナ内のボタンを同サイズにする設定 */
-.button-row > .button-standard {
+/* ボタンを同サイズで横幅いっぱいに広げる */
+.button-row > .c-button {
     flex-grow: 1;
     flex-basis: 0;
-    min-width: 0; /* 文字が溢れても縮むように設定 */
+    min-width: 0;
 }

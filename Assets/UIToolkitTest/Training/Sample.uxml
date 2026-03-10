@@ -1,4 +1,5 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UIToolkitTest/Training/Common.uss?fileID=7433441132597879392&amp;guid=b3ba3eb0e25bb5247a94e1e4d642dcaa&amp;type=3#Common"/>
     <Style src="project://database/Assets/UIToolkitTest/Training/Sample.uss?fileID=7433441132597879392&amp;guid=d207c53c83e6d0843af2c7fb42717cbf&amp;type=3#Sample"/>
     <!-- t-root で文字色の継承、t-surface で背景色の適用（全画面）、l-screen で広がり -->
     <ui:VisualElement class="t-root l-screen t-surface">

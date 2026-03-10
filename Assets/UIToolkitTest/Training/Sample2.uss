@@ -13,7 +13,7 @@
 .l-window > .button-row {
     margin-top: 16px;
     flex-direction: row;
-    justify-content: space-around;
+    column-gap: 16px; /* ボタン間の隙間を統一 */
 }
 
 .l-window > .button-row > .c-button {
