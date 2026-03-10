@@ -1,8 +1,10 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/UIToolkitTest/Training/Sample.uss?fileID=7433441132597879392&amp;guid=d207c53c83e6d0843af2c7fb42717cbf&amp;type=3#Sample"/>
-    <!-- t-root で文字色の継承、t-surface で背景色の適用（全画面）、l-screen で広がり -->
-    <ui:VisualElement class="t-root l-screen t-surface">
-        <ui:VisualElement class="sample-container">
+    <Style src="project://database/Assets/UIToolkitTest/Training/Common.uss?fileID=7433441132597879392&amp;guid=b3ba3eb0e25bb5247a94e1e4d642dcaa&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UIToolkitTest/Training/Sample2.uss?fileID=7433441132597879392&amp;guid=a7bebe5affaa4b448a765eb4bdfc7a01&amp;type=3#Sample2"/>
+    
+    <!-- t-root で文字色継承、l-screen+u-center-content で画面中央配置 -->
+    <ui:VisualElement class="t-root l-screen u-center-content u-bg-transparent">
+        <ui:VisualElement class="l-window t-surface">
             <ui:TextField label="ユーザー名" class="c-control-size c-input" />
             <ui:IntegerField label="年齢" value="20" class="c-control-size c-input" />
             <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input" />

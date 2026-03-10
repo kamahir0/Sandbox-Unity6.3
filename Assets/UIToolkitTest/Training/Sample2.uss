@@ -1,0 +1,22 @@
+/* Sample2 固有のスタイル (主に寸法など) */
+
+.l-window {
+    width: 500px;
+    max-width: 90%;
+}
+
+/* ウィンドウ内のコントロール間隔の微調整が必要な場合 */
+.l-window > .c-control-size {
+    margin: 12px 0;
+}
+
+.l-window > .button-row {
+    margin-top: 16px;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.l-window > .button-row > .c-button {
+    flex-grow: 1;
+    flex-basis: 0;
+}

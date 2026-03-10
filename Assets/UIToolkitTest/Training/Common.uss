@@ -1,66 +1,107 @@
-/* 全体の背景と文字色 */
-.root-container {
+/* ============================================================
+   Theme (t-) : 配色・フォント・視覚効果
+   ============================================================ */
+
+/* UIのルートに付与し、変数のスコープと文字色の継承を保証する */
+.t-root {
+    color: var(--color-window-text);
+}
+
+/* 実体のある「面」に適用し、背景色と文字色をセットで適用する */
+.t-surface {
     background-color: var(--color-window-bg);
     color: var(--color-window-text);
+}
+
+/* ============================================================
+   Layout (l-) : 構造・配置
+   ============================================================ */
+
+/* 画面いっぱいに広がるコンテナ */
+.l-screen {
     width: 100%;
     height: 100%;
 }
 
-/* 共通のレイアウト設定 */
-.standard-control {
+/* ウィンドウパネル構造 */
+.l-window {
+    border-radius: 12px;
+    padding: 24px;
+    border-width: 1px;
+    border-color: var(--color-input-border);
+    /* 簡易的な影 */
+    border-bottom-width: 3px;
+    flex-direction: column;
+}
+
+/* ============================================================
+   Component (c-) : 個別のUIパーツ
+   ============================================================ */
+
+/* 共通の寸法設定 */
+.c-control-size {
     height: var(--size-control-height);
     font-size: var(--font-size-standard);
     margin: 8px;
-    padding: 4px 12px;
 }
 
-.button-standard {
-    /* standard-control の設定を継承しつつボタン固有の設定 */
+/* ボタンの基本スタイル */
+.c-button {
     border-radius: 4px;
     border-width: 1px;
     -unity-font-style: bold;
+    padding: 4px 12px;
 }
 
-/* TextField / IntegerField 等の入力フィールドのスタイル */
-.input-standard .unity-base-field__label {
+/* 入力フィールドの基本スタイル */
+.c-input .unity-base-field__label {
     -unity-text-align: middle-left;
     margin: 0;
     padding: 0;
 }
 
-.input-standard .unity-base-field__input {
+.c-input .unity-base-field__input {
     background-color: var(--color-input-bg);
     color: var(--color-input-text);
     border-color: var(--color-input-border);
     border-radius: 4px;
     border-width: 1px;
     padding: 0 8px;
-    -unity-text-align: middle-left; /* テキストの垂直位置を中央に */
-
-    /* キャレット（カーソル）の色設定 */
+    -unity-text-align: middle-left;
     -unity-cursor-color: var(--color-input-cursor);
     --unity-cursor-color: var(--color-input-cursor);
 }
 
-/* --- セマンティック・ボタン・スタイル --- */
-
-/* 主要なアクション（決定など） */
-.button-primary {
+/* --- セマンティック・カラー --- */
+.c-button--primary {
     background-color: var(--color-primary-bg);
     color: var(--color-primary-text);
     border-color: var(--color-primary-border);
 }
 
-/* 補助的なアクション（キャンセルなど） */
-.button-secondary {
+.c-button--secondary {
     background-color: var(--color-secondary-bg);
     color: var(--color-secondary-text);
     border-color: var(--color-secondary-border);
 }
 
-/* 危険なアクション（削除など） */
-.button-danger {
+.c-button--danger {
     background-color: var(--color-danger-bg);
     color: var(--color-danger-text);
     border-color: var(--color-danger-border);
+}
+
+/* ============================================================
+   Utility (u-) : 汎用的な調整
+   ============================================================ */
+
+/* 中央寄せ */
+.u-center-content {
+    justify-content: center;
+    align-items: center;
+}
+
+/* 背景を完全に透明にする（オーバーレイ用） */
+.u-bg-transparent {
+    background-color: rgba(0, 0, 0, 0);
 }
