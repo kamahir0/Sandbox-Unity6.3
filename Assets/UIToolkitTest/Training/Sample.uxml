@@ -5,8 +5,9 @@
         <ui:VisualElement class="sample-container">
             <ui:TextField label="ユーザー名" class="c-control-size c-input"/>
             <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
-            <ui:Foldout text="Foldout">
+            <ui:Foldout text="Foldout" class="c-foldout">
                 <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
+                <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
                 <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
             </ui:Foldout>
             <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input"/>

@@ -105,19 +105,19 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-.unity-foldout .unity-toggle .unity-toggle__checkmark {
+.c-foldout .unity-toggle .unity-toggle__checkmark {
     width: 54px;
     height: 54px;
 }
 
 /* Foldoutのラベル(text)のフォントサイズを標準に合わせる */
-.unity-foldout .unity-toggle__text {
+.c-foldout .unity-toggle__text {
     font-size: var(--font-size-standard);
     -unity-text-align: middle-left;
 }
 
 /* Foldout（閉じた状態のヘッダー部分）の基本スタイルをコントロール共通サイズに合わせる */
-.unity-foldout > .unity-foldout__toggle {
+.c-foldout > .unity-foldout__toggle {
     margin: 12px;
     height: var(--size-control-height);
 }
