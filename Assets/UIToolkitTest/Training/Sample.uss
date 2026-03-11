@@ -9,9 +9,6 @@
 .button-row {
     flex-direction: row;
     width: 100%;
-    column-gap: 16px; /* ボタン間の隙間を少し広げた */
-    margin-top: 16px;
-    padding: 8px; /* コンテナ内の余白 */
 }
 
 /* ボタンを同サイズで横幅いっぱいに広げる */

@@ -42,7 +42,7 @@
 .c-control-size {
     height: var(--size-control-height);
     font-size: var(--font-size-standard);
-    margin: 8px;
+    margin: 12px;
 }
 
 /* ボタンの基本スタイル */

@@ -5,15 +5,8 @@
     max-width: 90%;
 }
 
-/* ウィンドウ内のコントロール間隔の微調整が必要な場合 */
-.l-window > .c-control-size {
-    margin: 12px 0;
-}
-
 .l-window > .button-row {
-    margin-top: 16px;
     flex-direction: row;
-    column-gap: 16px; /* ボタン間の隙間を統一 */
 }
 
 .l-window > .button-row > .c-button {
