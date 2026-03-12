@@ -3,21 +3,23 @@
     <Style src="project://database/Assets/UIToolkitTest/Training/Sample.uss?fileID=7433441132597879392&amp;guid=d207c53c83e6d0843af2c7fb42717cbf&amp;type=3#Sample"/>
     <ui:VisualElement class="t-root l-screen t-surface">
         <ui:VisualElement class="sample-container">
-            <ui:TextField label="ユーザー名" class="c-control-size c-input"/>
-            <ui:Label text="Label" class="c-control-size c-label" />
-            <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
-            <ui:Foldout text="Foldout" class="c-foldout">
-                <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
-                <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
-                <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
-            </ui:Foldout>
-            <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input"/>
-            <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
-            <ui:VisualElement class="button-row">
-                <ui:Button text="削除" class="c-control-size c-button c-button--danger"/>
-                <ui:Button text="キャンセル" class="c-control-size c-button c-button--secondary"/>
-                <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
-            </ui:VisualElement>
+            <ui:ScrollView class="c-scroll-view">
+                <ui:TextField label="ユーザー名" class="c-control-size c-input" />
+                <ui:Label text="Label" class="c-control-size c-label" />
+                <ui:IntegerField label="年齢" value="20" class="c-control-size c-input" />
+                <ui:Foldout text="Foldout" class="c-foldout">
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                    <ui:IntegerField label="年齢" value="20" class="c-control-size c-input" />
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                </ui:Foldout>
+                <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input" />
+                <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                <ui:VisualElement class="button-row">
+                    <ui:Button text="削除" class="c-control-size c-button c-button--danger" />
+                    <ui:Button text="キャンセル" class="c-control-size c-button c-button--secondary" />
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                </ui:VisualElement>
+            </ui:ScrollView>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

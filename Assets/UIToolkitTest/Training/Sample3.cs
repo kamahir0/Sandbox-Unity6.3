@@ -31,21 +31,26 @@ namespace Lilja.Training
             window.style.maxWidth = Length.Percent(95);
             root.Add(window);
 
-            // 3. Components (Encapsulated Custom Controls)
+            // 3. ScrollView Layer
+            // コンテンツをスクロール可能にする
+            var scrollView = new MainScrollView();
+            window.Add(scrollView);
+
+            // 4. Components (Added to scrollView)
             
             // Header
             var header = new MainLabel("Encapsulated UI (Sample3)");
-            window.Add(header);
+            scrollView.Add(header);
 
             // TextField
             var textField = new MainTextField("ユーザー名");
-            window.Add(textField);
+            scrollView.Add(textField);
 
             // Foldout
             var foldout = new MainFoldout();
             foldout.text = "詳細設定 (MainFoldout)";
             
-            window.Add(foldout);
+            scrollView.Add(foldout);
             
             // Secondary Button inside Foldout
             var innerButton = new SecondaryButton("内部ボタン");
@@ -53,7 +58,7 @@ namespace Lilja.Training
 
             // Primary Button
             var primaryButton = new PrimaryButton("決定");
-            window.Add(primaryButton);
+            scrollView.Add(primaryButton);
         }
     }
 }

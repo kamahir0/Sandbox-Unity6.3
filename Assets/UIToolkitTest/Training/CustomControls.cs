@@ -82,4 +82,17 @@ namespace Lilja.Training
 
         public new class UxmlFactory : UxmlFactory<MainFoldout, UxmlTraits> { }
     }
+
+    /// <summary>
+    /// デザインシステム上のメインスクロールビュー
+    /// </summary>
+    public class MainScrollView : ScrollView
+    {
+        public MainScrollView() : base()
+        {
+            AddToClassList("c-scroll-view");
+        }
+
+        public new class UxmlFactory : UxmlFactory<MainScrollView, UxmlTraits> { }
+    }
 }
