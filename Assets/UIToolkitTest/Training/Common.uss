@@ -129,5 +129,6 @@
 /* Foldout（閉じた状態のヘッダー部分）の基本スタイルをコントロール共通サイズに合わせる */
 .c-foldout > .unity-foldout__toggle {
     margin: var(--size-control-margin);
+    margin-left: 0; /* 他のコントロールより左に寄せるため、左マージンをゼロ（または負の値）に調整 */
     height: var(--size-control-height);
 }
