@@ -42,7 +42,7 @@
 .c-control-size {
     height: var(--size-control-height);
     font-size: var(--font-size-standard);
-    margin: 12px;
+    margin: var(--size-control-margin);
 }
 
 /* ボタンの基本スタイル */
@@ -128,6 +128,6 @@
 
 /* Foldout（閉じた状態のヘッダー部分）の基本スタイルをコントロール共通サイズに合わせる */
 .c-foldout > .unity-foldout__toggle {
-    margin: 12px;
+    margin: var(--size-control-margin);
     height: var(--size-control-height);
 }
