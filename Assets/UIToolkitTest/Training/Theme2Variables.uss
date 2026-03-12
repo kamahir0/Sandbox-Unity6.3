@@ -6,6 +6,7 @@
     /* レイアウト定数 (サンプルとして少し大きく設定) */
     --size-control-height: 80px;
     --size-control-margin: 12px;
+    --size-label-width: 40%;
     --font-size-standard: 30px;
 
     /* プライマリ（決定など）: オレンジ */

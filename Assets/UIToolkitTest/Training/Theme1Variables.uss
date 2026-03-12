@@ -6,6 +6,7 @@
     /* レイアウト定数 */
     --size-control-height: 64px;
     --size-control-margin: 12px;
+    --size-label-width: 35%;
     --font-size-standard: 26px;
 
     /* プライマリ（決定など）: 青 */
