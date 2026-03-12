@@ -46,7 +46,8 @@
 }
 
 /* RadioButtonGroup の場合は固定高を解除し、要素数に合わせて伸びるようにする */
-.c-control-size.unity-radio-button-group {
+.c-control-size.unity-radio-button-group,
+.c-control-size.unity-toggle-button-group {
     height: auto;
 }
 
@@ -84,7 +85,8 @@
 
 /* Toggle / Radio 系 */
 .c-toggle .unity-base-field__label,
-.c-radio-group .unity-base-field__label {
+.c-radio-group .unity-base-field__label,
+.c-toggle-button-group .unity-base-field__label {
     -unity-text-align: middle-left;
     margin: 0;
     padding: 0;

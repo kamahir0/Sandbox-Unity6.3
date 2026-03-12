@@ -4,22 +4,27 @@
     <ui:VisualElement class="t-root l-screen t-surface">
         <ui:VisualElement class="sample-container">
             <ui:ScrollView class="c-scroll-view">
-                <ui:Toggle label="通知を有効にする" class="c-control-size c-toggle" />
-                <ui:RadioButtonGroup label="表示モード" choices="ライト,ダーク,システム" class="c-control-size c-radio-group" />
-                <ui:TextField label="ユーザー名" class="c-control-size c-input" />
-                <ui:Label text="Label" class="c-control-size c-label" />
-                <ui:IntegerField label="年齢" value="20" class="c-control-size c-input" />
+                <ui:Toggle label="通知を有効にする" class="c-control-size c-toggle"/>
+                <ui:ToggleButtonGroup label="優先度" class="c-control-size c-toggle-button-group">
+                    <ui:Button text="低"/>
+                    <ui:Button text="中"/>
+                    <ui:Button text="高"/>
+                </ui:ToggleButtonGroup>
+                <ui:RadioButtonGroup label="表示モード" choices="ライト,ダーク,システム" class="c-control-size c-radio-group"/>
+                <ui:TextField label="ユーザー名" class="c-control-size c-input"/>
+                <ui:Label text="Label" class="c-control-size c-label"/>
+                <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
                 <ui:Foldout text="Foldout" class="c-control-size">
-                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
-                    <ui:IntegerField label="年齢" value="20" class="c-control-size c-input" />
-                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
+                    <ui:IntegerField label="年齢" value="20" class="c-control-size c-input"/>
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
                 </ui:Foldout>
-                <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input" />
-                <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                <ui:FloatField label="Float Field" value="42.2" class="c-control-size c-input"/>
+                <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
                 <ui:VisualElement class="button-row">
-                    <ui:Button text="削除" class="c-control-size c-button c-button--danger" />
-                    <ui:Button text="キャンセル" class="c-control-size c-button c-button--secondary" />
-                    <ui:Button text="決定" class="c-control-size c-button c-button--primary" />
+                    <ui:Button text="削除" class="c-control-size c-button c-button--danger"/>
+                    <ui:Button text="キャンセル" class="c-control-size c-button c-button--secondary"/>
+                    <ui:Button text="決定" class="c-control-size c-button c-button--primary"/>
                 </ui:VisualElement>
             </ui:ScrollView>
         </ui:VisualElement>

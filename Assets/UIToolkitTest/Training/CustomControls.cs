@@ -95,4 +95,18 @@ namespace Lilja.Training
 
         public new class UxmlFactory : UxmlFactory<MainScrollView, UxmlTraits> { }
     }
+
+    /// <summary>
+    /// デザインシステム上のメインのトグルボタングループ
+    /// </summary>
+    public class MainToggleButtonGroup : ToggleButtonGroup
+    {
+        public MainToggleButtonGroup() : base()
+        {
+            AddToClassList("c-control-size");
+            AddToClassList("c-toggle-button-group");
+        }
+
+        public new class UxmlFactory : UxmlFactory<MainToggleButtonGroup, UxmlTraits> { }
+    }
 }
