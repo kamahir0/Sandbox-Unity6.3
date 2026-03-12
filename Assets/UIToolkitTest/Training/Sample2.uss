@@ -1,7 +1,7 @@
 /* Sample2 固有のスタイル (主に寸法など) */
 
 .l-window {
-    width: 500px;
+    width: 700px;
     max-width: 90%;
 }
 
