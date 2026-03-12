@@ -77,7 +77,7 @@ namespace Lilja.Training
     {
         public MainFoldout() : base()
         {
-            AddToClassList("c-foldout");
+            AddToClassList("c-control-size");
         }
 
         public new class UxmlFactory : UxmlFactory<MainFoldout, UxmlTraits> { }

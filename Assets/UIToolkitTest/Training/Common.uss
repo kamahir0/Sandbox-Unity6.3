@@ -45,6 +45,23 @@
     margin: var(--size-control-margin);
 }
 
+/* RadioButtonGroup の場合は固定高を解除し、要素数に合わせて伸びるようにする */
+.c-control-size.unity-radio-button-group {
+    height: auto;
+}
+
+/* Foldout の場合はコンテナ自体の高さを auto にし、中のトグルにのみ共通サイズを適用する */
+.c-control-size.unity-foldout {
+    height: auto;
+    margin: 0;
+}
+
+.c-control-size.unity-foldout > .unity-foldout__toggle {
+    height: var(--size-control-height);
+    margin: var(--size-control-margin);
+    margin-left: 0; /* チェックマーク分を考慮した微調整 */
+}
+
 /* ボタンの基本スタイル */
 .c-button {
     border-radius: 4px;
@@ -63,6 +80,14 @@
 /* スクロールビューの基本スタイル */
 .c-scroll-view {
     flex-grow: 1;
+}
+
+/* Toggle / Radio 系 */
+.c-toggle .unity-base-field__label,
+.c-radio-group .unity-base-field__label {
+    -unity-text-align: middle-left;
+    margin: 0;
+    padding: 0;
 }
 
 /* ラベルの基本スタイル: c-control-size と併用し、高さを他のコントロールと合わせる */
@@ -115,20 +140,8 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-.c-foldout .unity-toggle .unity-toggle__checkmark {
+/* Foldout のチェックマークサイズを調整 */
+.c-control-size.unity-foldout .unity-toggle__checkmark {
     width: 54px;
     height: 54px;
-}
-
-/* Foldoutのラベル(text)のフォントサイズを標準に合わせる */
-.c-foldout .unity-toggle__text {
-    font-size: var(--font-size-standard);
-    -unity-text-align: middle-left;
-}
-
-/* Foldout（閉じた状態のヘッダー部分）の基本スタイルをコントロール共通サイズに合わせる */
-.c-foldout > .unity-foldout__toggle {
-    margin: var(--size-control-margin);
-    margin-left: 0; /* 他のコントロールより左に寄せるため、左マージンをゼロ（または負の値）に調整 */
-    height: var(--size-control-height);
 }
