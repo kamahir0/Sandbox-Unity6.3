@@ -60,6 +60,11 @@
     padding: 0;
 }
 
+/* ラベルの基本スタイル: c-control-size と併用し、高さを他のコントロールと合わせる */
+.c-label {
+    -unity-text-align: middle-left;
+}
+
 .c-input .unity-base-field__input {
     background-color: var(--color-input-bg);
     color: var(--color-input-text);
