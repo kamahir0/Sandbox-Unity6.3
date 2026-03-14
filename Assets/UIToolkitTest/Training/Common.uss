@@ -133,6 +133,75 @@
 }
 
 /* ============================================================
+   MultiToggleGroup (カスタムコントロール)
+   RadioButtonGroup と同様のレイアウト（ラベル左・選択肢縦並び）で
+   複数選択を可能にするカスタムトグルグループ。
+   ============================================================ */
+
+/* c-control-size との組み合わせで高さを auto に（RadioButtonGroup と同じ扱い） */
+.c-control-size.multi-toggle-group {
+    height: auto;
+}
+
+/* 外枠: ラベルと選択肢を横並びに */
+.multi-toggle-group {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* 左側ラベル: RadioButtonGroup の .unity-base-field__label に相当 */
+.multi-toggle-group__label {
+    width: var(--size-label-width);
+    min-height: var(--size-control-height);
+    -unity-text-align: middle-left;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* 右側: 選択肢を縦に並べるコンテナ */
+.multi-toggle-group__items {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* ============================================================
+   MultiToggleItem (MultiToggleGroup の各行)
+
+   Unity の Toggle 内部要素（.unity-toggle__input）は
+   デフォルトテーマが高優先度で適用されるため USS から間隔制御が困難。
+   そのため「チェックボックス専用 Toggle」と「テキスト Label」を
+   独立した兄弟要素として配置し、両者の間隔を
+   CSS 変数 --multi-toggle-item-gap で自由に制御できるようにした。
+   ============================================================ */
+
+/* 各行のルート: チェックボックスとテキストを横並びにする */
+.multi-toggle-item {
+    flex-direction: row;
+    align-items: center;
+    font-size: var(--font-size-standard);
+    margin: 4px 0;
+}
+
+/* チェックボックス専用 Toggle の内蔵ラベルは非表示 */
+.multi-toggle-item__checkbox .unity-base-field__label {
+    display: none;
+}
+
+/* チェックボックスとテキストの間隔。
+   --multi-toggle-item-gap を親要素や :root で上書きすることで調整できる。
+   例) .multi-toggle-group { --multi-toggle-item-gap: 4px; } */
+.multi-toggle-item__checkbox {
+    margin-right: var(--multi-toggle-item-gap, 8px);
+}
+
+/* テキストラベル */
+.multi-toggle-item__label {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+}
+
+/* ============================================================
    Utility (u-) : 汎用的な調整
    ============================================================ */
 

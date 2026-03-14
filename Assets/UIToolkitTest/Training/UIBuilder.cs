@@ -125,6 +125,23 @@ namespace Lilja.Training
         }
 
         // ----------------------------------------------------------------
+        // MultiToggleGroup
+        // ----------------------------------------------------------------
+
+        public IUIBuilder AddMultiToggleGroup(string label, IEnumerable<string> choices, Action<IReadOnlyList<string>> onValueChanged = null)
+        {
+            _factories.Add(() =>
+            {
+                var group = new MultiToggleGroup(label);
+                group.SetChoices(choices);
+                if (onValueChanged != null)
+                    group.onValueChanged += onValueChanged;
+                return group;
+            });
+            return this;
+        }
+
+        // ----------------------------------------------------------------
         // Foldout
         // ----------------------------------------------------------------
 

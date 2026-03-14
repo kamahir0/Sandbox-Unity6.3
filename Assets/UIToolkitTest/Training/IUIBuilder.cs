@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 namespace Lilja.Training
@@ -20,6 +21,11 @@ namespace Lilja.Training
         IUIBuilder AddFloatField(string label, float initialValue = 0f, Action<float> onValueChanged = null);
 
         IUIBuilder AddToggle(string label, bool initialValue = false, Action<bool> onValueChanged = null);
+
+        /// <summary>
+        /// RadioButtonGroup と同外観で複数選択が可能なカスタムトグルグループを追加する。
+        /// </summary>
+        IUIBuilder AddMultiToggleGroup(string label, IEnumerable<string> choices, Action<IReadOnlyList<string>> onValueChanged = null);
 
         /// <summary>
         /// Foldout を追加する。innerBuilder に折りたたみ内部のコンテンツを渡す。
