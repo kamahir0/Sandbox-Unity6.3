@@ -103,6 +103,11 @@
     min-height: var(--size-control-height);
 }
 
+/* ラジオボタンのチェックマークとラベルの間隔を MultiToggleGroup の --multi-toggle-item-gap に合わせる */
+.c-radio-group .unity-radio-button__checkmark-background {
+    margin-right: var(--multi-toggle-item-gap, 8px);
+}
+
 /* ラベルの基本スタイル: c-control-size と併用し、高さを他のコントロールと合わせる */
 .c-label {
     -unity-text-align: middle-left;
