@@ -93,6 +93,16 @@
     padding: 0;
 }
 
+/* RadioButtonGroup: 選択肢が縦に並ぶため、ラベルを上揃えにする。
+   MultiToggleGroup と同パターン（align-items: flex-start + min-height）で統一。 */
+.c-radio-group.unity-radio-button-group {
+    align-items: flex-start;
+}
+
+.c-radio-group .unity-base-field__label {
+    min-height: var(--size-control-height);
+}
+
 /* ラベルの基本スタイル: c-control-size と併用し、高さを他のコントロールと合わせる */
 .c-label {
     -unity-text-align: middle-left;
