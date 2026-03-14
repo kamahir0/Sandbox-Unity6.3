@@ -27,7 +27,7 @@ namespace Lilja.Training
             var window = new VisualElement();
             window.AddToClassList("l-window");
             window.AddToClassList("t-surface");
-            window.style.width = 900; 
+            window.style.width = 900;
             window.style.maxWidth = Length.Percent(95);
             root.Add(window);
 
@@ -37,7 +37,7 @@ namespace Lilja.Training
             window.Add(scrollView);
 
             // 4. Components (Added to scrollView)
-            
+
             // Header
             var header = new MainLabel("Encapsulated UI (Sample3)");
             scrollView.Add(header);
@@ -49,9 +49,9 @@ namespace Lilja.Training
             // Foldout
             var foldout = new MainFoldout();
             foldout.text = "詳細設定 (MainFoldout)";
-            
+
             scrollView.Add(foldout);
-            
+
             // Secondary Button inside Foldout
             var innerButton = new SecondaryButton("内部ボタン");
             foldout.Add(innerButton);
