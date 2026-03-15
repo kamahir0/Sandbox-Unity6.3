@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="MultiClickButton.uss"/>
+    <ui:VisualElement class="multi-click-overlay" picking-mode="Ignore">
+        <ui:Button name="multi-click-button" class="multi-click-button"/>
+    </ui:VisualElement>
+</ui:UXML>
