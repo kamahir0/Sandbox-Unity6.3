@@ -4,12 +4,23 @@ using UnityEngine.UIElements;
 
 namespace UIToolkitTest.Training.MultiClick
 {
+    public enum ButtonPosition
+    {
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight,
+        CenterLeft,
+        CenterRight,
+    }
+
     [RequireComponent(typeof(UIDocument))]
     public sealed class MultiClickButton : MonoBehaviour
     {
         private const string ButtonName = "multi-click-button";
         private const string PressedClass = "multi-click-button--pressed";
 
+        [SerializeField] private ButtonPosition buttonPosition = ButtonPosition.BottomLeft;
         [SerializeField, Min(0.01f)] private float thresholdSeconds = 0.5f;
         [SerializeField, Min(2)] private int requiredClicks = 3;
 
@@ -30,6 +41,8 @@ namespace UIToolkitTest.Training.MultiClick
                 Debug.LogError($"[MultiClickButton] Button '{ButtonName}' not found in UXML.");
                 return;
             }
+
+            ApplyButtonPosition(root);
 
             _button.RegisterCallback<PointerDownEvent>(OnPointerDown);
             _button.RegisterCallback<PointerUpEvent>(OnPointerUp);
@@ -89,6 +102,26 @@ namespace UIToolkitTest.Training.MultiClick
         private static void HandleMultiClick()
         {
             Debug.Log("[MultiClickButton] Multi-click triggered!");
+        }
+
+        private void ApplyButtonPosition(VisualElement root)
+        {
+            var overlay = root.Q<VisualElement>(className: "multi-click-overlay");
+            if (overlay == null) return;
+
+            var (justify, align) = buttonPosition switch
+            {
+                ButtonPosition.TopLeft => (Justify.FlexStart, Align.FlexStart),
+                ButtonPosition.TopRight => (Justify.FlexStart, Align.FlexEnd),
+                ButtonPosition.BottomLeft => (Justify.FlexEnd, Align.FlexStart),
+                ButtonPosition.BottomRight => (Justify.FlexEnd, Align.FlexEnd),
+                ButtonPosition.CenterLeft => (Justify.Center, Align.FlexStart),
+                ButtonPosition.CenterRight => (Justify.Center, Align.FlexEnd),
+                _ => (Justify.FlexEnd, Align.FlexStart),
+            };
+
+            overlay.style.justifyContent = justify;
+            overlay.style.alignItems = align;
         }
     }
 }
