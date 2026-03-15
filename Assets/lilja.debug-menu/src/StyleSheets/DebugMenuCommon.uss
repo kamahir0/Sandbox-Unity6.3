@@ -1,0 +1,283 @@
+/* ============================================================
+   Theme (t-) : 配色・フォント・視覚効果
+   ============================================================ */
+
+/* UIのルートに付与し、変数のスコープと文字色の継承を保証する */
+.t-root {
+    color: var(--color-window-text);
+}
+
+/* 実体のある「面」に適用し、背景色と文字色をセットで適用する */
+.t-surface {
+    background-color: var(--color-window-bg);
+    color: var(--color-window-text);
+}
+
+/* ============================================================
+   Layout (l-) : 構造・配置
+   ============================================================ */
+
+/* 画面いっぱいに広がるコンテナ */
+.l-screen {
+    width: 100%;
+    height: 100%;
+}
+
+/* ウィンドウパネル構造 */
+.l-window {
+    border-radius: 12px;
+    padding: 24px;
+    border-width: 1px;
+    border-color: var(--color-input-border);
+    /* 簡易的な影 */
+    border-bottom-width: 3px;
+    flex-direction: column;
+}
+
+/* ============================================================
+   Component (c-) : 個別のUIパーツ
+   ============================================================ */
+
+/* 共通の寸法設定 */
+.c-control-size {
+    height: var(--size-control-height);
+    font-size: var(--font-size-standard);
+    margin: var(--size-control-margin);
+}
+
+/* RadioButtonGroup の場合は固定高を解除し、要素数に合わせて伸びるようにする */
+.c-control-size.unity-radio-button-group,
+.c-control-size.unity-toggle-button-group {
+    height: auto;
+}
+
+/* Foldout の場合はコンテナ自体の高さを auto にし、中のトグルにのみ共通サイズを適用する */
+.c-control-size.unity-foldout {
+    height: auto;
+    margin: 0;
+}
+
+.c-control-size.unity-foldout > .unity-foldout__toggle {
+    height: var(--size-control-height);
+    margin: var(--size-control-margin);
+    margin-left: 0; /* チェックマーク分を考慮した微調整 */
+}
+
+/* ボタンの基本スタイル */
+.c-button {
+    border-radius: 4px;
+    border-width: 1px;
+    -unity-font-style: bold;
+    padding: 4px 12px;
+}
+
+/* 入力フィールドの基本スタイル */
+.c-input .unity-base-field__label {
+    -unity-text-align: middle-left;
+    margin: 0;
+    padding: 0;
+}
+
+/* スクロールビューの基本スタイル */
+.c-scroll-view {
+    flex-grow: 1;
+}
+
+/* Toggle / Radio 系 */
+.c-toggle .unity-base-field__label,
+.c-radio-group .unity-base-field__label,
+.c-toggle-button-group .unity-base-field__label {
+    width: var(--size-label-width);
+    -unity-text-align: middle-left;
+    margin: 0;
+    padding: 0;
+}
+
+/* RadioButtonGroup: 選択肢が縦に並ぶため、ラベルを上揃えにする。
+   DebugToggleGroup と同パターン（align-items: flex-start + min-height）で統一。 */
+.c-radio-group.unity-radio-button-group {
+    align-items: flex-start;
+}
+
+.c-radio-group .unity-base-field__label {
+    min-height: var(--size-control-height);
+}
+
+/* ラジオボタンのチェックマークとラベルの間隔を DebugToggleGroup の --multi-toggle-item-gap に合わせる */
+.c-radio-group .unity-radio-button__checkmark-background {
+    margin-right: var(--multi-toggle-item-gap, 8px);
+}
+
+/* ラベルの基本スタイル: c-control-size と併用し、高さを他のコントロールと合わせる */
+.c-label {
+    -unity-text-align: middle-left;
+}
+
+.c-input .unity-base-field__label {
+    width: var(--size-label-width);
+}
+
+.c-input .unity-base-field__input {
+    background-color: var(--color-input-bg);
+    color: var(--color-input-text);
+    border-color: var(--color-input-border);
+    border-radius: 4px;
+    border-width: 1px;
+    padding: 0 8px;
+    -unity-text-align: middle-left;
+    --unity-cursor-color: var(--color-input-cursor);
+}
+
+/* --- セマンティック・カラー --- */
+.c-button--primary {
+    background-color: var(--color-primary-bg);
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border);
+}
+
+.c-button--secondary {
+    background-color: var(--color-secondary-bg);
+    color: var(--color-secondary-text);
+    border-color: var(--color-secondary-border);
+}
+
+.c-button--danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border-color: var(--color-danger-border);
+}
+
+/* ============================================================
+   DebugToggleGroup (カスタムコントロール)
+   RadioButtonGroup と同様のレイアウト（ラベル左・選択肢縦並び）で
+   複数選択が可能なカスタムトグルグループ。
+   子要素として VerticalToggleItem を配置して使用する。
+   ============================================================ */
+
+/* c-control-size との組み合わせで高さを auto に（RadioButtonGroup と同じ扱い） */
+.c-control-size.debug-toggle-group {
+    height: auto;
+}
+
+/* 外枠: ラベルと選択肢を横並びに */
+.debug-toggle-group {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* 左側ラベル: RadioButtonGroup の .unity-base-field__label に相当 */
+.debug-toggle-group__label {
+    width: var(--size-label-width);
+    min-height: var(--size-control-height);
+    -unity-text-align: middle-left;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-standard);
+}
+
+/* 右側: 選択肢を縦に並べるコンテナ */
+.debug-toggle-group__items {
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* ============================================================
+   VerticalToggleItem (DebugToggleGroup の各行)
+
+   チェックマークは Unity 標準の Toggle を内部利用。
+   テキストは独立した Label で表示する構造。
+   ============================================================ */
+
+/* 各行のルート: チェックボックスとテキストを横並びに */
+.debug-toggle-group-item {
+    flex-direction: row;
+    align-items: center;
+    height: var(--size-control-height);
+    padding: 0 2px;
+    cursor: link;
+}
+
+/* チェックボックス: Unity 標準 Toggle を使用 */
+.debug-toggle-group-item__checkbox {
+    flex-shrink: 0;
+    margin: 0;
+    margin-right: var(--debug-toggle-group-item-gap, 8px);
+}
+
+/* Toggle 内部の空ラベルを非表示 */
+.debug-toggle-group-item__checkbox .unity-base-field__label {
+    display: none;
+}
+
+/* Toggle 内部のチェックマークサイズを調整 */
+.debug-toggle-group-item__checkbox .unity-toggle__checkmark {
+    width: var(--size-toggle-checkbox, 36px);
+    height: var(--size-toggle-checkbox, 36px);
+}
+
+/* テキストラベル */
+.debug-toggle-group-item__label {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    font-size: var(--font-size-standard);
+    margin: 0 2px;
+}
+
+/* ============================================================
+   DebugMenuFrame (c-window) : ヘッダー付き共通ウィンドウ
+   l-window の構造的スタイルを内包し、ヘッダーとコンテンツを分離する。
+   ============================================================ */
+
+/* ウィンドウ外枠: l-window と同等の構造（padding なし、ヘッダー/コンテンツで分担） */
+.c-window {
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: var(--color-input-border);
+    border-bottom-width: 3px;
+    flex-direction: column;
+}
+
+/* ヘッダー: テーマ変数で配色を切り替え、上端の角丸を維持 */
+.c-window__header {
+    background-color: var(--color-window-header-bg);
+    color: var(--color-window-header-text);
+    padding: 16px 24px;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
+}
+
+/* ヘッダータイトルテキスト */
+.c-window__title {
+    font-size: var(--font-size-standard);
+    -unity-font-style: bold;
+    color: var(--color-window-header-text);
+}
+
+/* コンテンツエリア: l-window の padding を引き継ぐ */
+.c-window__content {
+    padding: 24px;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* ============================================================
+   Utility (u-) : 汎用的な調整
+   ============================================================ */
+
+/* 中央寄せ */
+.u-center-content {
+    justify-content: center;
+    align-items: center;
+}
+
+/* 背景を完全に透明にする（オーバーレイ用） */
+.u-bg-transparent {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* Foldout のチェックマークサイズを調整（Foldout 直下のトグルのみ対象） */
+.c-control-size.unity-foldout > .unity-foldout__toggle .unity-toggle__checkmark {
+    width: 54px;
+    height: 54px;
+}

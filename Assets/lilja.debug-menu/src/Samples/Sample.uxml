@@ -1,0 +1,26 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:debug="Lilja.DebugMenu" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <debug:DebugMenuRoot>
+        <debug:DebugMenuFrame label="Debug Menu" style="width: 700px; max-width: 90%;">
+            <debug:DebugScrollView>
+                <debug:DebugLabel text="プレイヤー設定"/>
+                <debug:DebugTextField label="プレイヤー名" value="Player1"/>
+                <debug:DebugRadioButtonGroup label="テーマ" choices="ライト,ダーク"/>
+                <debug:DebugToggleGroup label="有効機能" class="c-control-size">
+                    <debug:DebugToggleGroupItem text="デバッグログ" name="DebugToggleGroupItem"/>
+                    <debug:DebugToggleGroupItem text="FPS表示"/>
+                </debug:DebugToggleGroup>
+                <debug:DebugFoldout text="詳細設定">
+                    <debug:DebugToggleGroup label="出力先" class="c-control-size">
+                        <debug:DebugToggleGroupItem text="コンソール"/>
+                        <debug:DebugToggleGroupItem text="ファイル"/>
+                    </debug:DebugToggleGroup>
+                    <debug:DebugTextField label="タイムスケール" value="1.0"/>
+                </debug:DebugFoldout>
+                <ui:VisualElement style="flex-direction: row; margin-top: 12px;">
+                    <debug:DebugSecondaryButton text="リセット" style="flex-grow: 1;"/>
+                    <debug:DebugButton text="適用" style="flex-grow: 1;"/>
+                </ui:VisualElement>
+            </debug:DebugScrollView>
+        </debug:DebugMenuFrame>
+    </debug:DebugMenuRoot>
+</ui:UXML>
