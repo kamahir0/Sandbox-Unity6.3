@@ -771,6 +771,7 @@ GameObject:
   - component: {fileID: 2040490916}
   - component: {fileID: 2040490918}
   - component: {fileID: 2040490919}
+  - component: {fileID: 2040490920}
   m_Layer: 0
   m_Name: UI Document
   m_TagString: Untagged
@@ -835,11 +836,23 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2040490915}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a89ab6374ada3934292b117b306f3ade, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UIToolkitTest::Lilja.Training.Sample3
+--- !u!114 &2040490920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2040490915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7430df654cbc124f935dc94d031e472, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UIToolkitTest::Lilja.Training.Sample4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
