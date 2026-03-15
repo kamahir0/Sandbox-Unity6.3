@@ -2,8 +2,7 @@
     <Style src="project://database/Assets/UIToolkitTest/Training/Common.uss?fileID=7433441132597879392&amp;guid=b3ba3eb0e25bb5247a94e1e4d642dcaa&amp;type=3#Common"/>
     <Style src="project://database/Assets/UIToolkitTest/Training/Sample2.uss?fileID=7433441132597879392&amp;guid=a7bebe5affaa4b448a765eb4bdfc7a01&amp;type=3#Sample2"/>
 
-    <!-- t-root で文字色継承、l-screen+u-center-content で画面中央配置 -->
-    <ui:VisualElement class="t-root l-screen u-center-content u-bg-transparent">
+    <training:AppRoot>
         <training:AppWindow label="Sample2: ウィンドウUI">
             <ui:ScrollView class="c-scroll-view">
                 <ui:TextField label="ユーザー名" class="c-control-size c-input" />
@@ -17,5 +16,5 @@
                 </ui:VisualElement>
             </ui:ScrollView>
         </training:AppWindow>
-    </ui:VisualElement>
+    </training:AppRoot>
 </ui:UXML>

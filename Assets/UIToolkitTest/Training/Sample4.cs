@@ -16,23 +16,21 @@ namespace Lilja.Training
             var root = GetComponent<UIDocument>().rootVisualElement;
             root.Clear();
 
-            // --- 構造レイヤー（Sample3 と同じ。IUIBuilder の関心外） ---
-            root.AddToClassList("t-root");
-            root.AddToClassList("l-screen");
-            root.AddToClassList("u-center-content");
-            root.AddToClassList("u-bg-transparent");
+            // 1. Root Layer
+            var appRoot = new AppRoot();
+            root.Add(appRoot);
 
+            // 2. Window Layer
             var window = new AppWindow("Sample4: IUIBuilder デモ");
             window.style.width = 900;
             window.style.maxWidth = Length.Percent(95);
-            root.Add(window);
+            appRoot.Add(window);
 
+            // 3. ScrollView Layer
             var scrollView = new MainScrollView();
             window.Add(scrollView);
 
-            // --- コンテンツレイヤー（IUIBuilder が担当） ---
-
-            // メインコンテンツを UIBuilder で組み立て
+            // 4. コンテンツレイヤー（IUIBuilder が担当）
             IUIBuilder mainBuilder = new UIBuilder()
                 .AddTextField("ユーザー名", "", v => Debug.Log($"ユーザー名: {v}"))
                 .AddIntegerField("年齢", 20, v => Debug.Log($"年齢: {v}"))
