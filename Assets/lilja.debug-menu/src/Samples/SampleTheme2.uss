@@ -38,5 +38,5 @@
     --size-toggle-checkbox: 30px;
 
     /* フォーカス時の共通色 */
-    --color-focus: #FF9800;
+    --color-focus: #006AA6;
 }

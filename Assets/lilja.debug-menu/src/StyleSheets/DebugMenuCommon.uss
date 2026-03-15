@@ -128,23 +128,6 @@
     --unity-cursor-color: var(--color-input-cursor);
 }
 
-/* TextField: フォーカス時の枠線 */
-.c-input .unity-base-field__input:focus {
-    border-color: var(--color-focus);
-}
-
-/* RadioButtonGroup: フォーカス時のラジオボタン枠線 */
-.c-radio-group .unity-radio-button:focus .unity-radio-button__checkmark-background {
-    border-color: var(--color-focus);
-}
-
-/* Foldout: フォーカス時のヘッダートグル */
-.c-control-size.unity-foldout > .unity-foldout__toggle:focus {
-    border-color: var(--color-focus);
-    border-width: 1px;
-    border-radius: 4px;
-}
-
 /* --- セマンティック・カラー --- */
 .c-button--primary {
     background-color: var(--color-primary-bg);
