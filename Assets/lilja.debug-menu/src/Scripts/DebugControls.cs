@@ -104,4 +104,34 @@ namespace Lilja.DebugMenu
             AddToClassList("c-radio-group");
         }
     }
+
+    /// <summary>
+    /// デバッグメニュー用の整数フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugIntegerField : IntegerField
+    {
+        public DebugIntegerField() : this(string.Empty) { }
+
+        public DebugIntegerField(string label) : base(label)
+        {
+            AddToClassList("c-control-size");
+            AddToClassList("c-input");
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の浮動小数点フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugFloatField : FloatField
+    {
+        public DebugFloatField() : this(string.Empty) { }
+
+        public DebugFloatField(string label) : base(label)
+        {
+            AddToClassList("c-control-size");
+            AddToClassList("c-input");
+        }
+    }
 }
