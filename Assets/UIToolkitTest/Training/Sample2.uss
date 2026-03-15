@@ -1,15 +1,15 @@
-/* Sample2 固有のスタイル (主に寸法など) */
+/* Sample2 固有のスタイル */
 
-.l-window {
+.c-window {
     width: 700px;
     max-width: 90%;
 }
 
-.l-window > .button-row {
+.button-row {
     flex-direction: row;
 }
 
-.l-window > .button-row > .c-button {
+.button-row > .c-button {
     flex-grow: 1;
     flex-basis: 0;
 }

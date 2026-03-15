@@ -29,4 +29,8 @@
     --color-input-text: #FFFFFF;
     --color-input-border: #444444;
     --color-input-cursor: #FFFFFF;
+
+    /* ウィンドウヘッダー: 深い紫 */
+    --color-window-header-bg: #4A148C;
+    --color-window-header-text: #FFFFFF;
 }

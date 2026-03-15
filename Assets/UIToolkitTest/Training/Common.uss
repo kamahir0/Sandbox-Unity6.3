@@ -217,6 +217,43 @@
 }
 
 /* ============================================================
+   AppWindow (c-window) : ヘッダー付き共通ウィンドウ
+   l-window の構造的スタイルを内包し、ヘッダーとコンテンツを分離する。
+   ============================================================ */
+
+/* ウィンドウ外枠: l-window と同等の構造（padding なし、ヘッダー/コンテンツで分担） */
+.c-window {
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: var(--color-input-border);
+    border-bottom-width: 3px;
+    flex-direction: column;
+}
+
+/* ヘッダー: テーマ変数で配色を切り替え、上端の角丸を維持 */
+.c-window__header {
+    background-color: var(--color-window-header-bg);
+    color: var(--color-window-header-text);
+    padding: 16px 24px;
+    border-top-left-radius: 11px;
+    border-top-right-radius: 11px;
+}
+
+/* ヘッダータイトルテキスト */
+.c-window__title {
+    font-size: var(--font-size-standard);
+    -unity-font-style: bold;
+    color: var(--color-window-header-text);
+}
+
+/* コンテンツエリア: l-window の padding を引き継ぐ */
+.c-window__content {
+    padding: 24px;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* ============================================================
    Utility (u-) : 汎用的な調整
    ============================================================ */
 

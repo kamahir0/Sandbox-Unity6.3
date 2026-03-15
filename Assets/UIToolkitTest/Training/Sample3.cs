@@ -23,24 +23,17 @@ namespace Lilja.Training
             root.AddToClassList("u-center-content");
             root.AddToClassList("u-bg-transparent");
 
-            // 2. Window Layer (l-window, t-surface)
-            var window = new VisualElement();
-            window.AddToClassList("l-window");
-            window.AddToClassList("t-surface");
+            // 2. Window Layer (AppWindow: ヘッダー + コンテンツエリア)
+            var window = new AppWindow("Sample3: カスタムコントロール");
             window.style.width = 900;
             window.style.maxWidth = Length.Percent(95);
             root.Add(window);
 
             // 3. ScrollView Layer
-            // コンテンツをスクロール可能にする
             var scrollView = new MainScrollView();
             window.Add(scrollView);
 
             // 4. Components (Added to scrollView)
-
-            // Header
-            var header = new MainLabel("Encapsulated UI (Sample3)");
-            scrollView.Add(header);
 
             // TextField
             var textField = new MainTextField("ユーザー名");
@@ -49,7 +42,6 @@ namespace Lilja.Training
             // Foldout
             var foldout = new MainFoldout();
             foldout.text = "詳細設定 (MainFoldout)";
-
             scrollView.Add(foldout);
 
             // Secondary Button inside Foldout

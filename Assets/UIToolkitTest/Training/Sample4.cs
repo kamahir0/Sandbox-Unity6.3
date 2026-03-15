@@ -22,9 +22,7 @@ namespace Lilja.Training
             root.AddToClassList("u-center-content");
             root.AddToClassList("u-bg-transparent");
 
-            var window = new VisualElement();
-            window.AddToClassList("l-window");
-            window.AddToClassList("t-surface");
+            var window = new AppWindow("Sample4: IUIBuilder デモ");
             window.style.width = 900;
             window.style.maxWidth = Length.Percent(95);
             root.Add(window);
@@ -34,15 +32,8 @@ namespace Lilja.Training
 
             // --- コンテンツレイヤー（IUIBuilder が担当） ---
 
-            // Foldout 内部を別の UIBuilder で定義
-            IUIBuilder detailBuilder = new UIBuilder()
-                .AddFloatField("身長 (cm)", 170f, v => Debug.Log($"身長: {v}"))
-                .AddToggle("メルマガ受信", true, v => Debug.Log($"メルマガ: {v}"))
-                .AddDangerButton("アカウント削除", () => Debug.Log("削除"));
-
             // メインコンテンツを UIBuilder で組み立て
             IUIBuilder mainBuilder = new UIBuilder()
-                .AddLabel("Sample4: IUIBuilder Demo")
                 .AddTextField("ユーザー名", "", v => Debug.Log($"ユーザー名: {v}"))
                 .AddIntegerField("年齢", 20, v => Debug.Log($"年齢: {v}"))
                 .AddFoldout("詳細設定", new UIBuilder()
