@@ -68,6 +68,7 @@ namespace Lilja.DebugMenu
             _checkbox = new Toggle();
             _checkbox.AddToClassList(checkboxUssClassName);
             _checkbox.pickingMode = PickingMode.Ignore;
+            _checkbox.focusable = false;
             Add(_checkbox);
 
             // テキストラベル

@@ -33,4 +33,7 @@
     /* ウィンドウヘッダー: 青 */
     --color-window-header-bg: #1565C0;
     --color-window-header-text: #FFFFFF;
+
+    /* フォーカス時の共通色 */
+    --color-focus: #2196F3;
 }
