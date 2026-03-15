@@ -14,7 +14,7 @@
                         <debug:DebugToggleGroupItem text="コンソール"/>
                         <debug:DebugToggleGroupItem text="ファイル"/>
                     </debug:DebugToggleGroup>
-                    <debug:DebugTextField label="タイムスケール" value="1.0"/>
+                    <debug:DebugIntegerField label="回数"/>
                 </debug:DebugFoldout>
                 <ui:VisualElement style="flex-direction: row; margin-top: 12px;">
                     <debug:DebugSecondaryButton text="リセット" style="flex-grow: 1;"/>
