@@ -6,7 +6,7 @@
                 <debug:DebugTextField label="プレイヤー名" value="Player1"/>
                 <debug:DebugRadioButtonGroup label="テーマ" choices="ライト,ダーク"/>
                 <debug:DebugToggleGroup label="有効機能" class="c-control-size">
-                    <debug:DebugToggleGroupItem text="デバッグログ" name="DebugToggleGroupItem"/>
+                    <debug:DebugToggleGroupItem text="デバッグログ"/>
                     <debug:DebugToggleGroupItem text="FPS表示"/>
                 </debug:DebugToggleGroup>
                 <debug:DebugFoldout text="詳細設定">
