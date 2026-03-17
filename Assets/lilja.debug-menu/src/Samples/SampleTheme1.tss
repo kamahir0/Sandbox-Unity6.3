@@ -1,5 +1,4 @@
-@import url("unity-theme://default");
+@import url("../StyleSheets/DebugMenuTheme.tss");
 @import url("SampleTheme1.uss");
-@import url("../StyleSheets/DebugMenuCommon.uss");
 
 VisualElement {}
