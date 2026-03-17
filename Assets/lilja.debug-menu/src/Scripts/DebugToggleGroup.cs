@@ -65,6 +65,7 @@ namespace Lilja.DebugMenu
         public DebugToggleGroup(string label)
         {
             AddToClassList(ussClassName);
+            AddToClassList("c-control-size");
 
             _labelElement = new Label(label);
             _labelElement.AddToClassList(labelUssClassName);
