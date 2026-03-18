@@ -13,16 +13,16 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugMenuFrame : VisualElement
     {
-        public static readonly string ussClassName             = "c-window";
-        public static readonly string headerUssClassName       = ussClassName + "__header";
-        public static readonly string backButtonUssClassName     = ussClassName + "__back-button";
+        public static readonly string ussClassName = "c-window";
+        public static readonly string headerUssClassName = ussClassName + "__header";
+        public static readonly string backButtonUssClassName = ussClassName + "__back-button";
         public static readonly string backButtonIconUssClassName = ussClassName + "__back-button-icon";
-        public static readonly string headerSpacerUssClassName   = ussClassName + "__header-spacer";
-        public static readonly string titleUssClassName        = ussClassName + "__title";
-        public static readonly string contentUssClassName      = ussClassName + "__content";
+        public static readonly string headerSpacerUssClassName = ussClassName + "__header-spacer";
+        public static readonly string titleUssClassName = ussClassName + "__title";
+        public static readonly string contentUssClassName = ussClassName + "__content";
 
-        private readonly Button        _backButton;
-        private readonly Label         _titleLabel;
+        private readonly Button _backButton;
+        private readonly Label _titleLabel;
         private readonly VisualElement _contentContainer;
 
         public override VisualElement contentContainer => _contentContainer;
