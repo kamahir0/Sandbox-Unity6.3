@@ -4,28 +4,28 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// VerticalToggleGroup 内で使用するトグル項目。
+    /// DebugToggleGroup 内で使用するトグル項目。
     /// Unity 標準の Toggle を使わずカスタム VisualElement で実装することで
     /// em ベースのサイズスケール問題を回避している。
     ///
-    /// VerticalToggleGroup の子として UXML に配置して使用する:
+    /// DebugToggleGroup の子として UXML に配置して使用する:
     ///   &lt;debug:DebugToggleGroup label="設定"&gt;
     ///     &lt;debug:DebugToggleGroupItem text="オプションA" /&gt;
     ///   &lt;/debug:DebugToggleGroup&gt;
     ///
-    /// VerticalToggleGroup 外でも単体使用可能。
+    /// DebugToggleGroup 外でも単体使用可能。
     /// </summary>
     [UxmlElement]
     public partial class DebugToggleGroupItem : VisualElement
     {
-        public static readonly string ussClassName         = "debug-toggle-group-item";
-        public static readonly string checkedUssClassName  = ussClassName + "--checked";
+        public static readonly string ussClassName = "debug-toggle-group-item";
+        public static readonly string checkedUssClassName = ussClassName + "--checked";
         public static readonly string checkboxUssClassName = ussClassName + "__checkbox";
-        public static readonly string labelUssClassName    = ussClassName + "__label";
+        public static readonly string labelUssClassName = ussClassName + "__label";
 
         private readonly Toggle _checkbox;
-        private readonly Label  _textLabel;
-        private          bool          _value;
+        private readonly Label _textLabel;
+        private bool _value;
 
         // 親グループへの参照。Attach/Detach 時に使用する
         private DebugToggleGroup _registeredGroup;
