@@ -21,6 +21,9 @@ public class MockBuilder : MonoBehaviour
         frame.style.maxWidth = new StyleLength(new Length(90, LengthUnit.Percent));
         menuRoot.Add(frame);
 
+        // バックボタンクリック時にアンカードポジションをアニメーション付きで移動
+        frame.BackClicked += () => AnimateFramePosition(frame);
+
         // DebugPage
         var scrollView = new DebugPage();
         frame.Add(scrollView);
@@ -63,5 +66,42 @@ public class MockBuilder : MonoBehaviour
         buttonRow.Add(applyButton);
 
         scrollView.Add(buttonRow);
+    }
+
+    private void AnimateFramePosition(DebugMenuFrame frame)
+    {
+        var currentTranslate = frame.style.translate.value;
+        var targetTranslate = new Translate(
+            currentTranslate.x.value + 20,
+            currentTranslate.y.value + 10
+        );
+
+        StartCoroutine(AnimateTranslate(frame, currentTranslate, targetTranslate, 0.5f));
+    }
+
+    private System.Collections.IEnumerator AnimateTranslate(DebugMenuFrame frame, Translate start, Translate target, float duration)
+    {
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsedTime / duration);
+
+            // イージング: Ease-In-Out Quad
+            float easedProgress = progress < 0.5f
+                ? 2f * progress * progress
+                : -1f + (4f - 2f * progress) * progress;
+
+            var current = new Translate(
+                Mathf.Lerp(start.x.value, target.x.value, easedProgress),
+                Mathf.Lerp(start.y.value, target.y.value, easedProgress)
+            );
+
+            frame.style.translate = current;
+            yield return null;
+        }
+
+        frame.style.translate = target;
     }
 }
