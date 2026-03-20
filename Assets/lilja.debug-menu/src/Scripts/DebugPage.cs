@@ -11,6 +11,7 @@ namespace Lilja.DebugMenu
 
         public DebugPage() : base()
         {
+            AddToClassList("t-surface");
             _scrollView = new ScrollView();
             _scrollView.AddToClassList("c-scroll-view");
             hierarchy.Add(_scrollView);
