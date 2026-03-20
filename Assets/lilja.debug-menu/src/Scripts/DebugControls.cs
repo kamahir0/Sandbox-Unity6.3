@@ -75,6 +75,7 @@ namespace Lilja.DebugMenu
         public DebugFoldout() : base()
         {
             AddToClassList("c-control-size");
+            AddToClassList("c-foldout");
         }
     }
 

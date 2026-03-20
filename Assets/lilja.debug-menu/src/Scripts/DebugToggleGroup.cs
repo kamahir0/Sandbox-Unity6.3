@@ -17,7 +17,7 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugToggleGroup : VisualElement
     {
-        public static readonly string ussClassName = "debug-toggle-group";
+        public static readonly string ussClassName = "c-toggle-group";
         public static readonly string labelUssClassName = ussClassName + "__label";
         public static readonly string itemsUssClassName = ussClassName + "__items";
 

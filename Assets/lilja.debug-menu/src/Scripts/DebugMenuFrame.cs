@@ -13,7 +13,7 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugMenuFrame : VisualElement
     {
-        public static readonly string ussClassName = "c-window";
+        public static readonly string ussClassName = "c-menu-frame";
         public static readonly string headerUssClassName = ussClassName + "__header";
         public static readonly string backButtonUssClassName = ussClassName + "__back-button";
         public static readonly string backButtonIconUssClassName = ussClassName + "__back-button-icon";
