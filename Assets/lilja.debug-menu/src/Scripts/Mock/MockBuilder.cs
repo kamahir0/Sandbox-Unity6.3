@@ -43,8 +43,8 @@ public class MockBuilder : MonoBehaviour
         _page1.style.position = Position.Absolute;
         _page1.style.left = 0;
         _page1.style.top = 0;
-        _page1.style.right = 0;
-        _page1.style.bottom = 0;
+        _page1.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+        _page1.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
         _pageContainer.Add(_page1);
 
         // ページ2：詳細設定
@@ -52,8 +52,8 @@ public class MockBuilder : MonoBehaviour
         _page2.style.position = Position.Absolute;
         _page2.style.left = 0;
         _page2.style.top = 0;
-        _page2.style.right = 0;
-        _page2.style.bottom = 0;
+        _page2.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+        _page2.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
         _page2.style.display = DisplayStyle.None;  // 初期非表示
         _pageContainer.Add(_page2);
 
