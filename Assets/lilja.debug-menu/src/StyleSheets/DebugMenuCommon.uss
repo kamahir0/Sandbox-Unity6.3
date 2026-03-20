@@ -195,7 +195,6 @@
     align-items: center;
     height: var(--size-control-height);
     padding: 0 2px;
-    cursor: link;
 }
 
 /* チェックボックス: Unity 標準 Toggle を使用 */
