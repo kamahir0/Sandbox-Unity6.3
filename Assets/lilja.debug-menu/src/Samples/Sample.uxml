@@ -1,7 +1,7 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:debug="Lilja.DebugMenu" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <debug:DebugMenuRoot>
         <debug:DebugMenuFrame label="Debug Menu" style="width: 700px; max-width: 90%;">
-            <debug:DebugScrollView>
+            <debug:DebugPage>
                 <debug:DebugLabel text="プレイヤー設定"/>
                 <debug:DebugTextField label="プレイヤー名" value="Player1"/>
                 <debug:DebugRadioButtonGroup label="テーマ" choices="ライト,ダーク"/>
@@ -20,7 +20,7 @@
                     <debug:DebugSecondaryButton text="リセット" style="flex-grow: 1;"/>
                     <debug:DebugButton text="適用" style="flex-grow: 1;"/>
                 </ui:VisualElement>
-            </debug:DebugScrollView>
+            </debug:DebugPage>
         </debug:DebugMenuFrame>
     </debug:DebugMenuRoot>
 </ui:UXML>
