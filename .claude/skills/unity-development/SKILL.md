@@ -2,185 +2,148 @@
 name: unity-development
 description: >-
   Use for Unity Editor automation through UniCli in projects where `unicli` is
-  available: running `unicli exec`/`unicli eval`, editing files under `Assets/`
-  or `Packages/`, compiling Unity code, running EditMode/PlayMode tests, and
-  creating or modifying GameObjects, scenes, prefabs, assets, packages, build
-  settings, or project settings. Follow required safeguards such as
-  `AssetDatabase.Import` after file changes and `Compile` verification after C#
-  edits.
+  available: editing files under `Assets/` or `Packages/`, compiling Unity
+  code, running EditMode/PlayMode tests, and creating or modifying GameObjects,
+  scenes, prefabs, assets, packages, build settings, or project settings.
+  Follow required safeguards such as `AssetDatabase.Import` after file changes
+  and `Compile` verification after C# edits.
 metadata:
-  version: "1.1.0"
+  version: "2.0.0"
 ---
 
 # UniCli — Unity Editor CLI
 
-UniCli lets you interact with Unity Editor directly from the terminal.
-The CLI (`unicli`) communicates with the Unity Editor over named pipes, so the Editor must be open with the `com.yucchiy.unicli-server` package installed.
-
-## RULES — Always Follow These
-
-1. **After creating/modifying ANY file under `Assets/` or `Packages/`**: Run `unicli exec AssetDatabase.Import --path "<path>" --json` to generate `.meta` files. **Never create `.meta` files manually** — always let Unity generate them via this command. Unity requires `.meta` files for every asset — skipping this causes missing references, broken imports, and compilation errors. This applies to all file types: `.cs`, `.asmdef`, `.asset`, `.prefab`, directories, etc.
-2. **After modifying C# code in the Unity project**: Run `unicli exec Compile --json` to verify compilation.
-3. **Always use `--json`** when parsing output programmatically.
-4. **If connection to Unity Editor fails**: Retry 2–3 times, then ask the user to confirm Unity Editor is running with the project open.
-5. **For platform-specific verification**: Use `unicli exec BuildPlayer.Compile --target <platform> --json` to catch platform-specific errors (missing `#if` guards, unsupported APIs, etc.).
-6. **When running tests**: Always use the default `--resultFilter failures` (or `--resultFilter none` for summary-only) to keep output minimal. Only use `--resultFilter all` when you specifically need to inspect individual passed test details. This prevents large test suites from flooding context. Stack traces are omitted by default (`--stackTraceLines 0`); use `--stackTraceLines 3` when you need to diagnose a failure location.
-7. **When checking console logs**: Use `--logType "Warning,Error"` to filter out informational noise and focus on actionable issues. Stack traces are omitted by default; use `--stackTraceLines 3` when debugging errors.
-8. **Discover commands dynamically**: Use `unicli commands --json` to list all available commands and `unicli exec <command> --help` to see parameters for any command. `--help` includes nested type details when applicable, and `commands --json` provides nested schemas via each field's `children`. Do not rely on memorized command lists — the project may have custom commands.
-
-## Project Path
-
-By default, `unicli` looks for a Unity project in the current working directory.
-If the Unity project is in a subdirectory, set the `UNICLI_PROJECT` environment variable:
-
-```bash
-export UNICLI_PROJECT=path/to/unity/project
-unicli exec Compile --json
-```
-
-Or prefix each command:
-
-```bash
-UNICLI_PROJECT=path/to/unity/project unicli exec Compile --json
-```
+UniCli lets you interact with Unity Editor directly from the terminal via named pipes. The Editor must be open with `com.yucchiy.unicli-server` installed.
 
 ## Prerequisites
 
-Before running commands, verify that the CLI is installed and the Editor is reachable:
-
 ```bash
-unicli check
+unicli check          # Verify CLI and Editor connection
+unicli install        # Install server package if missing
+unicli install --update  # Update if version mismatch
 ```
 
-If `unicli check` reports that the server package is not installed, run `unicli install` to install it:
+If connection fails, retry 2–3 times — the Editor may need a moment to start the server.
+
+## Command Selection — Follow This Every Time
+
+**TIER 1 → TIER 2 → TIER 3 (last resort)**
+
+### TIER 1: Specialized Commands (always try first)
 
 ```bash
-unicli install
+unicli commands --json | grep -i "<keyword>"   # Search for a command
+unicli exec <command> --help                   # See parameters
+unicli exec <command> [...args] --json         # Execute
 ```
 
-If the server package version does not match the CLI version, run `unicli install --update` to update it:
+Always use `--json` when parsing output programmatically. Commands are discovered dynamically — do not rely on memorized lists; the project may have custom commands.
+
+### TIER 2: Chain Multiple Specialized Commands
+
+If no single command covers your goal, combine up to ~4 sequential commands. Example:
 
 ```bash
-unicli install --update
+unicli exec GameObject.Find --name "MyObject" --json > /tmp/go.json
+GO_ID=$(jq -r '.instanceId' /tmp/go.json)
+unicli exec Component.Get --instanceId "$GO_ID" --json
 ```
 
-If the package is installed but the connection fails, make sure Unity Editor is open with the target project loaded. Retry a few times — the Editor may need a moment to start the server.
+### TIER 3: `unicli eval` — Last Resort Only
 
-## Executing Commands
+Use `eval` only when TIER 1 and TIER 2 are both impractical, and the logic is simple enough to debug. `eval` is unstable and recompiles on every execution (high latency). If you find yourself reaching for `eval` repeatedly, create a CommandHandler instead (see "Custom Command Handlers" below).
 
-Run commands with `unicli exec <command>`. Pass parameters as `--key value` flags:
-
-```bash
-unicli exec GameObject.Find --name "Main Camera" --json
-```
-
-Boolean flags can be passed without a value:
+**Known constraints:**
+- Return only simple types (`string`, `int`, `bool`) or a JSON string — anonymous types fail
+- Use fully qualified type names, or pass `--declarations 'using My.Namespace;'`
+- Add null checks — reference chains fail silently
 
 ```bash
-unicli exec GameObject.Find --includeInactive --json
-```
-
-Array parameters can be passed by repeating the same flag:
-
-```bash
-unicli exec BuildPlayer.Build --locationPathName "Builds/Test.app" --options Development --options ConnectWithProfiler --json
-```
-
-### Common options
-
-- `--json` — Output in JSON format (recommended for structured processing)
-- `--timeout <ms>` — Set command timeout in milliseconds
-- `--no-focus` — Don't bring Unity Editor to front
-- `--help` — Show command parameters and nested type details
-
-## Key Workflows
-
-**Compile and run tests:**
-
-```bash
-unicli exec Compile --json
-unicli exec TestRunner.RunEditMode --json
-unicli exec TestRunner.RunPlayMode --json
-```
-
-**Inspect and modify settings:**
-
-```bash
-unicli exec PlayerSettings.Inspect --json
-unicli eval 'PlayerSettings.companyName = "MyCompany";' --json
-```
-
-**Dynamic C# code execution (Eval):**
-
-`unicli eval` compiles and executes arbitrary C# code in the Unity Editor context. Use shell heredocs for multi-line code:
-
-```bash
+# Good: simple return
 unicli eval 'return Application.unityVersion;' --json
 
+# Good: multi-line with null check
 unicli eval "$(cat <<'EOF'
 var go = GameObject.Find("Main Camera");
-return go.transform.position;
+if (go == null) return "NOT_FOUND";
+return go.transform.position.ToString();
 EOF
 )" --json
 ```
 
-Options:
-- `--declarations '<code>'` — Additional type declarations (classes, structs, enums) included outside the Execute method
-- The generated eval code receives a `cancellationToken` variable for cooperative cancellation with `async`/`await`
+If `eval` fails twice, fall back to TIER 2 or create a CommandHandler.
 
-## Running Custom Code
+## Mandatory Safeguards
 
-When built-in commands don't cover what you need, choose the right approach:
+1. **After creating/modifying any file under `Assets/` or `Packages/`:**
+   ```bash
+   unicli exec AssetDatabase.Import --path "<path>" --json
+   ```
+   Never create `.meta` files manually. Skipping this causes missing references and broken imports.
 
-1. **One-shot tasks → Eval**: Use `unicli eval` for ad-hoc operations, quick inspections, prototyping, and tasks that don't need to be reused. No files to create or compile — just pass the code directly.
-2. **Reusable project commands → CommandHandler**: Use `CommandHandler` when the operation will be called repeatedly or is part of the project's workflow. This provides type-safe parameters, structured responses, and discoverability via `unicli commands`.
+2. **After modifying C# code:**
+   ```bash
+   unicli exec Compile --json
+   ```
 
-**Connect to a running player:**
+3. **For platform-specific builds:** Use `unicli exec BuildPlayer.Compile --target <platform> --json` to catch platform-specific errors.
 
-`Connection.*` commands manage the Unity Editor's PlayerConnection — used to connect to Development Builds running on devices or the local machine. This connection is required for remote debug commands and profiler data collection.
+## Common Workflows
 
+**Compile and test:**
 ```bash
-unicli exec Connection.List --json                          # List available targets
-unicli exec Connection.Connect '{"id":-1}' --json           # Connect by player ID
-unicli exec Connection.Connect '{"ip":"192.168.1.100"}' --json  # Connect by IP
-unicli exec Connection.Connect '{"deviceId":"SERIAL"}' --json   # Connect by device serial
-unicli exec Connection.Status --json                        # Check connection status
+unicli exec Compile --json
+unicli exec TestRunner.RunEditMode --resultFilter failures --json
+unicli exec TestRunner.RunPlayMode --resultFilter failures --json
+```
+Use `--resultFilter none` for a summary only. Use `--stackTraceLines 3` when diagnosing failures.
+
+**Check console logs:**
+```bash
+unicli exec ConsoleLog.Get --logType "Warning,Error" --json
 ```
 
-**Invoke remote debug commands on connected player:**
+**Project path (if Unity project is in a subdirectory):**
+```bash
+export UNICLI_PROJECT=path/to/unity/project
+```
 
-`Remote.*` commands invoke debug commands on a connected Development Build. Requires: `UNICLI_REMOTE` scripting define symbol + Development Build with Autoconnect Profiler enabled.
+**Player connection:**
+```bash
+unicli exec Connection.List --json
+unicli exec Connection.Connect '{"id":-1}' --json
+unicli exec Connection.Status --json
+```
 
+**Remote debug commands (requires `UNICLI_REMOTE` define + Development Build):**
 ```bash
 unicli exec Remote.List --json
 unicli exec Remote.Invoke '{"command":"Debug.Stats"}' --json
-unicli exec Remote.Invoke '{"command":"Debug.GetPlayerPref","data":"{\"key\":\"HighScore\",\"type\":\"int\"}"}' --json
 ```
-
-Built-in debug commands: `Debug.SystemInfo`, `Debug.Stats`, `Debug.GetLogs`, `Debug.GetHierarchy`, `Debug.FindGameObjects`, `Debug.GetScenes`, `Debug.GetPlayerPref`
 
 ## Custom Command Handlers
 
-The server auto-discovers all `ICommandHandler` implementations via `TypeCache`, so no manual registration is required.
-
-Place custom handlers under `Assets/Editor/UniCli/` with a dedicated asmdef:
+When `eval` would be needed repeatedly, implement a `CommandHandler` instead — it provides type safety, structured I/O, and discoverability via `unicli commands`.
 
 ```bash
-# 1. Create asmdef and add reference to UniCli.Server.Editor
-unicli exec AssemblyDefinition.Create --path "Assets/Editor/UniCli/MyProject.UniCli.Editor.asmdef" --name "MyProject.UniCli.Editor" --editorOnly --json
-unicli exec AssemblyDefinition.AddReference --path "Assets/Editor/UniCli/MyProject.UniCli.Editor.asmdef" --reference "UniCli.Server.Editor" --json
+# 1. Create asmdef
+unicli exec AssemblyDefinition.Create \
+  --path "Assets/Editor/UniCli/MyProject.UniCli.Editor.asmdef" \
+  --name "MyProject.UniCli.Editor" --editorOnly --json
+unicli exec AssemblyDefinition.AddReference \
+  --path "Assets/Editor/UniCli/MyProject.UniCli.Editor.asmdef" \
+  --reference "UniCli.Server.Editor" --json
 
 # 2. Create handler script, then import and compile
 unicli exec AssetDatabase.Import --path "Assets/Editor/UniCli" --json
 unicli exec Compile --json
 
-# 3. Verify registration and execute
+# 3. Verify and use
 unicli commands --json
 unicli exec MyCategory.MyAction --targetName "test" --json
 ```
 
-### Handler implementation
-
+**Handler implementation:**
 ```csharp
 using System.Threading;
 using System.Threading.Tasks;
@@ -190,16 +153,10 @@ using UniCli.Server.Editor.Handlers;
 namespace MyProject.UniCli.Editor.Handlers
 {
     [System.Serializable]
-    public class MyRequest
-    {
-        public string targetName = "";
-    }
+    public class MyRequest { public string targetName = ""; }
 
     [System.Serializable]
-    public class MyResponse
-    {
-        public string result;
-    }
+    public class MyResponse { public string result; }
 
     public sealed class MyCustomHandler : CommandHandler<MyRequest, MyResponse>
     {
@@ -208,25 +165,13 @@ namespace MyProject.UniCli.Editor.Handlers
 
         protected override ValueTask<MyResponse> ExecuteAsync(MyRequest request, CancellationToken cancellationToken)
         {
-            return new ValueTask<MyResponse>(new MyResponse
-            {
-                result = $"Processed {request.targetName}"
-            });
+            return new ValueTask<MyResponse>(new MyResponse { result = $"Processed {request.targetName}" });
         }
     }
 }
 ```
 
-Key rules:
-- Request/Response types must be `[Serializable]` with **public fields** (not properties) — required by `JsonUtility`
-- Use `Unit` as `TRequest` when no input is needed, or as `TResponse` when no output is needed
-- Throw `CommandFailedException` with response data on failure
-- For async operations, use `TaskCompletionSource` + `await` with `WithCancellation(cancellationToken)` to wait for Unity callbacks
+- Request/Response types must be `[Serializable]` with **public fields** (not properties)
+- Use `Unit` as `TRequest` or `TResponse` when no input/output is needed
+- Throw `CommandFailedException` on failure
 - Constructor parameters are resolved from `ServiceRegistry` for dependency injection
-
-## Tips
-
-- Run `unicli commands --json` to discover all available commands, including project-specific custom commands.
-- Run `unicli exec <command> --help` to see parameters, types, defaults, and nested type details for any command.
-- Run `unicli commands --json` to get machine-readable schemas; nested fields are represented by each field's `children`.
-- If a command times out, increase the timeout: `unicli exec Compile --timeout 60000`.
