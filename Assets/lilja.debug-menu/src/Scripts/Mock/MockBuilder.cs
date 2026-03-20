@@ -8,6 +8,9 @@ public class MockBuilder : MonoBehaviour
 
     private int _currentPageIndex = 0;
     private DebugMenuFrame _frame;
+    private DebugPage _page1;
+    private DebugPage _page2;
+    private VisualElement _pageContainer;
 
     private void OnEnable()
     {
@@ -28,78 +31,37 @@ public class MockBuilder : MonoBehaviour
         _frame.BackClicked += () => GoToPreviousPage();
 
         // ページコンテナ（複数ページをスタック）
-        var pageContainer = new VisualElement();
-        pageContainer.style.position = Position.Relative;
-        pageContainer.style.flexGrow = 1;
-        pageContainer.style.overflow = Overflow.Hidden;
-        pageContainer.style.height = new StyleLength(new Length(500, LengthUnit.Pixel));  // 高さを固定設定
-        _frame.Add(pageContainer);
+        _pageContainer = new VisualElement();
+        _pageContainer.style.position = Position.Relative;
+        _pageContainer.style.flexGrow = 1;
+        _pageContainer.style.overflow = Overflow.Hidden;
+        _pageContainer.style.height = new StyleLength(new Length(500, LengthUnit.Pixel));  // 高さを固定設定
+        _frame.Add(_pageContainer);
 
         // ページ1：プレイヤー設定
-        var page1 = CreatePage1();
-        page1.style.position = Position.Absolute;
-        page1.style.left = 0;
-        page1.style.top = 0;
-        page1.style.right = 0;
-        page1.style.bottom = 0;
-        pageContainer.Add(page1);
+        _page1 = CreatePage1();
+        _page1.style.position = Position.Absolute;
+        _page1.style.left = 0;
+        _page1.style.top = 0;
+        _page1.style.right = 0;
+        _page1.style.bottom = 0;
+        _pageContainer.Add(_page1);
 
         // ページ2：詳細設定
-        var page2 = CreatePage2();
-        page2.style.position = Position.Absolute;
-        page2.style.left = 0;
-        page2.style.top = 0;
-        page2.style.right = 0;
-        page2.style.bottom = 0;
-        page2.style.display = DisplayStyle.None;  // 初期非表示
-        pageContainer.Add(page2);
+        _page2 = CreatePage2();
+        _page2.style.position = Position.Absolute;
+        _page2.style.left = 0;
+        _page2.style.top = 0;
+        _page2.style.right = 0;
+        _page2.style.bottom = 0;
+        _page2.style.display = DisplayStyle.None;  // 初期非表示
+        _pageContainer.Add(_page2);
 
         // テスト用ボタン：次のページへ
         var nextPageButton = new DebugButton("詳細設定へ");
-        page1.Add(new VisualElement { style = { marginTop = 12 } });
-        page1.Add(nextPageButton);
-        nextPageButton.clicked += () => GoToNextPage(page1, page2);
-
-        var scrollView = page1;
-
-        // プレイヤー設定ラベル
-        scrollView.Add(new DebugLabel("プレイヤー設定"));
-
-        // プレイヤー名テキストフィールド
-        scrollView.Add(new DebugTextField("プレイヤー名") { value = "Player1" });
-
-        // テーマ ラジオボタングループ
-        scrollView.Add(new DebugRadioButtonGroup("テーマ") { choices = new[] { "ライト", "ダーク" } });
-
-        // 有効機能 トグルグループ
-        var toggleGroup = new DebugToggleGroup("有効機能");
-        toggleGroup.Add(new DebugToggleGroupItem("デバッグログ"));
-        toggleGroup.Add(new DebugToggleGroupItem("FPS表示"));
-        scrollView.Add(toggleGroup);
-
-        // 詳細設定 フォールドアウト
-        var foldout = new DebugFoldout() { text = "詳細設定" };
-        var outputGroup = new DebugToggleGroup("出力先");
-        outputGroup.Add(new DebugToggleGroupItem("コンソール"));
-        outputGroup.Add(new DebugToggleGroupItem("ファイル"));
-        foldout.Add(outputGroup);
-        foldout.Add(new DebugIntegerField("回数"));
-        scrollView.Add(foldout);
-
-        // ボタン行
-        var buttonRow = new VisualElement();
-        buttonRow.style.flexDirection = FlexDirection.Row;
-        buttonRow.style.marginTop = 12;
-
-        var resetButton = new DebugSecondaryButton("リセット");
-        resetButton.style.flexGrow = 1;
-        buttonRow.Add(resetButton);
-
-        var applyButton = new DebugButton("適用");
-        applyButton.style.flexGrow = 1;
-        buttonRow.Add(applyButton);
-
-        scrollView.Add(buttonRow);
+        _page1.Add(new VisualElement { style = { marginTop = 12 } });
+        _page1.Add(nextPageButton);
+        nextPageButton.clicked += () => GoToNextPage(_page1, _page2);
     }
 
     private DebugPage CreatePage1()
@@ -154,8 +116,19 @@ public class MockBuilder : MonoBehaviour
     private void GoToPreviousPage()
     {
         if (_currentPageIndex <= 0) return;
+
+        if (_currentPageIndex == 1)
+        {
+            // Page2からPage1に戻る
+            StartCoroutine(AnimateSlideOut(_page2, 0.4f, () =>
+            {
+                _page2.style.display = DisplayStyle.None;
+                _page1.style.display = DisplayStyle.Flex;
+                _page1.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
+            }));
+        }
+
         _currentPageIndex--;
-        // ここでは簡略版：バックボタンで前ページに戻る処理
     }
 
     private void AnimatePageTransition(DebugPage outPage, DebugPage inPage, bool slideInFromRight)
@@ -193,6 +166,32 @@ public class MockBuilder : MonoBehaviour
         }
 
         page.style.left = new StyleLength(new Length(endX, LengthUnit.Percent));
+    }
+
+    private System.Collections.IEnumerator AnimateSlideOut(DebugPage page, float duration, System.Action onComplete)
+    {
+        float elapsedTime = 0f;
+        float startX = 0f;
+        float endX = -100f;  // 左へスライドアウト
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsedTime / duration);
+
+            // イージング: Ease-In-Out Cubic
+            float easedProgress = progress < 0.5f
+                ? 4f * progress * progress * progress
+                : 1f - Mathf.Pow(-2f * progress + 2f, 3f) / 2f;
+
+            float currentX = Mathf.Lerp(startX, endX, easedProgress);
+            page.style.left = new StyleLength(new Length(currentX, LengthUnit.Percent));
+
+            yield return null;
+        }
+
+        page.style.left = new StyleLength(new Length(endX, LengthUnit.Percent));
+        onComplete?.Invoke();
     }
 
     private void AnimateFramePosition(DebugMenuFrame frame)
