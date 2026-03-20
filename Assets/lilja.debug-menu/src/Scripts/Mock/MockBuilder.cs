@@ -172,7 +172,7 @@ public class MockBuilder : MonoBehaviour
     {
         float elapsedTime = 0f;
         float startX = 0f;
-        float endX = -100f;  // 左へスライドアウト
+        float endX = 100f;  // 右へスライドアウト
 
         while (elapsedTime < duration)
         {
