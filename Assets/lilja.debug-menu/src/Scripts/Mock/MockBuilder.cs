@@ -23,8 +23,7 @@ public class MockBuilder : MonoBehaviour
 
         // DebugMenuFrame
         _frame = new DebugMenuFrame("Debug Menu");
-        _frame.style.width = 700;
-        _frame.style.maxWidth = new StyleLength(new Length(90, LengthUnit.Percent));
+        _frame.AddToClassList("l-debug-frame");
         menuRoot.Add(_frame);
 
         // バックボタンクリック時にページを戻る
@@ -32,28 +31,22 @@ public class MockBuilder : MonoBehaviour
 
         // ページコンテナ（複数ページをスタック）
         _pageContainer = new VisualElement();
+        _pageContainer.AddToClassList("l-debug-page-container");
         _pageContainer.style.position = Position.Relative;
         _pageContainer.style.flexGrow = 1;
         _pageContainer.style.overflow = Overflow.Hidden;
-        _pageContainer.style.height = new StyleLength(new Length(500, LengthUnit.Pixel));  // 高さを固定設定
         _frame.Add(_pageContainer);
 
         // ページ1：プレイヤー設定
         _page1 = CreatePage1();
-        _page1.style.position = Position.Absolute;
-        _page1.style.left = 0;
-        _page1.style.top = 0;
-        _page1.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
-        _page1.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+        _page1.AddToClassList("l-debug-page");
+        SetupPageLayout(_page1);
         _pageContainer.Add(_page1);
 
         // ページ2：詳細設定
         _page2 = CreatePage2();
-        _page2.style.position = Position.Absolute;
-        _page2.style.left = 0;
-        _page2.style.top = 0;
-        _page2.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
-        _page2.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+        _page2.AddToClassList("l-debug-page");
+        SetupPageLayout(_page2);
         _page2.style.display = DisplayStyle.None;  // 初期非表示
         _pageContainer.Add(_page2);
 
@@ -62,6 +55,15 @@ public class MockBuilder : MonoBehaviour
         _page1.Add(new VisualElement { style = { marginTop = 12 } });
         _page1.Add(nextPageButton);
         nextPageButton.clicked += () => GoToNextPage(_page1, _page2);
+    }
+
+    private void SetupPageLayout(DebugPage page)
+    {
+        page.style.position = Position.Absolute;
+        page.style.left = 0;
+        page.style.top = 0;
+        page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+        page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
     }
 
     private DebugPage CreatePage1()
