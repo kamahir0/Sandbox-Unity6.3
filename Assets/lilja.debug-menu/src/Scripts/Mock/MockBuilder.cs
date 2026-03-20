@@ -21,8 +21,8 @@ public class MockBuilder : MonoBehaviour
         frame.style.maxWidth = new StyleLength(new Length(90, LengthUnit.Percent));
         menuRoot.Add(frame);
 
-        // DebugScrollView
-        var scrollView = new DebugScrollView();
+        // DebugPage
+        var scrollView = new DebugPage();
         frame.Add(scrollView);
 
         // プレイヤー設定ラベル

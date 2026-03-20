@@ -79,18 +79,6 @@ namespace Lilja.DebugMenu
     }
 
     /// <summary>
-    /// デバッグメニュー用のスクロールビュー
-    /// </summary>
-    [UxmlElement]
-    public partial class DebugScrollView : ScrollView
-    {
-        public DebugScrollView() : base()
-        {
-            AddToClassList("c-scroll-view");
-        }
-    }
-
-    /// <summary>
     /// デバッグメニュー用のラジオボタングループ
     /// </summary>
     [UxmlElement]
