@@ -283,6 +283,21 @@
     flex-grow: 1;
 }
 
+/* DebugMenuFrame にデフォルトサイズを付与する Modifier */
+.c-menu-frame--default-size {
+    width: var(--size-frame-width);
+    max-width: var(--size-frame-max-width);
+    height: var(--size-frame-height);
+}
+
+/* ページスタック（スライドナビゲーション用コンテナ）
+   複数の DebugPage を重ねてスライドアニメーションで切り替える */
+.c-page-stack {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+}
+
 /* ============================================================
    Utility (u-) : 汎用的な調整
    ============================================================ */
@@ -298,18 +313,3 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-/* ============================================================
-   Debug Menu Navigation Layout
-   ページナビゲーション用のレイアウト定義
-   ============================================================ */
-
-/* デバッグメニューフレーム：サイズ定義 */
-.l-debug-frame {
-    width: 700px;
-    max-width: 90%;
-}
-
-/* ページコンテナ：ナビゲーション対応 */
-.l-debug-page-container {
-    height: 500px;
-}

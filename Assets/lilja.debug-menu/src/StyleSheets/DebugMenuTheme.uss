@@ -45,4 +45,9 @@
 
     /* フォーカス時の共通色 */
     --color-focus: #006AA6;
+
+    /* DebugMenuFrame のデフォルトサイズ */
+    --size-frame-width: 700px;
+    --size-frame-max-width: 90%;
+    --size-frame-height: 80%;
 }

@@ -23,7 +23,7 @@ public class MockBuilder : MonoBehaviour
 
         // DebugMenuFrame
         _frame = new DebugMenuFrame("Debug Menu");
-        _frame.AddToClassList("l-debug-frame");
+        _frame.AddToClassList("c-menu-frame--default-size");
         menuRoot.Add(_frame);
 
         // バックボタンクリック時にページを戻る
@@ -31,21 +31,16 @@ public class MockBuilder : MonoBehaviour
 
         // ページコンテナ（複数ページをスタック）
         _pageContainer = new VisualElement();
-        _pageContainer.AddToClassList("l-debug-page-container");
-        _pageContainer.style.position = Position.Relative;
-        _pageContainer.style.flexGrow = 1;
-        _pageContainer.style.overflow = Overflow.Hidden;
+        _pageContainer.AddToClassList("c-page-stack");
         _frame.Add(_pageContainer);
 
         // ページ1：プレイヤー設定
         _page1 = CreatePage1();
-        _page1.AddToClassList("l-debug-page");
         SetupPageLayout(_page1);
         _pageContainer.Add(_page1);
 
         // ページ2：詳細設定
         _page2 = CreatePage2();
-        _page2.AddToClassList("l-debug-page");
         SetupPageLayout(_page2);
         _page2.style.display = DisplayStyle.None;  // 初期非表示
         _pageContainer.Add(_page2);
