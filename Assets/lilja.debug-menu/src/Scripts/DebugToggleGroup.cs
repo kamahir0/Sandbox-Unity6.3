@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 
@@ -6,110 +5,116 @@ namespace Lilja.DebugMenu
 {
     /// <summary>
     /// ToggleButtonGroup と同様の構造で複数選択が可能なカスタムトグルグループ。
-    /// 選択肢を choices 属性ではなく、子要素 DebugToggleGroupItem として配置する。
-    ///
-    /// UXML での使い方:
-    ///   &lt;debug:DebugToggleGroup label="有効機能"&gt;
-    ///     &lt;debug:DebugToggleGroupItem text="オプションA" /&gt;
-    ///     &lt;debug:DebugToggleGroupItem text="オプションB" /&gt;
-    ///   &lt;/debug:DebugToggleGroup&gt;
     /// </summary>
     [UxmlElement]
-    public partial class DebugToggleGroup : VisualElement
+    public partial class DebugToggleGroup : VisualElement, INotifyValueChanged<ToggleButtonGroupState>
     {
+        // クラス
         public static readonly string ussClassName = "c-toggle-group";
         public static readonly string labelUssClassName = ussClassName + "__label";
         public static readonly string itemsUssClassName = ussClassName + "__items";
 
+        // UI
         private readonly Label _labelElement;
         private readonly VisualElement _itemsContainer;
         private readonly List<DebugToggleGroupItem> _items = new();
 
+        private ToggleButtonGroupState _state;
+
+        /// <inheritdoc/>
         public override VisualElement contentContainer => _itemsContainer;
 
-        // ----------------------------------------------------------------
-        // Properties
-        // ----------------------------------------------------------------
-
         [UxmlAttribute]
-        public string label
+        public string Label
         {
             get => _labelElement.text;
             set => _labelElement.text = value;
         }
 
-        /// <summary>現在チェックされている項目のテキスト一覧。</summary>
-        public IReadOnlyList<string> value
+        /// <summary>現在の選択状態をビットマスクで返す</summary>
+        public ToggleButtonGroupState Value
         {
-            get
+            get => _state;
+            set
             {
-                var selected = new List<string>();
-                foreach (var item in _items)
-                    if (item.value) selected.Add(item.Text);
-                return selected.AsReadOnly();
+                if (_state.Equals(value)) return;
+                var previous = _state;
+                SetValueWithoutNotify(value);
+                using var evt = ChangeEvent<ToggleButtonGroupState>.GetPooled(previous, _state);
+                evt.target = this;
+                SendEvent(evt);
             }
         }
 
-        // ----------------------------------------------------------------
-        // Events
-        // ----------------------------------------------------------------
-
-        public event Action<IReadOnlyList<string>> onValueChanged;
-
-        // ----------------------------------------------------------------
-        // Constructor
-        // ----------------------------------------------------------------
+        /// <inheritdoc/>
+        ToggleButtonGroupState INotifyValueChanged<ToggleButtonGroupState>.value
+        {
+            get => Value;
+            set => Value = value;
+        }
 
         public DebugToggleGroup() : this(string.Empty) { }
 
         public DebugToggleGroup(string label)
         {
+            new ToggleButtonGroup();
             AddToClassList(ussClassName);
             AddToClassList("c-control-size");
 
+            // ラベル
             _labelElement = new Label(label);
             _labelElement.AddToClassList(labelUssClassName);
             hierarchy.Add(_labelElement);
 
+            // コンテンツエリア
             _itemsContainer = new VisualElement();
             _itemsContainer.AddToClassList(itemsUssClassName);
             hierarchy.Add(_itemsContainer);
         }
 
-        // ----------------------------------------------------------------
-        // Item registration (called by DebugToggleGroupItem via Attach/Detach)
-        // ----------------------------------------------------------------
+        /// <inheritdoc/>
+        public void SetValueWithoutNotify(ToggleButtonGroupState state)
+        {
+            int count = System.Math.Min(_items.Count, state.length);
+            for (int i = 0; i < count; i++)
+            {
+                _items[i].SetValueWithoutNotify(state[i]);
+            }
+            RebuildState();
+        }
 
         internal void RegisterItem(DebugToggleGroupItem item)
         {
             if (_items.Contains(item)) return;
             _items.Add(item);
-            item.onValueChanged += OnItemValueChanged;
+            item.RegisterValueChangedCallback(OnItemValueChanged);
+            RebuildState();
         }
 
         internal void UnregisterItem(DebugToggleGroupItem item)
         {
             if (!_items.Contains(item)) return;
-            item.onValueChanged -= OnItemValueChanged;
+            item.UnregisterValueChangedCallback(OnItemValueChanged);
             _items.Remove(item);
+            RebuildState();
         }
 
-        // ----------------------------------------------------------------
-        // Public API
-        // ----------------------------------------------------------------
-
-        /// <summary>指定したテキストの項目を選択状態にする（イベントは発火しない）。</summary>
-        public void SetValueWithoutNotify(IEnumerable<string> selectedTexts)
+        private void RebuildState()
         {
-            var selected = new HashSet<string>(selectedTexts);
-            foreach (var item in _items)
-                item.SetValueWithoutNotify(selected.Contains(item.Text));
+            _state = new ToggleButtonGroupState(0ul, _items.Count);
+            for (int i = 0; i < _items.Count; i++)
+            {
+                _state[i] = _items[i].Value;
+            }
         }
 
-        // ----------------------------------------------------------------
-        // Internal
-        // ----------------------------------------------------------------
-
-        private void OnItemValueChanged(bool _) => onValueChanged?.Invoke(value);
+        private void OnItemValueChanged(ChangeEvent<bool> _)
+        {
+            var previous = _state;
+            RebuildState();
+            using var evt = ChangeEvent<ToggleButtonGroupState>.GetPooled(previous, _state);
+            evt.target = this;
+            SendEvent(evt);
+        }
     }
 }
