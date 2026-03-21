@@ -4,11 +4,7 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// ヘッダー付きのデバッグメニュー用ウィンドウコンポーネント。
-    /// l-window + t-surface の構造を内包し、ヘッダーとコンテンツエリアを分離する。
-    ///
-    /// UXML での使い方:
-    ///   &lt;DebugMenuFrame label="タイトル" /&gt;
+    /// デバッグメニューのフレーム
     /// </summary>
     [UxmlElement]
     public partial class DebugMenuFrame : VisualElement
