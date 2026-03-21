@@ -22,7 +22,7 @@ public class MockBuilder : MonoBehaviour
         root.Add(menuRoot);
 
         // DebugMenuFrame
-        _frame = new DebugMenuFrame("Debug Menu");
+        _frame = new DebugMenuFrame();
         _frame.AddToClassList("c-menu-frame--default-size");
         menuRoot.Add(_frame);
 
