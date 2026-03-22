@@ -180,21 +180,21 @@ namespace Lilja.DebugMenu
         /// <summary> 指定したページをスライドさせる </summary>
         private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete)
         {
-            var fromLeft = (float)from;
-            var toLeft = (float)to;
+            var leftStart = (float)from;
+            var leftEnd = (float)to;
 
-            page.style.left = new StyleLength(new Length(fromLeft, LengthUnit.Percent));
+            page.style.left = new StyleLength(new Length(leftStart, LengthUnit.Percent));
 
             float elapsed = 0f;
             schedule.Execute(timer =>
             {
                 elapsed += timer.deltaTime / 1000f;
                 var t = EaseInOutCubic(Mathf.Clamp01(elapsed / duration));
-                page.style.left = new StyleLength(new Length(Mathf.Lerp(fromLeft, toLeft, t), LengthUnit.Percent));
+                page.style.left = new StyleLength(new Length(Mathf.Lerp(leftStart, leftEnd, t), LengthUnit.Percent));
 
                 if (elapsed >= duration)
                 {
-                    page.style.left = new StyleLength(new Length(toLeft, LengthUnit.Percent));
+                    page.style.left = new StyleLength(new Length(leftEnd, LengthUnit.Percent));
                     onComplete?.Invoke();
                 }
             }).Every(0).Until(() => elapsed >= duration);
