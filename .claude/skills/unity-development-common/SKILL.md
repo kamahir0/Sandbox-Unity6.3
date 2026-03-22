@@ -7,68 +7,54 @@ description: >-
   (unicli commands, unicli exec), and implementing custom CommandHandlers
   when built-in commands are insufficient.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # UniCli — Unity Editor CLI (Common)
 
-UniCli lets you interact with Unity Editor directly from the terminal via named pipes. The Editor must be open with `com.yucchiy.unicli-server` installed.
+UniCli interacts with Unity Editor via named pipes. The Editor must be open with `com.yucchiy.unicli-server` installed.
 
-## RULES — Always Follow These
-
-- **Always use `--json`** when parsing output programmatically.
-- **If connection to Unity Editor fails**: Retry 2–3 times, then ask the user to confirm Unity Editor is running with the project open.
-- **Discover commands dynamically**: Use `unicli commands --json` to list all available commands and `unicli exec <command> --help` to see parameters. Do not rely on memorized command lists — the project may have custom commands.
-
-## Prerequisites
-
-Before running commands, verify that the CLI is installed and the Editor is reachable:
+## Setup
 
 ```bash
-unicli check
+unicli check                  # Verify CLI and server connection
+unicli install                # Install server package if missing
+unicli install --update       # Update if version mismatch
 ```
 
-If `unicli check` reports that the server package is not installed, run `unicli install` to install it:
-
-```bash
-unicli install
-```
-
-If the server package version does not match the CLI version, run `unicli install --update` to update it:
-
-```bash
-unicli install --update
-```
-
-## Project Path
-
-By default, `unicli` looks for a Unity project in the current working directory. If the Unity project is in a subdirectory, set the `UNICLI_PROJECT` environment variable:
+If `UNICLI_PROJECT` is not the current directory, set it:
 
 ```bash
 export UNICLI_PROJECT=path/to/unity/project
 ```
 
-Or prefix each command:
+## Rules — Always Follow
+
+- **Always use `--json`** when parsing output programmatically.
+- **On connection failure**: Retry 2–3 times, then ask the user to confirm the Editor is open.
+- **Discover commands dynamically** — never rely on memorized lists:
+  ```bash
+  unicli commands --json | grep -i "<keyword>"
+  unicli exec <command> --help
+  ```
+- **After creating or deleting any `.cs` file**: Run `AssetDatabase.Import` to refresh and regenerate `.csproj`:
+  ```bash
+  unicli exec AssetDatabase.Import --path "<path>" --json
+  ```
+- **After any C# edit**: Run `Compile` and confirm zero errors before finishing:
+  ```bash
+  unicli exec Compile --json
+  ```
+
+## Command Execution
 
 ```bash
-UNICLI_PROJECT=path/to/unity/project unicli exec Compile --json
+unicli exec <command> [--key value ...] --json
 ```
 
-## Command Selection — Follow This Every Time
+Repeat flags for arrays: `--options Development --options ConnectWithProfiler`
 
-**TIER 1 → TIER 2**
-
-### TIER 1: Specialized Commands (always try first)
-
-```bash
-unicli commands --json | grep -i "<keyword>"   # Search for a command
-unicli exec <command> --help                   # See parameters
-unicli exec <command> [...args] --json         # Execute
-```
-
-### TIER 2: Chain Multiple Specialized Commands
-
-If no single command covers your goal, combine up to ~4 sequential commands. Example:
+If no single command covers the goal, chain up to ~4 sequential commands:
 
 ```bash
 unicli exec GameObject.Find --namePattern "MyObject" --json > /tmp/go.json
@@ -76,39 +62,11 @@ GO_ID=$(jq -r '.results[0].instanceId' /tmp/go.json)
 unicli exec GameObject.GetComponents --instanceId "$GO_ID" --json
 ```
 
-## Executing Commands
+## Custom CommandHandlers
 
-Run commands with `unicli exec <command>`. Pass parameters as `--key value` flags:
-
-```bash
-unicli exec GameObject.Find --namePattern "Main Camera" --json
-```
-
-Boolean flags can be passed without a value:
+Use when built-in commands are insufficient. Provides type safety and discoverability.
 
 ```bash
-unicli exec GameObject.Find --includeInactive --json
-```
-
-Array parameters can be passed by repeating the same flag:
-
-```bash
-unicli exec BuildPlayer.Build --options Development --options ConnectWithProfiler --json
-```
-
-### Common options
-
-- `--json` — Output in JSON format (recommended for structured processing)
-- `--timeout <ms>` — Set command timeout in milliseconds
-- `--no-focus` — Don't bring Unity Editor to front
-- `--help` — Show command parameters and nested type details
-
-## Custom Command Handlers
-
-When TIER 1 and TIER 2 are insufficient, implement a `CommandHandler` — it provides type safety, structured I/O, and discoverability via `unicli commands`.
-
-```bash
-# 1. Create asmdef
 unicli exec AssemblyDefinition.Create \
   --name "MyProject.UniCli.Editor" \
   --directory "Assets/Editor/UniCli" \
@@ -116,17 +74,10 @@ unicli exec AssemblyDefinition.Create \
 unicli exec AssemblyDefinition.AddReference \
   --name "MyProject.UniCli.Editor" \
   --reference "UniCli.Server.Editor" --json
-
-# 2. Create handler script, then import and compile
 unicli exec AssetDatabase.Import --path "Assets/Editor/UniCli" --json
 unicli exec Compile --json
-
-# 3. Verify and use
-unicli commands --json
-unicli exec MyCategory.MyAction --targetName "test" --json
+unicli commands --json   # Verify new command appears
 ```
-
-**Handler implementation:**
 
 ```csharp
 using System.Threading;
@@ -156,6 +107,5 @@ namespace MyProject.UniCli.Editor.Handlers
 ```
 
 - Request/Response types must be `[Serializable]` with **public fields** (not properties) — required by `JsonUtility`
-- Use `Unit` as `TRequest` or `TResponse` when no input/output is needed
 - Throw `CommandFailedException` on failure
-- Constructor parameters are resolved from `ServiceRegistry` for dependency injection
+- Constructor parameters are resolved from `ServiceRegistry`
