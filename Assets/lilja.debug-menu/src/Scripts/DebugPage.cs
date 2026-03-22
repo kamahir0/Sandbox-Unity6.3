@@ -8,6 +8,7 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugPage : VisualElement
     {
+        // UI
         private readonly ScrollView _scrollView;
 
         /// <inheritdoc/>

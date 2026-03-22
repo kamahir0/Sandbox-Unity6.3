@@ -27,7 +27,7 @@ namespace Lilja.DebugMenu
         private readonly VisualElement _pageContainer;
 
         // ナビゲーション
-        private readonly Dictionary<string, (DebugPage page, string title)> _pages = new();
+        private readonly Dictionary<string, (DebugPage page, string title)> _pageCache = new();
         private readonly Stack<string> _history = new();
         private string _currentPage;
         private bool _isAnimating;
@@ -102,7 +102,7 @@ namespace Lilja.DebugMenu
         /// <param name="title">Navigate 時にヘッダーに表示するタイトル</param>
         public void RegisterPage(string name, DebugPage page, string title = "")
         {
-            _pages[name] = (page, title);
+            _pageCache[name] = (page, title);
 
             // 画面外右で待機
             page.style.position = Position.Absolute;
@@ -120,7 +120,7 @@ namespace Lilja.DebugMenu
         public void Navigate(string name)
         {
             if (_isAnimating) return;
-            if (!_pages.TryGetValue(name, out var entry)) return;
+            if (!_pageCache.TryGetValue(name, out var entry)) return;
             if (name == _currentPage) return;
 
             var prevName = _currentPage;
@@ -137,7 +137,7 @@ namespace Lilja.DebugMenu
             _isAnimating = true;
 
             // 現在ページを左へスライドアウト
-            if (_pages.TryGetValue(prevName, out var prevEntry))
+            if (_pageCache.TryGetValue(prevName, out var prevEntry))
             {
                 SlidePage(prevEntry.page, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
             }
@@ -162,8 +162,8 @@ namespace Lilja.DebugMenu
             var currentName = _currentPage;
             _currentPage = prevName;
 
-            var (prevPage, prevTitle) = _pages[prevName];
-            var (currentPage, _) = _pages[currentName];
+            var (prevPage, prevTitle) = _pageCache[prevName];
+            var (currentPage, _) = _pageCache[currentName];
 
             Label = prevTitle;
 
