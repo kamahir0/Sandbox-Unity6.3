@@ -57,7 +57,6 @@ namespace Lilja.DebugMenu
 
         public DebugToggleGroup(string label)
         {
-            new ToggleButtonGroup();
             AddToClassList(ussClassName);
             AddToClassList("c-control-size");
 
