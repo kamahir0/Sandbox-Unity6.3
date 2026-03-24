@@ -1,53 +1,38 @@
 ---
 name: unity-development-edit-scene
 description: >-
-  Use when creating or modifying GameObjects and scenes in Unity through
-  UniCli: creating new GameObjects (GameObject.Create), adding or removing
-  components (GameObject.AddComponent, GameObject.RemoveComponent), reparenting
-  objects (GameObject.SetParent), or opening and saving scenes (Scene.Open,
-  Scene.Save). Always run AssetDatabase.Import after file changes and Compile
-  after C# edits.
+  Use when creating or modifying GameObjects, components, scenes, or prefabs in Unity. 
 metadata:
-  version: "1.0.0"
+  version: "1.3.0"
 ---
 
-# UniCli — Unity Editor CLI (Edit Scene)
+# UniCli — Edit Scene
 
-## RULES
+All commands: `unicli exec <Command> [options] --json`
 
-- **After creating/modifying ANY file under `Assets/` or `Packages/`**: Run `unicli exec AssetDatabase.Import --path "<path>" --json`. Never create `.meta` files manually — skipping this causes missing references and broken imports.
-- **After modifying C# code**: Run `unicli exec Compile --json`.
+## コマンド一覧
 
-## Key Workflows
+**GameObject**
+`Create` `CreatePrimitive(primitiveType)` `Destroy` `Duplicate` `Find(namePattern)`
+`GetComponents` `GetHierarchy` `Rename` `SetActive(active)` `SetParent(parentPath)`
+`SetTransform(position/rotation/scale as JSON)`
 
-**Discover scene and GameObject commands:**
+**Component**
+`GameObject.AddComponent(typeName)` `GameObject.RemoveComponent(componentInstanceId)`
+`Component.SetProperty(componentInstanceId, propertyPath, value)`
 
-```bash
-unicli commands --json | grep -iE "scene|gameobject|component|parent"
-```
+**Scene**
+`Open(path)` `Close(name)` `New` `Save` `List` `GetActive` `SetActive(name)`
 
-**Create a GameObject and configure it:**
+**Prefab**
+`Instantiate(path)` `Apply` `Save(path)` `Unpack` `GetStatus`
 
-```bash
-unicli exec GameObject.Create --name "SpawnPoint" --json
-GO_ID=$(unicli exec GameObject.Find --namePattern "SpawnPoint" --json | jq -r '.results[0].instanceId')
-unicli exec GameObject.AddComponent --instanceId "$GO_ID" --typeName "UnityEngine.BoxCollider" --json
-unicli exec GameObject.SetParent --instanceId "$GO_ID" --parentPath "Environment" --json
-```
+**Selection**
+`SetGameObject(path)` `SetGameObjects(paths as JSON array)`
 
-**Open and save a scene:**
+すべての操作対象は `--instanceId` で指定。パスはUnityプロジェクトルートからの相対パス。
 
-```bash
-unicli exec Scene.Open --path "Assets/Scenes/Level1.unity" --json
-unicli exec Scene.Save --json
-```
+## 注意事項
 
-**Typical editing sequence:**
-
-```bash
-unicli exec GameObject.Create --name "Enemy" --json
-GO_ID=$(unicli exec GameObject.Find --namePattern "Enemy" --json | jq -r '.results[0].instanceId')
-unicli exec GameObject.AddComponent --instanceId "$GO_ID" --typeName "UnityEngine.CapsuleCollider" --json
-unicli exec GameObject.SetParent --instanceId "$GO_ID" --parentPath "Enemies" --json
-unicli exec Scene.Save --json
-```
+- **`Component.SetProperty` の `--componentInstanceId`** は GameObject の instanceId とは別。必ず `GameObject.GetComponents` で取得したコンポーネントの instanceId を使え。
+- **`Prefab.Apply` 後**: `AssetDatabase.Import --path "<prefabPath>"` を必ず実行せよ。

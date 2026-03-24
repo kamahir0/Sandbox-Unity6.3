@@ -1,62 +1,56 @@
 ---
 name: unity-development-manage-assets
 description: >-
-  Use when managing Unity project assets through UniCli: importing assets
-  (AssetDatabase.Import), creating materials or other asset files
-  (Material.Create), deleting assets (AssetDatabase.Delete), creating or
-  modifying Assembly Definition files (AssemblyDefinition.Create,
-  AssemblyDefinition.AddReference), compiling C# code (Compile), or running
-  EditMode/PlayMode tests (TestRunner.RunEditMode, TestRunner.RunPlayMode).
-  Always run AssetDatabase.Import after file changes and Compile after C# edits.
+  Use when importing or deleting assets, creating materials or Assembly Definitions, compiling C# code, or running EditMode/PlayMode tests.
 metadata:
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
-# UniCli — Unity Editor CLI (Manage Assets)
+# UniCli — Manage Assets
 
-## RULES
+All commands: `unicli exec <Command> [options] --json`
 
-- **After creating/modifying ANY file under `Assets/` or `Packages/`**: Run `unicli exec AssetDatabase.Import --path "<path>" --json`. Never create `.meta` files manually. Applies to `.cs`, `.asmdef`, `.asset`, `.prefab`, directories, etc.
-- **After modifying C# code**: Run `unicli exec Compile --json`.
-- **For platform-specific verification**: Use `unicli exec BuildPlayer.Compile --target <platform> --json` to catch platform-specific errors.
-- **When running tests**: Use `--resultFilter failures` (or `--resultFilter none` for summary-only). Use `--stackTraceLines 3` when diagnosing failures.
+## AssetDatabase
+`Import(path)` `Delete(path)` `Find(filter)` `GetPath(guid)`
+> Filter syntax: `t:TypeName`, `l:Label`
+> ⚠️ Move/Rename has no dedicated command — use `Eval` with `AssetDatabase.MoveAsset(src, dst)`.
 
-## Key Workflows
+## Material
+`Create(assetPath, shader)` `Inspect(assetPath)`
+`GetColor/SetColor(assetPath, propertyName, r, g, b, a)`
+`GetFloat/SetFloat(assetPath, propertyName, value)`
 
-**Compile and run tests:**
+## Prefab
+`Save(instanceId, assetPath)` `Instantiate(assetPath)` `Apply(instanceId)`
+`Unpack(instanceId)` `GetStatus(instanceId)`
 
-```bash
-unicli exec Compile --json
-unicli exec TestRunner.RunEditMode --resultFilter failures --json
-unicli exec TestRunner.RunPlayMode --resultFilter failures --stackTraceLines 3 --json
-unicli exec TestRunner.RunEditMode --resultFilter none --json  # summary only (no per-test entries)
-```
+## AnimatorController
+`Create(assetPath)` `Inspect(assetPath)`
+`AddParameter/RemoveParameter(assetPath, name, type)`
+`AddState(assetPath, layerIndex, stateName)`
+`AddTransition(assetPath, layerIndex, fromState, toState)`
+`AddTransitionCondition(assetPath, layerIndex, fromState, toState, parameter, mode, threshold)`
 
-**Import and manage assets:**
+## Animator ⚠️ PlayMode only
+`Inspect(instanceId)` `SetController(instanceId, assetPath)`
+`Play(instanceId, stateName)` `CrossFade(instanceId, stateName, transitionDuration)`
+`SetParameter(instanceId, name, value)`
 
-```bash
-unicli exec AssetDatabase.Import --path "Assets/Textures/MyTexture.png" --json
-unicli exec AssetDatabase.Import --path "Assets/Textures" --json  # whole directory
-unicli exec AssetDatabase.Delete --path "Assets/Old/Texture.png" --json
-unicli exec Material.Create --assetPath "Assets/Materials/NewMaterial.mat" --shader "Standard" --json
-```
+## AssemblyDefinition
+`Create(name, directory, includePlatforms)` `Get(name)` `List`
+`AddReference/RemoveReference(name, reference)`
+> After changes: run `AssetDatabase.Import` → `Compile`
 
-> **Note**: There is no built-in `MoveAsset` command. To move or rename an asset, use `Eval` with `AssetDatabase.MoveAsset()`:
-> ```bash
-> unicli exec Eval --declarations "using UnityEditor;" \
->   --code 'AssetDatabase.MoveAsset("Assets/Old/Texture.png", "Assets/New/Texture.png");' --json
-> ```
+## Compile / TestRunner
+`Compile` — run after any C# edit, verify 0 errors
+`TestRunner.RunEditMode(resultFilter, stackTraceLines?)`
+`TestRunner.RunPlayMode(resultFilter, stackTraceLines?)`
+> resultFilter: `failures` | `none`
 
-**Assembly Definition operations:**
+## PackageManager
+`List` `GetInfo(name)` `Search(query)`
+`Add(identifier)` `Remove(name)` `Update(name)`
 
-```bash
-unicli exec AssemblyDefinition.Create \
-  --name "MyProject.UniCli.Editor" \
-  --directory "Assets/Editor/UniCli" \
-  --includePlatforms Editor --json
-unicli exec AssemblyDefinition.AddReference \
-  --name "MyProject.UniCli.Editor" \
-  --reference "UniCli.Server.Editor" --json
-unicli exec AssetDatabase.Import --path "Assets/Editor/UniCli" --json
-unicli exec Compile --json
-```
+## NuGet
+`List` `Install(id, version)` `Uninstall(id)` `Restore`
+`ListSources` `AddSource(name, url)` `RemoveSource(name)`

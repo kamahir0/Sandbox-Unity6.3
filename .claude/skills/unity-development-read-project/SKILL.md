@@ -1,56 +1,44 @@
 ---
 name: unity-development-read-project
 description: >-
-  Use when inspecting the Unity project through UniCli without modifying any
-  assets: finding GameObjects (GameObject.Find, GameObject.GetHierarchy),
-  reading console logs (Console.GetLog), listing or connecting to players
-  (Connection.List, Connection.Status, Connection.Connect), or invoking remote
-  debug commands on a connected Development Build (Remote.List, Remote.Invoke).
-  This skill is read-only — no AssetDatabase.Import or Compile is needed.
+  Use when reading or inspecting a Unity project without modifying any assets: querying GameObjects, console logs, player connections, remote debug commands, project/editor settings, assets, types, or modules.
 metadata:
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
-# UniCli — Unity Editor CLI (Read Project)
+# UniCli — Read Project
 
-## RULES
+All commands: `unicli exec <Command> [options] --json`
 
-- **Console logs**: Use `--logType "Warning"` or `--logType "Error"` to filter noise. Use `--stackTraceLines 3` when diagnosing errors.
-- **Read-only**: Do not run `AssetDatabase.Import`, `Compile`, or any file-modifying commands. Use `unity-development-edit-scene`, `unity-development-manage-assets`, or `unity-development-sync-properties` for write operations.
+## コマンド一覧
 
-## Key Workflows
+**Console**
+`GetLog` `GetLog(logType)` `GetLog(logType, stackTraceLines)`
 
-**Find GameObjects and inspect hierarchy:**
+**GameObject**
+`Find(namePattern)` `GetHierarchy`
 
-```bash
-unicli commands --json | grep -iE "find|hierarchy"
-unicli exec GameObject.Find --namePattern "Player" --json
-unicli exec GameObject.GetHierarchy --json
-```
+**Connection**
+`List` `Status` `Connect(id)` `Connect(ip)` `Connect(deviceId)`
 
-**Check console logs:**
+**Remote**
+`List` `Invoke(command)` `Invoke(command, data as JSON string)`
+ビルトインコマンド: `Debug.SystemInfo` `Debug.Stats` `Debug.GetLogs` `Debug.GetHierarchy` `Debug.FindGameObjects` `Debug.GetScenes` `Debug.GetPlayerPref`
 
-```bash
-unicli exec Console.GetLog --logType "Warning" --json
-unicli exec Console.GetLog --logType "Error" --stackTraceLines 3 --json
-```
+**Project / Settings**
+`Project.Inspect` `PlayerSettings.Inspect` `EditorSettings.Inspect` `EditorUserBuildSettings.Inspect`
 
-**Player connection:**
+**Search**
+`Search(query)` `Search(query, maxResults)` `Search(query, includePackages)`
+フィルタ: `t:TypeName`（型）、`l:Label`（ラベル）
 
-```bash
-unicli exec Connection.List --json
-unicli exec Connection.Connect '{"id":-1}' --json               # by player ID
-unicli exec Connection.Connect '{"ip":"192.168.1.100"}' --json  # by IP
-unicli exec Connection.Connect '{"deviceId":"SERIAL"}' --json   # by device serial
-unicli exec Connection.Status --json
-```
+**Type**
+`Type.List` `Type.List(baseType)` `Type.List(filter)` `Type.Inspect(typeName)`
 
-**Remote debug commands (requires `UNICLI_REMOTE` define + Development Build with Autoconnect Profiler):**
+**Module**
+`Module.List` `Module.Enable(name)` `Module.Disable(name)`
 
-```bash
-unicli exec Remote.List --json
-unicli exec Remote.Invoke '{"command":"Debug.Stats"}' --json
-unicli exec Remote.Invoke '{"command":"Debug.GetPlayerPref","data":"{\"key\":\"HighScore\",\"type\":\"int\"}"}' --json
-```
+## 注意事項
 
-Built-in debug commands: `Debug.SystemInfo`, `Debug.Stats`, `Debug.GetLogs`, `Debug.GetHierarchy`, `Debug.FindGameObjects`, `Debug.GetScenes`, `Debug.GetPlayerPref`
+- **Remote** の使用には `UNICLI_REMOTE` シンボル定義 + Development Build + Autoconnect Profiler が必要。
+- `Module.Enable` / `Disable` 後、コマンドディスパッチャは即時リロードされる。モジュール名は `unicli commands --json` の `module` フィールドと一致する。

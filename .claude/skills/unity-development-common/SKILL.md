@@ -1,111 +1,65 @@
 ---
 name: unity-development-common
 description: >-
-  Use for UniCli basics that apply to all Unity Editor automation: verifying
-  or installing the UniCli server (unicli check, unicli install), setting the
-  project path (UNICLI_PROJECT), discovering and executing commands
-  (unicli commands, unicli exec), and implementing custom CommandHandlers
-  when built-in commands are insufficient.
-metadata:
-  version: "1.1.0"
+  Common rules to refer to in all tasks involving the Unity Editor. Always refer to these rules when using unicli, modifying files, or compiling.
 ---
 
 # UniCli — Unity Editor CLI (Common)
 
-UniCli interacts with Unity Editor via named pipes. The Editor must be open with `com.yucchiy.unicli-server` installed.
+UniCli は named pipe 経由で Unity Editor を操作する。
+Editor が開いており `com.yucchiy.unicli-server` がインストール済みであること。
+初回セットアップや接続トラブルは `unicli check` / `unicli install` を実行する。
 
-## Setup
+---
 
-```bash
-unicli check                  # Verify CLI and server connection
-unicli install                # Install server package if missing
-unicli install --update       # Update if version mismatch
-```
+## ⚠️ 作業開始前：専門スキルを先に呼ぶ（必須）
 
-If `UNICLI_PROJECT` is not the current directory, set it:
+| やりたいこと | 呼ぶべきスキル |
+|---|---|
+| シーン・Prefab・GameObject・コンポーネントの作成・変更 | `unity-development-edit-scene` |
+| プロジェクト情報の読み取り・確認・ログ取得・型検索 | `unity-development-read-project` |
+| アセットのインポート・削除、C#コンパイル、テスト、パッケージ管理 | `unity-development-manage-assets` |
+| Source Generator が生成した .cs ファイルの読み取り | `unity-source-generator-reader` |
+| `unicli exec` にないカスタムコマンドの追加 | `unicli-create-custom-command` |
 
-```bash
-export UNICLI_PROJECT=path/to/unity/project
-```
+> フェーズが変わるたびに対応スキルを呼び直す。
 
-## Rules — Always Follow
+---
 
-- **Always use `--json`** when parsing output programmatically.
-- **On connection failure**: Retry 2–3 times, then ask the user to confirm the Editor is open.
-- **Discover commands dynamically** — never rely on memorized lists:
-  ```bash
-  unicli commands --json | grep -i "<keyword>"
-  unicli exec <command> --help
-  ```
-- **After creating or deleting any `.cs` file**: Run `AssetDatabase.Import` to refresh and regenerate `.csproj`:
-  ```bash
-  unicli exec AssetDatabase.Import --path "<path>" --json
-  ```
-- **After any C# edit**: Run `Compile` and confirm zero errors before finishing:
-  ```bash
-  unicli exec Compile --json
-  ```
+## ⛔ `unicli exec Eval` の制限
 
-## Command Execution
+| ルール | 詳細 |
+|---|---|
+| シーン・GameObject操作に使わない | `unity-development-edit-scene` の専用コマンドを使う |
+| 2回連続失敗で即停止 | 同じアプローチでの3回目試行は禁止。スキル再確認またはユーザーに確認 |
+| ループ禁止 | 微修正を繰り返さず、方針自体を見直す |
 
-```bash
-unicli exec <command> [--key value ...] --json
-```
+---
 
-Repeat flags for arrays: `--options Development --options ConnectWithProfiler`
+## ファイル操作後の必須後処理
 
-If no single command covers the goal, chain up to ~4 sequential commands:
+| 操作 | 必要なコマンド | 順序 |
+|---|---|---|
+| `.cs` 新規作成 / 削除 | `AssetDatabase.Import` → `Compile` | この順で |
+| `.cs` 編集のみ | `Compile` のみ | — |
+| ディレクトリ作成 / 移動 / リネーム（`.cs` 含む） | `AssetDatabase.Import` → `Compile` | この順で |
+| AssemblyDefinition 作成 / 変更 | `AssetDatabase.Import` → `Compile` | この順で |
+| 上記を複数組み合わせた場合 | `AssetDatabase.Import` → `Compile` | 最後に1回でよい |
 
 ```bash
-unicli exec GameObject.Find --namePattern "MyObject" --json > /tmp/go.json
-GO_ID=$(jq -r '.results[0].instanceId' /tmp/go.json)
-unicli exec GameObject.GetComponents --instanceId "$GO_ID" --json
+unicli exec AssetDatabase.Import --path "<変更したパス>" --json
+unicli exec Compile --json   # エラー 0 件を確認してから完了とする
 ```
 
-## Custom CommandHandlers
+---
 
-Use when built-in commands are insufficient. Provides type safety and discoverability.
+## 基本ルール
+
+- 出力をパースする場合は **必ず `--json`** を付ける
+- 接続失敗時は 2〜3 回リトライ後、ユーザーに Editor が開いているか確認する
+- 使えるコマンドは都度動的に探す（記憶に頼らない）:
 
 ```bash
-unicli exec AssemblyDefinition.Create \
-  --name "MyProject.UniCli.Editor" \
-  --directory "Assets/Editor/UniCli" \
-  --includePlatforms Editor --json
-unicli exec AssemblyDefinition.AddReference \
-  --name "MyProject.UniCli.Editor" \
-  --reference "UniCli.Server.Editor" --json
-unicli exec AssetDatabase.Import --path "Assets/Editor/UniCli" --json
-unicli exec Compile --json
-unicli commands --json   # Verify new command appears
+unicli commands --json | grep -i "<キーワード>"
+unicli exec <command> --help
 ```
-
-```csharp
-using System.Threading;
-using System.Threading.Tasks;
-using UniCli.Protocol;
-using UniCli.Server.Editor.Handlers;
-
-namespace MyProject.UniCli.Editor.Handlers
-{
-    [System.Serializable]
-    public class MyRequest { public string targetName = ""; }
-
-    [System.Serializable]
-    public class MyResponse { public string result; }
-
-    public sealed class MyCustomHandler : CommandHandler<MyRequest, MyResponse>
-    {
-        public override string CommandName => "MyCategory.MyAction";
-        public override string Description => "Description shown in unicli commands";
-
-        protected override ValueTask<MyResponse> ExecuteAsync(MyRequest request, CancellationToken cancellationToken)
-        {
-            return new ValueTask<MyResponse>(new MyResponse { result = $"Processed {request.targetName}" });
-        }
-    }
-}
-```
-
-- Request/Response types must be `[Serializable]` with **public fields** (not properties) — required by `JsonUtility`
-- Throw `CommandFailedException` on failure
-- Constructor parameters are resolved from `ServiceRegistry`
