@@ -10,10 +10,16 @@ public class MockBuilder : MonoBehaviour
 
     private void OnEnable()
     {
+        // OnEnable1();
+        OnEnable2();
+    }
+
+    private void OnEnable1()
+    {
         // DebugMenuFrameを初期化
         _frame = Init();
 
-        #region A
+        #region 1A
         // // ページを登録
         // _frame.RegisterPage("home", CreatePage1());
         // _frame.RegisterPage("settings", CreatePage2());
@@ -23,13 +29,18 @@ public class MockBuilder : MonoBehaviour
         // _frame.Navigate("home");
         #endregion
 
-        #region B
+        #region 1B
         var page1 = new Page1();
         var page2 = new Page2();
         _frame.RegisterPage(page1.GetType().Name, page1);
         _frame.RegisterPage(page2.GetType().Name, page2);
         _frame.Navigate(page1.GetType().Name);
         #endregion
+    }
+
+    private void OnEnable2()
+    {
+        DebugMenuManager.Initialize(_uiDocument);
     }
 
     private DebugMenuFrame Init()
@@ -119,7 +130,12 @@ public class MockBuilder : MonoBehaviour
         public override void Configure(IDebugPageBuilder builder)
         {
             builder.Button("次へ1");
-            builder.Button("次へ1");
+            builder.Button("次へ2");
+            builder.Foldout("折り畳み", b =>
+            {
+                b.Button("次へ3-1");
+                b.Button("次へ3-2");
+            });
             builder.NavigationButton<Page1>();
             builder.NavigationButton<Page2>();
         }

@@ -51,7 +51,9 @@ namespace Lilja.DebugMenu
             set => _label.text = value;
         }
 
-        public DebugMenuFrame()
+        public DebugMenuFrame() : this(null) { }
+
+        public DebugMenuFrame(DebugPage rootPage)
         {
             AddToClassList(ussClassName);
             AddToClassList("t-surface");
@@ -93,6 +95,14 @@ namespace Lilja.DebugMenu
             _pageContainer.AddToClassList("c-page-stack");
             _contentContainer.Add(_pageContainer);
 
+            // ルートページ
+            if (rootPage != null)
+            {
+                RegisterPage(rootPage.name, rootPage);
+                ShowPageImmediately(rootPage, PagePosition.In);
+                rootPage.Configure(new DebugPageBuilder(rootPage, _pageCache));
+            }
+
             DebugMenuManager.Frame = this;
         }
 
@@ -102,8 +112,6 @@ namespace Lilja.DebugMenu
         public void RegisterPage(string pageName, DebugPage page)
         {
             _pageCache.Add(pageName, page);
-
-            page.Configure(new DebugPageBuilder(page, _pageCache));
 
             // 画面外で待機
             page.style.position = Position.Absolute;
@@ -130,6 +138,7 @@ namespace Lilja.DebugMenu
             // 初期表示はアニメーションなし
             if (prevName == null)
             {
+                page.Configure(new DebugPageBuilder(page, _pageCache));
                 page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
                 return;
             }
@@ -137,12 +146,14 @@ namespace Lilja.DebugMenu
             _isAnimating = true;
 
             // 現在ページを左へスライドアウト
-            if (_pageCache.TryGet(prevName, out var prevEntry))
+            if (_pageCache.TryGet(prevName, out var prevPage))
             {
-                SlidePage(prevEntry, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
+                prevPage.Configure(new DebugPageBuilder(prevPage, _pageCache));
+                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
             }
 
             // 次ページを右からスライドイン
+            page.Configure(new DebugPageBuilder(page, _pageCache));
             SlidePage(page, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
                 _history.Push(prevName);
@@ -175,6 +186,12 @@ namespace Lilja.DebugMenu
             {
                 _isAnimating = false;
             });
+        }
+
+        /// <summary> 指定したページをスライドさせずに即座に表示する </summary>
+        private void ShowPageImmediately(DebugPage page, PagePosition position)
+        {
+            page.style.left = new StyleLength(new Length((float)position, LengthUnit.Percent));
         }
 
         /// <summary> 指定したページをスライドさせる </summary>

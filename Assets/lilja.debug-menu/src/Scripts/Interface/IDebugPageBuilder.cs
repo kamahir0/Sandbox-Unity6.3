@@ -38,7 +38,7 @@ namespace Lilja.DebugMenu
         public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory)
             where T : DebugPage
         {
-            var button = new DebugButton();
+            var button = new DebugButton(pageName);
             if (!builder.PageCache.Contains(pageName))
             {
                 builder.PageCache.Add(pageName, pageFactory());
