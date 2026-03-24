@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -8,6 +9,10 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugPage : VisualElement
     {
+        #region Virtual
+        public virtual void Configure(IDebugPageBuilder builder) { }
+        #endregion
+
         // UI
         private readonly ScrollView _scrollView;
 
@@ -23,6 +28,14 @@ namespace Lilja.DebugMenu
             _scrollView = new ScrollView();
             _scrollView.AddToClassList("c-scroll-view");
             hierarchy.Add(_scrollView);
+        }
+
+        /// <summary>
+        /// スクロール位置をリセットする
+        /// </summary>
+        public void ResetScrollPosition()
+        {
+            _scrollView.scrollOffset = Vector2.zero;
         }
     }
 }

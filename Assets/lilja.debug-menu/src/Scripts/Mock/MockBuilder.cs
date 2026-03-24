@@ -13,13 +13,23 @@ public class MockBuilder : MonoBehaviour
         // DebugMenuFrameを初期化
         _frame = Init();
 
-        // ページを登録
-        _frame.RegisterPage("home", CreatePage1(), "プレイヤー設定");
-        _frame.RegisterPage("settings", CreatePage2(), "詳細設定");
-        _frame.RegisterPage("log", CreatePage3(), "ログ設定");
+        #region A
+        // // ページを登録
+        // _frame.RegisterPage("home", CreatePage1());
+        // _frame.RegisterPage("settings", CreatePage2());
+        // _frame.RegisterPage("log", CreatePage3());
 
-        // 初期ページへ遷移
-        _frame.Navigate("home");
+        // // 初期ページへ遷移
+        // _frame.Navigate("home");
+        #endregion
+
+        #region B
+        var page1 = new Page1();
+        var page2 = new Page2();
+        _frame.RegisterPage(page1.GetType().Name, page1);
+        _frame.RegisterPage(page2.GetType().Name, page2);
+        _frame.Navigate(page1.GetType().Name);
+        #endregion
     }
 
     private DebugMenuFrame Init()
@@ -102,5 +112,26 @@ public class MockBuilder : MonoBehaviour
         page.Add(new DebugTextField("出力パス") { value = "Logs/debug.log" });
 
         return page;
+    }
+
+    public class Page1 : DebugPage
+    {
+        public override void Configure(IDebugPageBuilder builder)
+        {
+            builder.Button("次へ1");
+            builder.Button("次へ1");
+            builder.NavigationButton<Page1>();
+            builder.NavigationButton<Page2>();
+        }
+    }
+
+    public class Page2 : DebugPage
+    {
+        public override void Configure(IDebugPageBuilder builder)
+        {
+            builder.Button("次へ2");
+            builder.Button("次へ2");
+            builder.NavigationButton<Page2>();
+        }
     }
 }

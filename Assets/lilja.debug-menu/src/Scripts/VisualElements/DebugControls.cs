@@ -72,8 +72,11 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugFoldout : Foldout
     {
-        public DebugFoldout() : base()
+        public DebugFoldout() : this(string.Empty) { }
+
+        public DebugFoldout(string label) : base()
         {
+            text = label;
             AddToClassList("c-control-size");
             AddToClassList("c-foldout");
         }

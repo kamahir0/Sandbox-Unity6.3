@@ -27,9 +27,9 @@ namespace Lilja.DebugMenu
         private readonly VisualElement _pageContainer;
 
         // ナビゲーション
-        private readonly Dictionary<string, (DebugPage page, string title)> _pageCache = new();
+        private readonly DebugPageCache _pageCache = new();
         private readonly Stack<string> _history = new();
-        private string _currentPage;
+        private string _currentPageName;
         private bool _isAnimating;
 
         private const float AnimationDuration = 0.4f;
@@ -92,58 +92,58 @@ namespace Lilja.DebugMenu
             _pageContainer = new VisualElement();
             _pageContainer.AddToClassList("c-page-stack");
             _contentContainer.Add(_pageContainer);
+
+            DebugMenuManager.Frame = this;
         }
 
         /// <summary>
         /// ページを登録する
         /// </summary>
-        /// <param name="name">ページの識別名</param>
-        /// <param name="page">DebugPage インスタンス</param>
-        /// <param name="title">Navigate 時にヘッダーに表示するタイトル</param>
-        public void RegisterPage(string name, DebugPage page, string title = "")
+        public void RegisterPage(string pageName, DebugPage page)
         {
-            _pageCache[name] = (page, title);
+            _pageCache.Add(pageName, page);
 
-            // 画面外右で待機
+            page.Configure(new DebugPageBuilder(page, _pageCache));
+
+            // 画面外で待機
             page.style.position = Position.Absolute;
             page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
             page.style.top = 0;
             page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
             page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
-
             _pageContainer.Add(page);
         }
 
         /// <summary>
         /// 指定したページへ遷移する
         /// </summary>
-        public void Navigate(string name)
+        public void Navigate(string pageName)
         {
             if (_isAnimating) return;
-            if (!_pageCache.TryGetValue(name, out var entry)) return;
-            if (name == _currentPage) return;
+            if (!_pageCache.TryGet(pageName, out var page)) return;
+            if (pageName == _currentPageName) return;
 
-            var prevName = _currentPage;
-            _currentPage = name;
-            Label = entry.title;
+            var prevName = _currentPageName;
+            _currentPageName = pageName;
+            Label = pageName;
 
             // 初期表示はアニメーションなし
             if (prevName == null)
             {
-                entry.page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
+                page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
                 return;
             }
 
             _isAnimating = true;
 
             // 現在ページを左へスライドアウト
-            if (_pageCache.TryGetValue(prevName, out var prevEntry))
+            if (_pageCache.TryGet(prevName, out var prevEntry))
             {
-                SlidePage(prevEntry.page, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
+                SlidePage(prevEntry, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
             }
 
             // 次ページを右からスライドイン
-            SlidePage(entry.page, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
+            SlidePage(page, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
                 _history.Push(prevName);
                 _isAnimating = false;
@@ -159,13 +159,13 @@ namespace Lilja.DebugMenu
             _isAnimating = true;
 
             var prevName = _history.Pop();
-            var currentName = _currentPage;
-            _currentPage = prevName;
+            var currentName = _currentPageName;
+            _currentPageName = prevName;
 
-            var (prevPage, prevTitle) = _pageCache[prevName];
-            var (currentPage, _) = _pageCache[currentName];
+            if (!_pageCache.TryGet(prevName, out var prevPage)) return;
+            if (!_pageCache.TryGet(currentName, out var currentPage)) return;
 
-            Label = prevTitle;
+            Label = prevName;
 
             // 現在ページを右へスライドアウト
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, null);
