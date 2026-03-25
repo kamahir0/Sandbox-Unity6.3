@@ -65,8 +65,7 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// ラムダ式でUIを構成する汎用ページへのナビゲーションボタンを追加する。
         /// </summary>
-        public static void NavigationButton(this IDebugPageBuilder builder, string pageName,
-            Action<IDebugPageBuilder> configure)
+        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure)
         {
             builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure));
         }
