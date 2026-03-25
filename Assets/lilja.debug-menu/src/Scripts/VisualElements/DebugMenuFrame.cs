@@ -100,7 +100,9 @@ namespace Lilja.DebugMenu
             {
                 // name が未設定なら型名をフォールバックとして使用
                 if (string.IsNullOrEmpty(rootPage.name))
+                {
                     rootPage.name = rootPage.GetType().Name;
+                }
 
                 _currentPage = rootPage;
                 Label = rootPage.name;

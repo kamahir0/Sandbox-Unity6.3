@@ -6,7 +6,7 @@ namespace Lilja.DebugMenu
     {
         public static DebugMenuFrame Frame;
 
-        public static void Initialize(UIDocument uiDocument)
+        public static void Initialize(UIDocument uiDocument, DebugPage rootPage)
         {
             var root = uiDocument.rootVisualElement;
             root.Clear();
@@ -16,7 +16,7 @@ namespace Lilja.DebugMenu
             root.Add(menuRoot);
 
             // DebugMenuFrame
-            var frame = new DebugMenuFrame(new RootPage());
+            var frame = new DebugMenuFrame(rootPage);
             frame.AddToClassList("c-menu-frame--default-size");
             menuRoot.Add(frame);
 

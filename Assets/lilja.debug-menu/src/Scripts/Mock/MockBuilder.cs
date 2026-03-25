@@ -8,7 +8,7 @@ public class MockBuilder : MonoBehaviour
 
     private void OnEnable()
     {
-        DebugMenuManager.Initialize(_uiDocument);
+        DebugMenuManager.Initialize(_uiDocument, new RootPage());
     }
 
     public class Page1 : DebugPage
