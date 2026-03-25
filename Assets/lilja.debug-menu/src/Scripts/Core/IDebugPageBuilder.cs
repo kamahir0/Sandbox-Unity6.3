@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
