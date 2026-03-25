@@ -27,9 +27,9 @@ namespace Lilja.DebugMenu
         private readonly VisualElement _pageContainer;
 
         // ナビゲーション
-        private readonly DebugPageCache _pageCache = new();
-        private readonly Stack<string> _history = new();
-        private string _currentPageName;
+        private readonly DebugPagePool _pagePool = new();
+        private readonly Stack<DebugPage> _history = new();
+        private DebugPage _currentPage;
         private bool _isAnimating;
 
         private const float AnimationDuration = 0.4f;
@@ -98,28 +98,24 @@ namespace Lilja.DebugMenu
             // ルートページ
             if (rootPage != null)
             {
-                RegisterPage(rootPage.name, rootPage);
+                // name が未設定なら型名をフォールバックとして使用
+                if (string.IsNullOrEmpty(rootPage.name))
+                    rootPage.name = rootPage.GetType().Name;
+
+                _currentPage = rootPage;
+                Label = rootPage.name;
+
+                // 循環防止マーカー設置後に Configure
+                _pagePool.Reserve(rootPage.name);
+                rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
+
+                // DOM に追加して即座表示
+                EnsureInDom(rootPage);
                 ShowPageImmediately(rootPage, PagePosition.In);
-                rootPage.Configure(new DebugPageBuilder(rootPage, _pageCache));
             }
 
+            UpdateBackButtonVisibility();
             DebugMenuManager.Frame = this;
-        }
-
-        /// <summary>
-        /// ページを登録する
-        /// </summary>
-        public void RegisterPage(string pageName, DebugPage page)
-        {
-            _pageCache.Add(pageName, page);
-
-            // 画面外で待機
-            page.style.position = Position.Absolute;
-            page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
-            page.style.top = 0;
-            page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
-            page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
-            _pageContainer.Add(page);
         }
 
         /// <summary>
@@ -128,37 +124,60 @@ namespace Lilja.DebugMenu
         public void Navigate(string pageName)
         {
             if (_isAnimating) return;
-            if (!_pageCache.TryGet(pageName, out var page)) return;
-            if (pageName == _currentPageName) return;
+            if (_currentPage == null) return;
 
-            var prevName = _currentPageName;
-            _currentPageName = pageName;
+            // プールから借用、なければファクトリで新規生成
+            if (!_pagePool.TryRent(pageName, out var targetPage))
+            {
+                targetPage = _pagePool.CreateNew(pageName);
+                if (targetPage == null) return;
+            }
+
+            EnsureInDom(targetPage);
+
+            var prevPage = _currentPage;
+            _currentPage = targetPage;
             Label = pageName;
 
-            // 初期表示はアニメーションなし
-            if (prevName == null)
+            // 同一名ナビゲーション: 履歴にpushせずプールに返却
+            if (prevPage.name == pageName)
             {
-                page.Configure(new DebugPageBuilder(page, _pageCache));
-                page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
-                return;
+                _pagePool.Return(prevPage);
+            }
+            else
+            {
+                _history.Push(prevPage);
             }
 
+            // アニメーション
             _isAnimating = true;
-
-            // 現在ページを左へスライドアウト
-            if (_pageCache.TryGet(prevName, out var prevPage))
+            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
+            SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
-                prevPage.Configure(new DebugPageBuilder(prevPage, _pageCache));
-                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
-            }
-
-            // 次ページを右からスライドイン
-            page.Configure(new DebugPageBuilder(page, _pageCache));
-            SlidePage(page, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
-            {
-                _history.Push(prevName);
                 _isAnimating = false;
+                UpdateBackButtonVisibility();
             });
+        }
+
+        /// <summary>
+        /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
+        /// </summary>
+        public void RegisterPage(string name, Func<DebugPage> factory)
+        {
+            if (_pagePool.Contains(name)) return;
+
+            _pagePool.Reserve(name);
+            _pagePool.RegisterFactory(name, () =>
+            {
+                var p = factory();
+                p.name = name;
+                return p;
+            });
+
+            var page = factory();
+            page.name = name;
+            page.Configure(new DebugPageBuilder(page, _pagePool));
+            _pagePool.Add(name, page);
         }
 
         /// <summary> 前のページへ戻る </summary>
@@ -169,23 +188,37 @@ namespace Lilja.DebugMenu
 
             _isAnimating = true;
 
-            var prevName = _history.Pop();
-            var currentName = _currentPageName;
-            _currentPageName = prevName;
+            var prevPage = _history.Pop();
+            var currentPage = _currentPage;
 
-            if (!_pageCache.TryGet(prevName, out var prevPage)) return;
-            if (!_pageCache.TryGet(currentName, out var currentPage)) return;
+            // 現在ページをプールに返却（スクロールリセット含む）
+            _pagePool.Return(currentPage);
 
-            Label = prevName;
+            _currentPage = prevPage;
+            Label = prevPage.name;
 
-            // 現在ページを右へスライドアウト
+            // アニメーション
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, null);
-
-            // 前ページを左からスライドイン
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
             {
                 _isAnimating = false;
+                UpdateBackButtonVisibility();
             });
+        }
+
+        /// <summary>
+        /// ページがまだ _pageContainer に追加されていなければ追加し、画面外に配置する。
+        /// </summary>
+        private void EnsureInDom(DebugPage page)
+        {
+            if (page.parent == _pageContainer) return;
+
+            page.style.position = Position.Absolute;
+            page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
+            page.style.top = 0;
+            page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+            page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+            _pageContainer.Add(page);
         }
 
         /// <summary> 指定したページをスライドさせずに即座に表示する </summary>
@@ -215,6 +248,13 @@ namespace Lilja.DebugMenu
                     onComplete?.Invoke();
                 }
             }).Every(0).Until(() => elapsed >= duration);
+        }
+
+        private void UpdateBackButtonVisibility()
+        {
+            _backButton.style.visibility = _history.Count > 0
+                ? Visibility.Visible
+                : Visibility.Hidden;
         }
 
         private static float EaseInOutCubic(float t) =>
