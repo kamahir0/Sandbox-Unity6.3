@@ -203,9 +203,7 @@ namespace Lilja.DebugMenu
             });
         }
 
-        /// <summary>
-        /// ページがまだ _contentContainer に追加されていなければ追加し、画面外に配置する。
-        /// </summary>
+        /// <summary> ページがまだ _contentContainer に追加されていなければ追加し、画面外に配置する。 </summary>
         private void EnsureInDom(DebugPage page)
         {
             if (page.parent == _contentContainer) return;
