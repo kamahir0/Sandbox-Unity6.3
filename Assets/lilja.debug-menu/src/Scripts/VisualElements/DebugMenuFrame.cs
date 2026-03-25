@@ -24,7 +24,6 @@ namespace Lilja.DebugMenu
         private readonly Button _backButton;
         private readonly Label _label;
         private readonly VisualElement _contentContainer;
-        private readonly VisualElement _pageContainer;
 
         // ナビゲーション
         private readonly DebugPagePool _pagePool = new();
@@ -85,15 +84,11 @@ namespace Lilja.DebugMenu
             spacer.pickingMode = PickingMode.Ignore;
             header.Add(spacer);
 
-            // コンテンツエリア
+            // コンテンツエリア（ページスタックを兼ねる）
             _contentContainer = new VisualElement();
             _contentContainer.AddToClassList(contentUssClassName);
+            _contentContainer.AddToClassList("c-page-stack");
             hierarchy.Add(_contentContainer);
-
-            // ページコンテナ
-            _pageContainer = new VisualElement();
-            _pageContainer.AddToClassList("c-page-stack");
-            _contentContainer.Add(_pageContainer);
 
             // ルートページ
             if (rootPage != null)
@@ -209,18 +204,18 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// ページがまだ _pageContainer に追加されていなければ追加し、画面外に配置する。
+        /// ページがまだ _contentContainer に追加されていなければ追加し、画面外に配置する。
         /// </summary>
         private void EnsureInDom(DebugPage page)
         {
-            if (page.parent == _pageContainer) return;
+            if (page.parent == _contentContainer) return;
 
             page.style.position = Position.Absolute;
             page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
             page.style.top = 0;
             page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
             page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
-            _pageContainer.Add(page);
+            _contentContainer.Add(page);
         }
 
         /// <summary> 指定したページをスライドさせずに即座に表示する </summary>
