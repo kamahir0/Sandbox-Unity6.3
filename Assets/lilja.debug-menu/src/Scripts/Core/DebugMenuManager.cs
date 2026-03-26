@@ -6,7 +6,7 @@ namespace Lilja.DebugMenu
 {
     public class DebugMenuManager
     {
-        public static DebugMenuFrame Frame;
+        private static DebugMenuFrame _frame;
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
@@ -19,100 +19,93 @@ namespace Lilja.DebugMenu
             var root = uiDocument.rootVisualElement;
             root.Clear();
 
-            // DebugMenuRoot
             var menuRoot = new DebugMenuRoot();
             root.Add(menuRoot);
             _menuRoot = menuRoot;
 
-            // DebugMenuFrame
             var frame = new DebugMenuFrame(rootPage);
             frame.AddToClassList("c-menu-frame--default-size");
             menuRoot.Add(frame);
-
-            Frame = frame;
+            _frame = frame;
 
             // 初期状態は即時非表示（アニメーションなし）
             ApplyHiddenState();
 
-            // 矩形外タップで閉じる
-            menuRoot.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (Frame != null && !Frame.worldBound.Contains(evt.position))
-                    Hide();
-            }, TrickleDown.TrickleDown);
+            // 矩形外タップで閉じる（DebugMenuRoot に委譲）
+            menuRoot.SetupOutsideTapHandler(() => _frame, Hide);
         }
 
         public static void Show()
         {
-            if (Frame == null || _menuRoot == null) return;
+            if (_frame == null || _menuRoot == null) return;
 
             _menuRoot.pickingMode = PickingMode.Position;
-            Frame.style.display = DisplayStyle.Flex;
+            _frame.style.display = DisplayStyle.Flex;
 
-            Animate(
+            var version = ++_animVersion;
+            DebugMenuAnimator.AnimateScaleOpacity(
+                _frame,
                 scaleFrom: HideScale, scaleTo: 1f,
                 opacityFrom: 0f, opacityTo: 1f,
                 duration: ShowDuration,
-                easing: EaseOutCubic,
+                easing: DebugMenuAnimator.EaseOutCubic,
+                shouldCancel: () => _animVersion != version,
                 onComplete: null
             );
         }
 
         public static void Hide()
         {
-            if (Frame == null || _menuRoot == null) return;
+            if (_frame == null || _menuRoot == null) return;
 
             _menuRoot.pickingMode = PickingMode.Ignore;
 
-            Animate(
+            var version = ++_animVersion;
+            DebugMenuAnimator.AnimateScaleOpacity(
+                _frame,
                 scaleFrom: 1f, scaleTo: HideScale,
                 opacityFrom: 1f, opacityTo: 0f,
                 duration: HideDuration,
-                easing: EaseInCubic,
+                easing: DebugMenuAnimator.EaseInCubic,
+                shouldCancel: () => _animVersion != version,
                 onComplete: ApplyHiddenState
             );
         }
 
+        /// <summary>
+        /// 事前登録済みのページへナビゲートする。未登録の場合は LogError を出して何もしない。
+        /// </summary>
+        public static void NavigateTo(string pageName)
+        {
+            if (_frame == null) return;
+            if (!_frame.IsPageRegistered(pageName))
+            {
+                Debug.LogError($"[DebugMenuManager] Page '{pageName}' is not registered. " +
+                               "Use NavigationButton or RegisterPage to register it first.");
+                return;
+            }
+            _frame.Navigate(pageName);
+        }
+
+        /// <summary>
+        /// GenericDebugPage を即席生成してナビゲートする。事前登録不要。
+        /// 主に動的コンテンツや GenericDebugPage を使うケース向け。
+        /// </summary>
+        public static void NavigateToTemp(string pageName, Action<IDebugPageBuilder> configure)
+        {
+            _frame?.NavigateTemp(pageName, configure);
+        }
+
+        /// <summary>
+        /// NavigationButton クリック時のナビゲート口。同一アセンブリ内からのみ使用する。
+        /// </summary>
+        internal static void NavigateInternal(string pageName) => _frame?.Navigate(pageName);
+
         private static void ApplyHiddenState()
         {
-            Frame.style.display = DisplayStyle.None;
-            Frame.style.opacity = 0f;
-            Frame.style.scale = new Scale(new Vector3(HideScale, HideScale, 1f));
+            _frame.style.display = DisplayStyle.None;
+            _frame.style.opacity = 0f;
+            _frame.style.scale = new Scale(new Vector3(HideScale, HideScale, 1f));
         }
-
-        private static void Animate(
-            float scaleFrom, float scaleTo,
-            float opacityFrom, float opacityTo,
-            float duration, Func<float, float> easing,
-            Action onComplete)
-        {
-            var version = ++_animVersion;
-            var elapsed = 0f;
-
-            Frame.style.scale = new Scale(new Vector3(scaleFrom, scaleFrom, 1f));
-            Frame.style.opacity = opacityFrom;
-
-            Frame.schedule.Execute(timer =>
-            {
-                if (_animVersion != version) return;
-
-                elapsed += timer.deltaTime / 1000f;
-                var t = easing(Mathf.Clamp01(elapsed / duration));
-
-                var s = Mathf.Lerp(scaleFrom, scaleTo, t);
-                Frame.style.scale = new Scale(new Vector3(s, s, 1f));
-                Frame.style.opacity = Mathf.Lerp(opacityFrom, opacityTo, t);
-
-                if (elapsed >= duration)
-                {
-                    Frame.style.scale = new Scale(new Vector3(scaleTo, scaleTo, 1f));
-                    Frame.style.opacity = opacityTo;
-                    onComplete?.Invoke();
-                }
-            }).Every(0).Until(() => elapsed >= duration || _animVersion != version);
-        }
-
-        private static float EaseOutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);
-        private static float EaseInCubic(float t) => t * t * t;
     }
 }

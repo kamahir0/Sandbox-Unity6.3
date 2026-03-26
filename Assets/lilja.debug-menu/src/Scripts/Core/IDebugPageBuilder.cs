@@ -5,14 +5,12 @@ namespace Lilja.DebugMenu
     public interface IDebugPageBuilder
     {
         void VisualElement(VisualElement visualElement);
-
-        DebugPagePool PagePool { get; }
     }
 
     internal sealed class DebugPageBuilder : IDebugPageBuilder
     {
         public VisualElement Parent { get; }
-        public DebugPagePool PagePool { get; }
+        internal DebugPagePool PagePool { get; }
 
         public DebugPageBuilder(VisualElement parent, DebugPagePool pagePool)
         {

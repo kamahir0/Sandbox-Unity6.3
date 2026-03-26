@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -14,6 +15,19 @@ namespace Lilja.DebugMenu
             AddToClassList("l-screen");
             AddToClassList("u-center-content");
             AddToClassList("u-bg-transparent");
+        }
+
+        /// <summary>
+        /// 矩形外タップ検知を設定する。フレーム外をタップしたときに onOutsideTap を呼び出す。
+        /// </summary>
+        internal void SetupOutsideTapHandler(Func<VisualElement> getFrame, Action onOutsideTap)
+        {
+            RegisterCallback<PointerDownEvent>(evt =>
+            {
+                var frame = getFrame();
+                if (frame != null && !frame.worldBound.Contains(evt.position))
+                    onOutsideTap();
+            }, TrickleDown.TrickleDown);
         }
     }
 }

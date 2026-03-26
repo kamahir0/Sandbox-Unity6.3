@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -95,9 +94,7 @@ namespace Lilja.DebugMenu
             {
                 // name が未設定なら型名をフォールバックとして使用
                 if (string.IsNullOrEmpty(rootPage.name))
-                {
                     rootPage.name = rootPage.GetType().Name;
-                }
 
                 _currentPage = rootPage;
                 Label = rootPage.name;
@@ -112,13 +109,12 @@ namespace Lilja.DebugMenu
             }
 
             UpdateBackButtonVisibility();
-            DebugMenuManager.Frame = this;
         }
 
         /// <summary>
         /// 指定したページへ遷移する
         /// </summary>
-        public void Navigate(string pageName)
+        internal void Navigate(string pageName)
         {
             if (_isAnimating) return;
             if (_currentPage == null) return;
@@ -130,51 +126,33 @@ namespace Lilja.DebugMenu
                 if (targetPage == null) return;
             }
 
-            EnsureInDom(targetPage);
-
-            var prevPage = _currentPage;
-            _currentPage = targetPage;
-            Label = pageName;
-
-            // 同一名ナビゲーション: 履歴にpushせずプールに返却
-            if (prevPage.name == pageName)
-            {
-                _pagePool.Return(prevPage);
-            }
-            else
-            {
-                _history.Push(prevPage);
-            }
-
-            // アニメーション
-            _isAnimating = true;
-            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
-            SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
-            {
-                _isAnimating = false;
-                UpdateBackButtonVisibility();
-            });
+            CommitNavigation(targetPage);
         }
+
+        /// <summary>
+        /// GenericDebugPage を即席生成して遷移する。事前登録不要。
+        /// </summary>
+        internal void NavigateTemp(string pageName, Action<IDebugPageBuilder> configure)
+        {
+            if (_isAnimating) return;
+            if (_currentPage == null) return;
+
+            var page = new GenericDebugPage(pageName, configure);
+            page.Configure(new DebugPageBuilder(page, _pagePool));
+            CommitNavigation(page);
+        }
+
+        /// <summary>
+        /// 指定ページ名がプールに登録済みか返す。
+        /// </summary>
+        internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
 
         /// <summary>
         /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
         /// </summary>
         public void RegisterPage(string name, Func<DebugPage> factory)
         {
-            if (_pagePool.Contains(name)) return;
-
-            _pagePool.Reserve(name);
-            _pagePool.RegisterFactory(name, () =>
-            {
-                var p = factory();
-                p.name = name;
-                return p;
-            });
-
-            var page = factory();
-            page.name = name;
-            page.Configure(new DebugPageBuilder(page, _pagePool));
-            _pagePool.Add(name, page);
+            _pagePool.Register(name, factory);
         }
 
         /// <summary> 前のページへ戻る </summary>
@@ -203,6 +181,33 @@ namespace Lilja.DebugMenu
             });
         }
 
+        /// <summary>
+        /// Navigate / NavigateTemp 共通のナビゲーション処理
+        /// </summary>
+        private void CommitNavigation(DebugPage targetPage)
+        {
+            EnsureInDom(targetPage);
+
+            var prevPage = _currentPage;
+            _currentPage = targetPage;
+            Label = targetPage.name;
+
+            // 同一名ナビゲーション: 履歴にpushせずプールに返却
+            if (prevPage.name == targetPage.name)
+                _pagePool.Return(prevPage);
+            else
+                _history.Push(prevPage);
+
+            // アニメーション
+            _isAnimating = true;
+            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
+            SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
+            {
+                _isAnimating = false;
+                UpdateBackButtonVisibility();
+            });
+        }
+
         /// <summary> ページがまだ _contentContainer に追加されていなければ追加し、画面外に配置する。 </summary>
         private void EnsureInDom(DebugPage page)
         {
@@ -225,24 +230,7 @@ namespace Lilja.DebugMenu
         /// <summary> 指定したページをスライドさせる </summary>
         private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete)
         {
-            var leftStart = (float)from;
-            var leftEnd = (float)to;
-
-            page.style.left = new StyleLength(new Length(leftStart, LengthUnit.Percent));
-
-            float elapsed = 0f;
-            schedule.Execute(timer =>
-            {
-                elapsed += timer.deltaTime / 1000f;
-                var t = EaseInOutCubic(Mathf.Clamp01(elapsed / duration));
-                page.style.left = new StyleLength(new Length(Mathf.Lerp(leftStart, leftEnd, t), LengthUnit.Percent));
-
-                if (elapsed >= duration)
-                {
-                    page.style.left = new StyleLength(new Length(leftEnd, LengthUnit.Percent));
-                    onComplete?.Invoke();
-                }
-            }).Every(0).Until(() => elapsed >= duration);
+            DebugMenuAnimator.Slide(page, this, (float)from, (float)to, duration, onComplete);
         }
 
         private void UpdateBackButtonVisibility()
@@ -251,10 +239,5 @@ namespace Lilja.DebugMenu
                 ? Visibility.Visible
                 : Visibility.Hidden;
         }
-
-        private static float EaseInOutCubic(float t) =>
-            t < 0.5f
-                ? 4f * t * t * t
-                : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
     }
 }

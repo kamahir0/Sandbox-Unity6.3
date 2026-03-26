@@ -16,7 +16,7 @@ namespace Lilja.DebugMenu
             var innerPool = new DebugPagePool();
             var innerBuilder = new DebugPageBuilder(foldout, innerPool);
             configure(innerBuilder);
-            builder.PagePool.Merge(innerPool);
+            ((DebugPageBuilder)builder).PagePool.Merge(innerPool);
             builder.VisualElement(foldout);
         }
 
@@ -29,28 +29,11 @@ namespace Lilja.DebugMenu
         public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory)
             where T : DebugPage
         {
-            if (!builder.PagePool.Contains(pageName))
-            {
-                // 循環防止マーカー設置
-                builder.PagePool.Reserve(pageName);
-
-                // ファクトリ登録: 生成時に必ず name をセット
-                builder.PagePool.RegisterFactory(pageName, () =>
-                {
-                    var p = pageFactory();
-                    p.name = pageName;
-                    return p;
-                });
-
-                // 初回インスタンス作成 → name設定 → Configure → プールに追加
-                var page = pageFactory();
-                page.name = pageName;
-                page.Configure(new DebugPageBuilder(page, builder.PagePool));
-                builder.PagePool.Add(pageName, page);
-            }
+            var b = (DebugPageBuilder)builder;
+            b.PagePool.Register(pageName, () => pageFactory());
 
             var button = new DebugButton(pageName);
-            button.clicked += () => DebugMenuManager.Frame.Navigate(pageName);
+            button.clicked += () => DebugMenuManager.NavigateInternal(pageName);
             builder.VisualElement(button);
         }
 

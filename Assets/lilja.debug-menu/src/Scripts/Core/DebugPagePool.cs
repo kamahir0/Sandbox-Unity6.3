@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// ページ型名をキーとし、同一型のインスタンスを最大 MaxPerType 個プールする。
+    /// ページ名をキーとし、同一ページのインスタンスを最大 MaxPerType 個プールする。
     /// </summary>
     public sealed class DebugPagePool
     {
@@ -14,50 +14,45 @@ namespace Lilja.DebugMenu
         private readonly Dictionary<string, Func<DebugPage>> _factories = new();
 
         /// <summary>
-        /// プールに pageName が登録済み（空でもキーが存在する）か返す。
-        /// NavigationButton の循環防止マーカーとして使う。
+        /// プールに pageName が登録済みか返す。循環防止チェックにも使う。
         /// </summary>
         public bool Contains(string pageName) => _pool.ContainsKey(pageName);
 
         /// <summary>
-        /// キーだけを登録して空のキューを確保する（循環防止マーカー）。
+        /// ページを登録する。循環防止マーカー設置・ファクトリ登録・初回インスタンス生成を一括実行する。
+        /// 既に登録済みの場合は何もしない。
         /// </summary>
-        public void Reserve(string pageName)
+        public void Register(string pageName, Func<DebugPage> factory)
+        {
+            if (Contains(pageName)) return;
+
+            _pool[pageName] = new Queue<DebugPage>();
+
+            Func<DebugPage> wrappedFactory = () =>
+            {
+                var p = factory();
+                p.name = pageName;
+                return p;
+            };
+            _factories[pageName] = wrappedFactory;
+
+            var page = wrappedFactory();
+            page.Configure(new DebugPageBuilder(page, this));
+            if (_pool[pageName].Count < MaxPerType)
+                _pool[pageName].Enqueue(page);
+        }
+
+        /// <summary>
+        /// キーだけを登録して空のキューを確保する（ルートページ等の循環防止マーカー用）。
+        /// </summary>
+        internal void Reserve(string pageName)
         {
             if (!_pool.ContainsKey(pageName))
-            {
                 _pool[pageName] = new Queue<DebugPage>();
-            }
         }
 
         /// <summary>
-        /// ファクトリを登録する。
-        /// </summary>
-        public void RegisterFactory(string pageName, Func<DebugPage> factory)
-        {
-            _factories[pageName] = factory;
-        }
-
-        /// <summary>
-        /// インスタンスをプールに追加する。
-        /// </summary>
-        public void Add(string pageName, DebugPage page)
-        {
-            if (!_pool.TryGetValue(pageName, out var queue))
-            {
-                queue = new Queue<DebugPage>();
-                _pool[pageName] = queue;
-            }
-
-            if (queue.Count < MaxPerType)
-            {
-                queue.Enqueue(page);
-            }
-        }
-
-        /// <summary>
-        /// プールからインスタンスを1つ借りる。
-        /// キューが空なら false を返す。
+        /// プールからインスタンスを1つ借りる。キューが空なら false を返す。
         /// </summary>
         public bool TryRent(string pageName, out DebugPage page)
         {
@@ -72,8 +67,7 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// ページをプールへ返却する。page.name をキーとして使用する。
-        /// MaxPerType を超えた分は DOM から除去して破棄する。
+        /// ページをプールへ返却する。MaxPerType を超えた分は DOM から除去して破棄する。
         /// </summary>
         public void Return(DebugPage page)
         {
@@ -87,13 +81,9 @@ namespace Lilja.DebugMenu
             }
 
             if (queue.Count < MaxPerType)
-            {
                 queue.Enqueue(page);
-            }
             else
-            {
                 page.RemoveFromHierarchy();
-            }
         }
 
         /// <summary>
@@ -103,9 +93,7 @@ namespace Lilja.DebugMenu
         public DebugPage CreateNew(string pageName)
         {
             if (!_factories.TryGetValue(pageName, out var factory))
-            {
                 return null;
-            }
 
             var page = factory();
             page.Configure(new DebugPageBuilder(page, this));
@@ -126,17 +114,13 @@ namespace Lilja.DebugMenu
                 }
 
                 while (otherQueue.Count > 0 && queue.Count < MaxPerType)
-                {
                     queue.Enqueue(otherQueue.Dequeue());
-                }
             }
 
             foreach (var (key, factory) in other._factories)
             {
                 if (!_factories.ContainsKey(key))
-                {
                     _factories[key] = factory;
-                }
             }
         }
     }
