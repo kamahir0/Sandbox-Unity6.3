@@ -25,6 +25,7 @@ namespace Lilja.DebugMenu
         private const string PressedClass = "debug-menu-open-button--pressed";
         private const string OverlayClass = "debug-menu-open-button-overlay";
 
+        [Header("ボタン設定")]
         [SerializeField] private DebugMenuButtonPosition buttonPosition = DebugMenuButtonPosition.BottomLeft;
         [SerializeField, Min(0.01f)] private float thresholdSeconds = 0.5f;
         [SerializeField, Min(2)] private int requiredClicks = 3;
@@ -32,6 +33,20 @@ namespace Lilja.DebugMenu
         private Button _button;
         private int _clickCount;
         private float _firstClickTime;
+
+        private void Awake()
+        {
+            var uiDoc = GetComponent<UIDocument>();
+            if (uiDoc.panelSettings == null) uiDoc.panelSettings = Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
+            if (uiDoc.visualTreeAsset == null) uiDoc.visualTreeAsset = Resources.Load<VisualTreeAsset>("DebugMenu/DebugMenuOpenButton");
+        }
+
+        private void Reset()
+        {
+            var uiDoc = GetComponent<UIDocument>();
+            uiDoc.visualTreeAsset = Resources.Load<VisualTreeAsset>("DebugMenu/DebugMenuOpenButton");
+            uiDoc.panelSettings = Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
+        }
 
         private void OnEnable()
         {
@@ -94,13 +109,13 @@ namespace Lilja.DebugMenu
 
             var (justify, align) = buttonPosition switch
             {
-                DebugMenuButtonPosition.TopLeft     => (Justify.FlexStart, Align.FlexStart),
-                DebugMenuButtonPosition.TopRight    => (Justify.FlexStart, Align.FlexEnd),
-                DebugMenuButtonPosition.BottomLeft  => (Justify.FlexEnd,   Align.FlexStart),
-                DebugMenuButtonPosition.BottomRight => (Justify.FlexEnd,   Align.FlexEnd),
-                DebugMenuButtonPosition.CenterLeft  => (Justify.Center,    Align.FlexStart),
-                DebugMenuButtonPosition.CenterRight => (Justify.Center,    Align.FlexEnd),
-                _                                   => (Justify.FlexEnd,   Align.FlexStart),
+                DebugMenuButtonPosition.TopLeft => (Justify.FlexStart, Align.FlexStart),
+                DebugMenuButtonPosition.TopRight => (Justify.FlexStart, Align.FlexEnd),
+                DebugMenuButtonPosition.BottomLeft => (Justify.FlexEnd, Align.FlexStart),
+                DebugMenuButtonPosition.BottomRight => (Justify.FlexEnd, Align.FlexEnd),
+                DebugMenuButtonPosition.CenterLeft => (Justify.Center, Align.FlexStart),
+                DebugMenuButtonPosition.CenterRight => (Justify.Center, Align.FlexEnd),
+                _ => (Justify.FlexEnd, Align.FlexStart),
             };
 
             overlay.style.justifyContent = justify;

@@ -14,6 +14,21 @@ namespace Lilja.DebugMenu
         private const float HideDuration = 0.15f;
         private const float HideScale = 0.9f;
 
+        /// <summary>
+        /// UIDocument を自動生成して初期化する簡易版。
+        /// PanelSettings を省略するとパッケージ付属のデフォルトを使用する。
+        /// </summary>
+        public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
+        {
+            var go = new GameObject("[DebugMenu]");
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            var uiDoc = go.AddComponent<UIDocument>();
+            uiDoc.panelSettings = panelSettings != null
+                ? panelSettings
+                : Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
+            Initialize(uiDoc, rootPage);
+        }
+
         public static void Initialize(UIDocument uiDocument, DebugPage rootPage)
         {
             var root = uiDocument.rootVisualElement;
