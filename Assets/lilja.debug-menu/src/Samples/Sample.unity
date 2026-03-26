@@ -144,7 +144,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 455651251}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: 
@@ -187,7 +187,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd96dddf1a77f144894d5de3edd86056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lilja.DebugMenu::MockBuilder
-  _uiDocument: {fileID: 455651252}
 --- !u!1 &726214265
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,6 +309,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 089e1a98370b0bf4abb18410ac0fd67a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lilja.DebugMenu::Lilja.DebugMenu.DebugMenuOpenButton
+  panelSettings: {fileID: 0}
   buttonPosition: 2
   thresholdSeconds: 0.5
   requiredClicks: 3
