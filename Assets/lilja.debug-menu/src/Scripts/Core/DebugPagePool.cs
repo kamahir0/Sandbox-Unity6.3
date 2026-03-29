@@ -39,7 +39,9 @@ namespace Lilja.DebugMenu
             var page = wrappedFactory();
             page.Configure(new DebugPageBuilder(page, this));
             if (_pool[pageName].Count < MaxPerType)
+            {
                 _pool[pageName].Enqueue(page);
+            }
         }
 
         /// <summary>
@@ -48,7 +50,9 @@ namespace Lilja.DebugMenu
         internal void Reserve(string pageName)
         {
             if (!_pool.ContainsKey(pageName))
+            {
                 _pool[pageName] = new Queue<DebugPage>();
+            }
         }
 
         /// <summary>
@@ -80,10 +84,8 @@ namespace Lilja.DebugMenu
                 _pool[pageName] = queue;
             }
 
-            if (queue.Count < MaxPerType)
-                queue.Enqueue(page);
-            else
-                page.RemoveFromHierarchy();
+            if (queue.Count < MaxPerType) queue.Enqueue(page);
+            else page.RemoveFromHierarchy();
         }
 
         /// <summary>
@@ -92,8 +94,7 @@ namespace Lilja.DebugMenu
         /// </summary>
         public DebugPage CreateNew(string pageName)
         {
-            if (!_factories.TryGetValue(pageName, out var factory))
-                return null;
+            if (!_factories.TryGetValue(pageName, out var factory)) return null;
 
             var page = factory();
             page.Configure(new DebugPageBuilder(page, this));
@@ -114,7 +115,9 @@ namespace Lilja.DebugMenu
                 }
 
                 while (otherQueue.Count > 0 && queue.Count < MaxPerType)
+                {
                     queue.Enqueue(otherQueue.Dequeue());
+                }
             }
 
             foreach (var (key, factory) in other._factories)
