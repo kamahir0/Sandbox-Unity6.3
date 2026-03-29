@@ -95,8 +95,7 @@ namespace Lilja.DebugMenu
             if (_frame == null) return;
             if (!_frame.IsPageRegistered(pageName))
             {
-                Debug.LogError($"[DebugMenuManager] Page '{pageName}' is not registered. " +
-                               "Use NavigationButton or RegisterPage to register it first.");
+                Debug.LogError($"[DebugMenuManager] Page '{pageName}' is not registered. Use NavigationButton or RegisterPage to register it first.");
                 return;
             }
             _frame.Navigate(pageName);
@@ -114,7 +113,16 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// NavigationButton クリック時のナビゲート口。同一アセンブリ内からのみ使用する。
         /// </summary>
-        internal static void NavigateInternal(string pageName) => _frame?.Navigate(pageName);
+        internal static void NavigateInternal(string pageName)
+        {
+            if (_frame == null)
+            {
+                Debug.LogError("DebugMenuFrame is null.");
+                return;
+            }
+
+            _frame.Navigate(pageName);
+        }
 
         private static void ApplyHiddenState()
         {
