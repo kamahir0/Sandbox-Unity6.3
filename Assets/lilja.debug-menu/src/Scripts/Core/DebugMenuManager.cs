@@ -44,7 +44,7 @@ namespace Lilja.DebugMenu
             _frame = frame;
 
             // 初期状態は即時非表示（アニメーションなし）
-            ApplyHiddenState();
+            frame.SetHidden();
 
             // 矩形外タップで閉じる（DebugMenuRoot に委譲）
             menuRoot.SetupOutsideTapHandler(() => _frame, Hide);
@@ -83,7 +83,7 @@ namespace Lilja.DebugMenu
                 duration: HideDuration,
                 easing: DebugMenuAnimator.EaseInCubic,
                 shouldCancel: () => _animVersion != version,
-                onComplete: ApplyHiddenState
+                onComplete: _frame.SetHidden
             );
         }
 
@@ -122,13 +122,6 @@ namespace Lilja.DebugMenu
             }
 
             _frame.Navigate(pageName);
-        }
-
-        private static void ApplyHiddenState()
-        {
-            _frame.style.display = DisplayStyle.None;
-            _frame.style.opacity = 0f;
-            _frame.style.scale = new Scale(new Vector3(HideScale, HideScale, 1f));
         }
     }
 }

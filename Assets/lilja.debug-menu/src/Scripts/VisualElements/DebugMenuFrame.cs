@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -49,9 +50,10 @@ namespace Lilja.DebugMenu
             set => _label.text = value;
         }
 
-        public DebugMenuFrame() : this(null) { }
-
-        public DebugMenuFrame(DebugPage rootPage)
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public DebugMenuFrame()
         {
             AddToClassList(ussClassName);
             AddToClassList("t-surface");
@@ -88,27 +90,31 @@ namespace Lilja.DebugMenu
             _contentContainer.AddToClassList(contentUssClassName);
             _contentContainer.AddToClassList("c-page-stack");
             hierarchy.Add(_contentContainer);
+        }
 
-            // ルートページ
-            if (rootPage != null)
+        /// <summary>
+        /// コンストラクタ（ランタイム）
+        /// </summary>
+        public DebugMenuFrame(DebugPage rootPage) : this()
+        {
+            if (rootPage == null) return;
+
+            // name が未設定なら型名をフォールバックとして使用
+            if (string.IsNullOrEmpty(rootPage.name))
             {
-                // name が未設定なら型名をフォールバックとして使用
-                if (string.IsNullOrEmpty(rootPage.name))
-                    rootPage.name = rootPage.GetType().Name;
-
-                _currentPage = rootPage;
-                Label = rootPage.name;
-
-                // 循環防止マーカー設置後に Configure
-                _pagePool.Reserve(rootPage.name);
-                rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
-
-                // DOM に追加して即座表示
-                EnsureInDom(rootPage);
-                ShowPageImmediately(rootPage, PagePosition.In);
+                rootPage.name = rootPage.GetType().Name;
             }
 
-            UpdateBackButtonVisibility();
+            _currentPage = rootPage;
+            Label = rootPage.name;
+
+            // 循環防止マーカー設置後に Configure
+            _pagePool.Reserve(rootPage.name);
+            rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
+
+            EnsureInDom(rootPage);
+            ShowPageImmediately(rootPage, PagePosition.In);
+            SetBackButtonVisibility();
         }
 
         /// <summary>
@@ -126,7 +132,7 @@ namespace Lilja.DebugMenu
                 if (targetPage == null) return;
             }
 
-            CommitNavigation(targetPage);
+            OnNavigate(targetPage);
         }
 
         /// <summary>
@@ -139,13 +145,8 @@ namespace Lilja.DebugMenu
 
             var page = new GenericDebugPage(pageName, configure);
             page.Configure(new DebugPageBuilder(page, _pagePool));
-            CommitNavigation(page);
+            OnNavigate(page);
         }
-
-        /// <summary>
-        /// 指定ページ名がプールに登録済みか返す。
-        /// </summary>
-        internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
 
         /// <summary>
         /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
@@ -154,6 +155,11 @@ namespace Lilja.DebugMenu
         {
             _pagePool.Register(name, factory);
         }
+
+        /// <summary>
+        /// 指定ページ名がプールに登録済みか返す。
+        /// </summary>
+        internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
 
         /// <summary> 前のページへ戻る </summary>
         private void Back()
@@ -177,34 +183,35 @@ namespace Lilja.DebugMenu
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
             {
                 _isAnimating = false;
-                UpdateBackButtonVisibility();
+                SetBackButtonVisibility();
             });
         }
 
         /// <summary>
-        /// Navigate / NavigateTemp 共通のナビゲーション処理
+        /// ページ遷移時処理
         /// </summary>
-        private void CommitNavigation(DebugPage targetPage)
+        private void OnNavigate(DebugPage targetPage)
         {
+            // DOMに追加
             EnsureInDom(targetPage);
+
+            // ラベル更新
+            Label = targetPage.name;
 
             var prevPage = _currentPage;
             _currentPage = targetPage;
-            Label = targetPage.name;
 
             // 同一名ナビゲーション: 履歴にpushせずプールに返却
-            if (prevPage.name == targetPage.name)
-                _pagePool.Return(prevPage);
-            else
-                _history.Push(prevPage);
+            if (prevPage.name == targetPage.name) _pagePool.Return(prevPage);
+            else _history.Push(prevPage);
 
             // アニメーション
             _isAnimating = true;
-            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, null);
+            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration);
             SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
                 _isAnimating = false;
-                UpdateBackButtonVisibility();
+                SetBackButtonVisibility();
             });
         }
 
@@ -228,12 +235,18 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary> 指定したページをスライドさせる </summary>
-        private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete)
+        private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete = null)
         {
             DebugMenuAnimator.Slide(page, this, (float)from, (float)to, duration, onComplete);
         }
 
-        private void UpdateBackButtonVisibility()
+        public void SetHidden()
+        {
+            style.display = DisplayStyle.None;
+            style.opacity = 0f;
+        }
+
+        private void SetBackButtonVisibility()
         {
             _backButton.style.visibility = _history.Count > 0
                 ? Visibility.Visible
