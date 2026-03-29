@@ -84,8 +84,14 @@ namespace Lilja.DebugMenu
                 _pool[pageName] = queue;
             }
 
-            if (queue.Count < MaxPerType) queue.Enqueue(page);
-            else page.RemoveFromHierarchy();
+            if (queue.Count < MaxPerType)
+            {
+                queue.Enqueue(page);
+            }
+            else
+            {
+                page.RemoveFromHierarchy();
+            }
         }
 
         /// <summary>
@@ -123,7 +129,9 @@ namespace Lilja.DebugMenu
             foreach (var (key, factory) in other._factories)
             {
                 if (!_factories.ContainsKey(key))
+                {
                     _factories[key] = factory;
+                }
             }
         }
     }
