@@ -13,7 +13,8 @@ namespace Lilja.DebugMenu
             VisualElement target,
             float scaleFrom, float scaleTo,
             float opacityFrom, float opacityTo,
-            float duration, Func<float, float> easing,
+            float duration,
+            Func<float, float> easing,
             Func<bool> shouldCancel,
             Action onComplete)
         {
