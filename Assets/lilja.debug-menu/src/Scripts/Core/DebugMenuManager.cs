@@ -110,18 +110,5 @@ namespace Lilja.DebugMenu
             _frame?.NavigateTemp(pageName, configure);
         }
 
-        /// <summary>
-        /// NavigationButton クリック時のナビゲート口。同一アセンブリ内からのみ使用する。
-        /// </summary>
-        internal static void NavigateInternal(string pageName)
-        {
-            if (_frame == null)
-            {
-                Debug.LogError("DebugMenuFrame is null.");
-                return;
-            }
-
-            _frame.Navigate(pageName);
-        }
     }
 }
