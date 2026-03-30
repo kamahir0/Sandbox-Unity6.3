@@ -6,13 +6,13 @@
                 <debug:DebugTextField label="プレイヤー名" value="Player1"/>
                 <debug:DebugRadioButtonGroup label="テーマ" choices="ライト,ダーク"/>
                 <debug:DebugToggleGroup label="有効機能">
-                    <debug:DebugToggleGroupItem text="デバッグログ"/>
-                    <debug:DebugToggleGroupItem text="FPS表示"/>
+                    <debug:DebugToggleGroupItem label="デバッグログ"/>
+                    <debug:DebugToggleGroupItem label="FPS表示"/>
                 </debug:DebugToggleGroup>
                 <debug:DebugFoldout text="詳細設定">
                     <debug:DebugToggleGroup label="出力先">
-                        <debug:DebugToggleGroupItem text="コンソール"/>
-                        <debug:DebugToggleGroupItem text="ファイル"/>
+                        <debug:DebugToggleGroupItem label="コンソール"/>
+                        <debug:DebugToggleGroupItem label="ファイル"/>
                     </debug:DebugToggleGroup>
                     <debug:DebugIntegerField label="回数"/>
                 </debug:DebugFoldout>

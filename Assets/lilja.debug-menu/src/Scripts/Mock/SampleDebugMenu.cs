@@ -23,6 +23,7 @@ public class SampleDebugMenu : MonoBehaviour
         {
             builder.NavigationButton("Player", () => new PlayerPage());
             builder.NavigationButton("Audio", () => new AudioPage());
+            builder.NavigationButton("Settings", () => new SettingsPage());
             builder.NavigationButton("Scene", b =>
             {
                 var titleBtn = new DebugButton("Title");
@@ -66,6 +67,48 @@ public class SampleDebugMenu : MonoBehaviour
 
             builder.NavigationButton("Player", () => new PlayerPage());
             builder.NavigationButton("Audio", () => new AudioPage());
+        }
+    }
+
+    // ─── Settings ────────────────────────────────────────────────
+
+    class SettingsPage : DebugPage
+    {
+        public override void Configure(IDebugPageBuilder builder)
+        {
+            builder.VisualElement(new DebugLabel("プレイヤー設定"));
+
+            var nameField = new DebugTextField("プレイヤー名") { value = "Player1" };
+            builder.VisualElement(nameField);
+
+            var themeGroup = new DebugRadioButtonGroup("テーマ") { choices = new System.Collections.Generic.List<string> { "ライト", "ダーク" } };
+            builder.VisualElement(themeGroup);
+
+            var featureGroup = new DebugToggleGroup("有効機能");
+            featureGroup.Add(new DebugToggleGroupItem("デバッグログ"));
+            featureGroup.Add(new DebugToggleGroupItem("FPS表示"));
+            builder.VisualElement(featureGroup);
+
+            builder.Foldout("詳細設定", b =>
+            {
+                var outputGroup = new DebugToggleGroup("出力先");
+                outputGroup.Add(new DebugToggleGroupItem("コンソール"));
+                outputGroup.Add(new DebugToggleGroupItem("ファイル"));
+                b.VisualElement(outputGroup);
+
+                b.VisualElement(new DebugIntegerField("回数"));
+            });
+
+            var buttonRow = new VisualElement();
+            buttonRow.style.flexDirection = FlexDirection.Row;
+            buttonRow.style.marginTop = 12;
+            var resetBtn = new DebugSecondaryButton("リセット");
+            resetBtn.style.flexGrow = 1;
+            var applyBtn = new DebugButton("適用");
+            applyBtn.style.flexGrow = 1;
+            buttonRow.Add(resetBtn);
+            buttonRow.Add(applyBtn);
+            builder.VisualElement(buttonRow);
         }
     }
 
