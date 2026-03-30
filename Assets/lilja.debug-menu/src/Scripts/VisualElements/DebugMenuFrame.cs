@@ -112,7 +112,8 @@ namespace Lilja.DebugMenu
             _pagePool.Reserve(rootPage.name);
             rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
 
-            EnsureInDom(rootPage);
+            rootPage.SetLayout();
+            _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
             SetBackButtonVisibility();
         }
@@ -188,8 +189,10 @@ namespace Lilja.DebugMenu
         /// </summary>
         private void OnNavigate(DebugPage targetPage)
         {
-            // DOMに追加
-            EnsureInDom(targetPage);
+            if (targetPage.parent != _contentContainer)
+            {
+                _contentContainer.Add(targetPage);
+            }
 
             // ラベル更新
             Label = targetPage.name;
@@ -219,18 +222,6 @@ namespace Lilja.DebugMenu
             });
         }
 
-        /// <summary> ページがまだ _contentContainer に追加されていなければ追加し、画面外に配置する。 </summary>
-        private void EnsureInDom(DebugPage page)
-        {
-            if (page.parent == _contentContainer) return;
-
-            page.style.position = Position.Absolute;
-            page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
-            page.style.top = 0;
-            page.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
-            page.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
-            _contentContainer.Add(page);
-        }
 
         /// <summary> 指定したページをスライドさせずに即座に表示する </summary>
         private void ShowPageImmediately(DebugPage page, PagePosition position)

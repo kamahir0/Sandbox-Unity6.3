@@ -37,5 +37,17 @@ namespace Lilja.DebugMenu
         {
             _scrollView.scrollOffset = Vector2.zero;
         }
+
+        /// <summary>
+        /// コンテナへ追加される前の初期レイアウトを設定する。画面外右端に絶対配置する。
+        /// </summary>
+        internal void SetLayout()
+        {
+            style.position = Position.Absolute;
+            style.left = new StyleLength(new Length(100, LengthUnit.Percent));
+            style.top = 0;
+            style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+            style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+        }
     }
 }

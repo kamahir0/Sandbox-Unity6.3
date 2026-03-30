@@ -37,6 +37,7 @@ namespace Lilja.DebugMenu
             _factories[pageName] = wrappedFactory;
 
             var page = wrappedFactory();
+            page.SetLayout();
             page.Configure(new DebugPageBuilder(page, this));
             if (_pool[pageName].Count < MaxPerType)
             {
@@ -72,6 +73,7 @@ namespace Lilja.DebugMenu
             if (!_factories.TryGetValue(pageName, out var factory)) return null;
 
             var page = factory();
+            page.SetLayout();
             page.Configure(new DebugPageBuilder(page, this));
             return page;
         }
