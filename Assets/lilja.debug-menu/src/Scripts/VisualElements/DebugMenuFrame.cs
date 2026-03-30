@@ -158,7 +158,7 @@ namespace Lilja.DebugMenu
         internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
 
         /// <summary> 前のページへ戻る </summary>
-        private void Back()
+        internal void Back()
         {
             if (_isAnimating) return;
             if (_history.Count == 0) return;

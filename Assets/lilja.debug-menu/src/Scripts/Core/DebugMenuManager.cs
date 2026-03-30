@@ -101,6 +101,11 @@ namespace Lilja.DebugMenu
             _frame.Navigate(pageName);
         }
 
+        public static void Back()
+        {
+            _frame?.Back();
+        }
+
         /// <summary>
         /// GenericDebugPage を即席生成してナビゲートする。事前登録不要。
         /// 主に動的コンテンツや GenericDebugPage を使うケース向け。
