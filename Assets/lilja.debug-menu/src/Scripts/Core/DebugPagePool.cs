@@ -56,18 +56,24 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// プールからインスタンスを1つ借りる。キューが空なら false を返す。
+        /// プールからインスタンスを1つ借りる。キューが空なら新規生成して返す。ファクトリ未登録なら null を返す。
         /// </summary>
-        public bool TryRent(string pageName, out DebugPage page)
+        public DebugPage Rent(string pageName)
         {
             if (_pool.TryGetValue(pageName, out var queue) && queue.Count > 0)
             {
-                page = queue.Dequeue();
-                return true;
+                return queue.Dequeue();
             }
+            return CreateNew(pageName);
+        }
 
-            page = null;
-            return false;
+        private DebugPage CreateNew(string pageName)
+        {
+            if (!_factories.TryGetValue(pageName, out var factory)) return null;
+
+            var page = factory();
+            page.Configure(new DebugPageBuilder(page, this));
+            return page;
         }
 
         /// <summary>
@@ -92,19 +98,6 @@ namespace Lilja.DebugMenu
             {
                 page.RemoveFromHierarchy();
             }
-        }
-
-        /// <summary>
-        /// ファクトリから新規インスタンスを生成し、Configure を実行して返す。
-        /// ファクトリ未登録なら null を返す。
-        /// </summary>
-        public DebugPage CreateNew(string pageName)
-        {
-            if (!_factories.TryGetValue(pageName, out var factory)) return null;
-
-            var page = factory();
-            page.Configure(new DebugPageBuilder(page, this));
-            return page;
         }
 
         /// <summary>

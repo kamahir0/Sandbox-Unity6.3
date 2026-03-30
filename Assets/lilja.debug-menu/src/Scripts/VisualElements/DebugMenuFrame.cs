@@ -125,12 +125,8 @@ namespace Lilja.DebugMenu
             if (_isAnimating) return;
             if (_currentPage == null) return;
 
-            // プールから借用、なければファクトリで新規生成
-            if (!_pagePool.TryRent(pageName, out var targetPage))
-            {
-                targetPage = _pagePool.CreateNew(pageName);
-                if (targetPage == null) return;
-            }
+            var targetPage = _pagePool.Rent(pageName);
+            if (targetPage == null) return;
 
             OnNavigate(targetPage);
         }
