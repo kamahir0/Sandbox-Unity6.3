@@ -22,7 +22,7 @@ public class SampleDebugMenu : MonoBehaviour
         public override void Configure(IDebugPageBuilder builder)
         {
             builder.NavigationButton("Player", () => new PlayerPage());
-            builder.NavigationButton("Audio",  () => new AudioPage());
+            builder.NavigationButton("Audio", () => new AudioPage());
             builder.NavigationButton("Scene", b =>
             {
                 var titleBtn = new DebugButton("Title");
@@ -73,7 +73,7 @@ public class SampleDebugMenu : MonoBehaviour
         public override void Configure(IDebugPageBuilder builder)
         {
             var bgmField = new DebugFloatField("BGM") { value = AudioListener.volume };
-            var seField  = new DebugFloatField("SE")  { value = 1f };
+            var seField = new DebugFloatField("SE") { value = 1f };
             var applyBtn = new DebugButton("適用");
             applyBtn.clicked += () =>
             {
