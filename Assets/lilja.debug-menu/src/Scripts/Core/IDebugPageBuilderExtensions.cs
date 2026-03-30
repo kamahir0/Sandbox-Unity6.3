@@ -13,10 +13,7 @@ namespace Lilja.DebugMenu
         public static void Foldout(this IDebugPageBuilder builder, string text, Action<IDebugPageBuilder> configure)
         {
             var foldout = new DebugFoldout(text);
-            var innerPool = new DebugPagePool();
-            var innerBuilder = new DebugPageBuilder(foldout, innerPool);
-            configure(innerBuilder);
-            ((DebugPageBuilder)builder).PagePool.Merge(innerPool);
+            configure(builder.CreateChildBuilder(foldout));
             builder.VisualElement(foldout);
         }
 
