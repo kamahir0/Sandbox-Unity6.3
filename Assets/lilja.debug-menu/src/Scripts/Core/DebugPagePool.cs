@@ -101,33 +101,5 @@ namespace Lilja.DebugMenu
                 page.RemoveFromHierarchy();
             }
         }
-
-        /// <summary>
-        /// 他プールの内容をマージする（Foldout のネスト用）。
-        /// </summary>
-        public void Merge(DebugPagePool other)
-        {
-            foreach (var (key, otherQueue) in other._pool)
-            {
-                if (!_pool.TryGetValue(key, out var queue))
-                {
-                    queue = new Queue<DebugPage>();
-                    _pool[key] = queue;
-                }
-
-                while (otherQueue.Count > 0 && queue.Count < MaxPerType)
-                {
-                    queue.Enqueue(otherQueue.Dequeue());
-                }
-            }
-
-            foreach (var (key, factory) in other._factories)
-            {
-                if (!_factories.ContainsKey(key))
-                {
-                    _factories[key] = factory;
-                }
-            }
-        }
     }
 }
