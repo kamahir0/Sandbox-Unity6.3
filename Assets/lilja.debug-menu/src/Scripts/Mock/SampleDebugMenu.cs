@@ -63,6 +63,9 @@ public class SampleDebugMenu : MonoBehaviour
                 invincibleBtn.clicked += () => Debug.Log("[Debug] 無敵モード");
                 b.VisualElement(invincibleBtn);
             });
+
+            builder.NavigationButton("Player", () => new PlayerPage());
+            builder.NavigationButton("Audio", () => new AudioPage());
         }
     }
 
