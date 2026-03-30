@@ -22,8 +22,8 @@ namespace Lilja.DebugMenu
     public sealed class DebugMenuOpenButton : MonoBehaviour
     {
         private const string ButtonName = "debug-menu-open-button";
-        private const string PressedClass = "debug-menu-open-button--pressed";
-        private const string OverlayClass = "debug-menu-open-button-overlay";
+        private const string PressedClass = "c-open-button--pressed";
+        private const string OverlayClass = "c-open-button__overlay";
 
         [Header("ボタン設定")]
         [SerializeField] private DebugMenuButtonPosition buttonPosition = DebugMenuButtonPosition.BottomLeft;

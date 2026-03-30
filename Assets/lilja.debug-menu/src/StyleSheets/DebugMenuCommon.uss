@@ -85,9 +85,6 @@
 }
 
 /* DebugPage (ScrollView ラッパー) */
-.c-page {
-}
-
 .c-scroll-view {
     flex-grow: 1;
 }
@@ -109,15 +106,6 @@
 /* チェックマークとラベルの間隔を c-toggle-group の --size-item-gap に合わせる */
 .c-radio-group .unity-radio-button__checkmark-background {
     margin-right: var(--size-item-gap);
-}
-
-/* Toggle 系の共通ラベル幅（c-toggle / c-toggle-button-group 用） */
-.c-toggle .unity-base-field__label,
-.c-toggle-button-group .unity-base-field__label {
-    width: var(--size-label-width);
-    -unity-text-align: middle-left;
-    margin: 0;
-    padding: 0;
 }
 
 /* DebugFoldout */
