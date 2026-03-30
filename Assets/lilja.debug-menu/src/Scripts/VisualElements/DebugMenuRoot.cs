@@ -26,7 +26,9 @@ namespace Lilja.DebugMenu
             {
                 var frame = getFrame();
                 if (frame != null && !frame.worldBound.Contains(evt.position))
+                {
                     onOutsideTap();
+                }
             }, TrickleDown.TrickleDown);
         }
     }
