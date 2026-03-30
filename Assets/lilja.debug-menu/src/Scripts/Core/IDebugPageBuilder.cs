@@ -11,7 +11,7 @@ namespace Lilja.DebugMenu
     internal sealed class DebugPageBuilder : IDebugPageBuilder
     {
         public VisualElement Parent { get; }
-        internal DebugPagePool PagePool { get; }
+        public DebugPagePool PagePool { get; }
 
         public DebugPageBuilder(VisualElement parent, DebugPagePool pagePool)
         {
