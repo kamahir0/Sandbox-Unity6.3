@@ -172,14 +172,14 @@ namespace Lilja.DebugMenu
             var prevPage = _history.Pop();
             var currentPage = _currentPage;
 
-            // 現在ページをプールに返却（スクロールリセット含む）
-            _pagePool.Return(currentPage);
-
             _currentPage = prevPage;
             Label = prevPage.name;
 
-            // アニメーション
-            SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, null);
+            // アニメーション完了後にプールへ返却（スクロールリセットはページが画面外に出てから）
+            SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, () =>
+            {
+                _pagePool.Return(currentPage);
+            });
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
             {
                 _isAnimating = false;
@@ -201,13 +201,21 @@ namespace Lilja.DebugMenu
             var prevPage = _currentPage;
             _currentPage = targetPage;
 
-            // 同一名ナビゲーション: 履歴にpushせずプールに返却
-            if (prevPage.name == targetPage.name) _pagePool.Return(prevPage);
-            else _history.Push(prevPage);
-
             // アニメーション
             _isAnimating = true;
-            SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration);
+            if (prevPage.name == targetPage.name)
+            {
+                // 同一名ナビゲーション: 履歴にpushせず、アニメーション完了後にプールへ返却
+                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, () =>
+                {
+                    _pagePool.Return(prevPage);
+                });
+            }
+            else
+            {
+                _history.Push(prevPage);
+                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration);
+            }
             SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
                 _isAnimating = false;
