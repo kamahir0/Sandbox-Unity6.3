@@ -129,6 +129,7 @@ public class SampleDebugMenu : MonoBehaviour
             builder.VisualElement(bgmField);
             builder.VisualElement(seField);
             builder.VisualElement(applyBtn);
+            builder.NavigationButton("Player", () => new PlayerPage());
         }
     }
 }
