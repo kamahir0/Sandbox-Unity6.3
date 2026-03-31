@@ -29,7 +29,7 @@ namespace Lilja.DebugMenu
             var b = (DebugPageBuilder)builder;
             b.PagePool.Register(pageName, () => pageFactory());
 
-            var button = new DebugButton(pageName);
+            var button = new DebugNavigationButton(pageName);
             button.clicked += () => DebugMenuManager.NavigateTo(pageName);
             builder.VisualElement(button);
         }

@@ -3,6 +3,23 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
+    /// ナビゲーションボタン（iOS設定アプリ風）
+    /// 背景色はページと同一、上下のセパレーターで矩形を可視化する。
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugNavigationButton : Button
+    {
+        public DebugNavigationButton() : this(string.Empty) { }
+
+        public DebugNavigationButton(string text) : base()
+        {
+            this.text = text;
+            AddToClassList("c-control-size");
+            AddToClassList("c-nav-button");
+        }
+    }
+
+    /// <summary>
     /// デバッグメニュー用のプライマリボタン
     /// </summary>
     [UxmlElement]
