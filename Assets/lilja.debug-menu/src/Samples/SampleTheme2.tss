@@ -1,4 +1,4 @@
-@import url("../StyleSheets/DebugMenuTheme.tss");
+@import url("../DebugMenu/StyleSheets/DebugMenuTheme.tss");
 @import url("SampleTheme2.uss");
 
 VisualElement {}
