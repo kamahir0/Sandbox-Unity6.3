@@ -5,6 +5,7 @@ namespace Lilja.DebugMenu
     /// <summary>
     /// ナビゲーションボタン（iOS設定アプリ風）
     /// 背景色はページと同一、上下のセパレーターで矩形を可視化する。
+    /// テキストラベルと右端矢印アイコンを子要素として保持する。
     /// </summary>
     [UxmlElement]
     public partial class DebugNavigationButton : Button
@@ -13,9 +14,16 @@ namespace Lilja.DebugMenu
 
         public DebugNavigationButton(string text) : base()
         {
-            this.text = text;
             AddToClassList("c-control-size");
             AddToClassList("c-nav-button");
+
+            var label = new Label(text);
+            label.AddToClassList("c-nav-button__label");
+            Add(label);
+
+            var icon = new VisualElement();
+            icon.AddToClassList("c-nav-button__icon");
+            Add(icon);
         }
     }
 

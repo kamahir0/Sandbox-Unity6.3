@@ -62,20 +62,38 @@
 
 /* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
    背景色はページと同一、上下のセパレーターで矩形を可視化する。
-   c-control-size の margin を打ち消して幅いっぱいに拡張する。 */
+   c-control-size の margin を打ち消して幅いっぱいに拡張する。
+   子要素として c-nav-button__label（テキスト）と c-nav-button__icon（右矢印）を持つ。 */
 .c-nav-button {
     margin: 0;
+    flex-direction: row;
+    align-items: center;
     background-color: var(--color-window-bg);
-    color: var(--color-window-text);
     border-radius: 0;
     border-left-width: 0;
     border-right-width: 0;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: var(--color-input-border);
+    padding: 0 16px;
+}
+
+.c-nav-button__label {
+    flex-grow: 1;
+    font-size: var(--font-size-standard);
+    color: var(--color-window-text);
     -unity-text-align: middle-left;
     -unity-font-style: normal;
-    padding: 0 16px;
+    margin: 0;
+    padding: 0;
+}
+
+.c-nav-button__icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background-image: url("../Resources/debug-menu-navigation.svg");
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 /* DebugLabel */
