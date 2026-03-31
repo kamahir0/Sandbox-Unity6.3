@@ -8,18 +8,18 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugToggleGroupItem : VisualElement, INotifyValueChanged<bool>
     {
-        // クラス
-        public static readonly string ussClassName = "c-toggle-group-item";
-        public static readonly string checkedUssClassName = ussClassName + "--checked";
-        public static readonly string checkboxUssClassName = ussClassName + "__checkbox";
-        public static readonly string labelUssClassName = ussClassName + "__label";
-
         // UI
         private readonly Toggle _checkbox;
         private readonly Label _label;
-        private bool _value;
 
+        private bool _value;
         private DebugToggleGroup _registeredGroup;
+
+        // クラス
+        private const string UssClassName = "c-toggle-group-item";
+        private const string CheckedUssClassName = UssClassName + "--checked";
+        private const string CheckboxUssClassName = UssClassName + "__checkbox";
+        private const string LabelUssClassName = UssClassName + "__label";
 
         [UxmlAttribute]
         public string Label
@@ -53,19 +53,19 @@ namespace Lilja.DebugMenu
 
         public DebugToggleGroupItem(string text)
         {
-            AddToClassList(ussClassName);
+            AddToClassList(UssClassName);
             focusable = true;
 
             // チェックボックス
             _checkbox = new Toggle();
-            _checkbox.AddToClassList(checkboxUssClassName);
+            _checkbox.AddToClassList(CheckboxUssClassName);
             _checkbox.pickingMode = PickingMode.Ignore;
             _checkbox.focusable = false;
             Add(_checkbox);
 
             // ラベル
             _label = new Label();
-            _label.AddToClassList(labelUssClassName);
+            _label.AddToClassList(LabelUssClassName);
             _label.pickingMode = PickingMode.Ignore;
             Add(_label);
             Label = text;
@@ -80,7 +80,7 @@ namespace Lilja.DebugMenu
         {
             _value = v;
             _checkbox.SetValueWithoutNotify(v);
-            EnableInClassList(checkedUssClassName, v);
+            EnableInClassList(CheckedUssClassName, v);
         }
 
         private void OnClick(ClickEvent e)

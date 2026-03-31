@@ -3,6 +3,16 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
+    /// 複数のコントロールクラスで共有される USS クラス名
+    /// </summary>
+    public static class DebugMenuUssClass
+    {
+        public const string ControlSize = "c-control-size";
+        public const string Button = "c-button";
+        public const string Input = "c-input";
+    }
+
+    /// <summary>
     /// ナビゲーションボタン（iOS設定アプリ風）
     /// 背景色はページと同一、上下のセパレーターで矩形を可視化する。
     /// テキストラベルと右端矢印アイコンを子要素として保持する。
@@ -10,19 +20,24 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugNavigationButton : Button
     {
+        // クラス
+        private const string UssClassName = "c-nav-button";
+        private const string LabelUssClassName = UssClassName + "__label";
+        private const string IconUssClassName = UssClassName + "__icon";
+
         public DebugNavigationButton() : this(string.Empty) { }
 
         public DebugNavigationButton(string text) : base()
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-nav-button");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
 
             var label = new Label(text);
-            label.AddToClassList("c-nav-button__label");
+            label.AddToClassList(LabelUssClassName);
             Add(label);
 
             var icon = new VisualElement();
-            icon.AddToClassList("c-nav-button__icon");
+            icon.AddToClassList(IconUssClassName);
             Add(icon);
         }
     }
@@ -33,14 +48,18 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugButton : Button
     {
+        // クラス
+        private const string UssClassName = DebugMenuUssClass.Button;
+        private const string PrimaryUssClassName = UssClassName + "--primary";
+
         public DebugButton() : this(string.Empty) { }
 
         public DebugButton(string text) : base()
         {
             this.text = text;
-            AddToClassList("c-control-size");
-            AddToClassList("c-button");
-            AddToClassList("c-button--primary");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
+            AddToClassList(PrimaryUssClassName);
         }
     }
 
@@ -50,14 +69,18 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugSecondaryButton : Button
     {
+        // クラス
+        private const string UssClassName = DebugMenuUssClass.Button;
+        private const string SecondaryUssClassName = UssClassName + "--secondary";
+
         public DebugSecondaryButton() : this(string.Empty) { }
 
         public DebugSecondaryButton(string text) : base()
         {
             this.text = text;
-            AddToClassList("c-control-size");
-            AddToClassList("c-button");
-            AddToClassList("c-button--secondary");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
+            AddToClassList(SecondaryUssClassName);
         }
     }
 
@@ -71,8 +94,8 @@ namespace Lilja.DebugMenu
 
         public DebugTextField(string label) : base(label)
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-input");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
         }
     }
 
@@ -82,12 +105,15 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugLabel : Label
     {
+        // クラス
+        private const string UssClassName = "c-label";
+
         public DebugLabel() : this(string.Empty) { }
 
         public DebugLabel(string text) : base(text)
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-label");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
         }
     }
 
@@ -97,13 +123,16 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugFoldout : Foldout
     {
+        // クラス
+        private const string UssClassName = "c-foldout";
+
         public DebugFoldout() : this(string.Empty) { }
 
         public DebugFoldout(string label) : base()
         {
             text = label;
-            AddToClassList("c-control-size");
-            AddToClassList("c-foldout");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
         }
     }
 
@@ -113,12 +142,15 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugRadioButtonGroup : RadioButtonGroup
     {
+        // クラス
+        private const string UssClassName = "c-radio-group";
+
         public DebugRadioButtonGroup() : this(string.Empty) { }
 
         public DebugRadioButtonGroup(string label) : base(label)
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-radio-group");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(UssClassName);
         }
     }
 
@@ -132,8 +164,8 @@ namespace Lilja.DebugMenu
 
         public DebugIntegerField(string label) : base(label)
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-input");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
         }
     }
 
@@ -147,8 +179,8 @@ namespace Lilja.DebugMenu
 
         public DebugFloatField(string label) : base(label)
         {
-            AddToClassList("c-control-size");
-            AddToClassList("c-input");
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
         }
     }
 }

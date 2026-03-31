@@ -39,7 +39,6 @@ namespace Lilja.DebugMenu
             _menuRoot = menuRoot;
 
             var frame = new DebugMenuFrame(rootPage);
-            frame.AddToClassList("c-menu-frame--default-size");
             menuRoot.Add(frame);
             _frame = frame;
 

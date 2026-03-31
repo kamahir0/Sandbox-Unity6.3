@@ -11,15 +11,6 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugMenuFrame : VisualElement
     {
-        // クラス
-        public static readonly string ussClassName = "c-menu-frame";
-        public static readonly string headerUssClassName = ussClassName + "__header";
-        public static readonly string backButtonUssClassName = ussClassName + "__back-button";
-        public static readonly string backButtonIconUssClassName = ussClassName + "__back-button-icon";
-        public static readonly string headerSpacerUssClassName = ussClassName + "__header-spacer";
-        public static readonly string titleUssClassName = ussClassName + "__title";
-        public static readonly string contentUssClassName = ussClassName + "__content";
-
         // UI
         private readonly Button _backButton;
         private readonly Label _label;
@@ -28,10 +19,22 @@ namespace Lilja.DebugMenu
         // ナビゲーション
         private readonly DebugPagePool _pagePool = new();
         private readonly Stack<DebugPage> _history = new();
+        private const float AnimationDuration = 0.4f;
+
         private DebugPage _currentPage;
         private bool _isAnimating;
 
-        private const float AnimationDuration = 0.4f;
+        // クラス
+        private const string UssClassName = "c-menu-frame";
+        private const string HeaderUssClassName = UssClassName + "__header";
+        private const string BackButtonUssClassName = UssClassName + "__back-button";
+        private const string BackButtonIconUssClassName = UssClassName + "__back-button-icon";
+        private const string HeaderSpacerUssClassName = UssClassName + "__header-spacer";
+        private const string TitleUssClassName = UssClassName + "__title";
+        private const string ContentUssClassName = UssClassName + "__content";
+        private const string DefaultSizeUssClassName = UssClassName + "--default-size";
+        private const string SurfaceUssClassName = "t-surface";
+        private const string PageStackUssClassName = "c-page-stack";
 
         private enum PagePosition
         {
@@ -55,19 +58,20 @@ namespace Lilja.DebugMenu
         /// </summary>
         public DebugMenuFrame()
         {
-            AddToClassList(ussClassName);
-            AddToClassList("t-surface");
+            AddToClassList(UssClassName);
+            AddToClassList(SurfaceUssClassName);
+            AddToClassList(DefaultSizeUssClassName);
 
             // ヘッダー
             var header = new VisualElement();
-            header.AddToClassList(headerUssClassName);
+            header.AddToClassList(HeaderUssClassName);
             hierarchy.Add(header);
 
             // バックボタン
             _backButton = new Button();
-            _backButton.AddToClassList(backButtonUssClassName);
+            _backButton.AddToClassList(BackButtonUssClassName);
             var backButtonIcon = new VisualElement();
-            backButtonIcon.AddToClassList(backButtonIconUssClassName);
+            backButtonIcon.AddToClassList(BackButtonIconUssClassName);
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
             _backButton.clicked += Back;
@@ -75,20 +79,20 @@ namespace Lilja.DebugMenu
 
             // タイトルラベル
             _label = new Label();
-            _label.AddToClassList(titleUssClassName);
+            _label.AddToClassList(TitleUssClassName);
             header.Add(_label);
 
             // スペーサー
             // NOTE: バックボタンと同幅のスペーサーでタイトルを視覚的に中央寄せ
             var spacer = new VisualElement();
-            spacer.AddToClassList(headerSpacerUssClassName);
+            spacer.AddToClassList(HeaderSpacerUssClassName);
             spacer.pickingMode = PickingMode.Ignore;
             header.Add(spacer);
 
             // コンテンツエリア（ページスタックを兼ねる）
             _contentContainer = new VisualElement();
-            _contentContainer.AddToClassList(contentUssClassName);
-            _contentContainer.AddToClassList("c-page-stack");
+            _contentContainer.AddToClassList(ContentUssClassName);
+            _contentContainer.AddToClassList(PageStackUssClassName);
             hierarchy.Add(_contentContainer);
         }
 

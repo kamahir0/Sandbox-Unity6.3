@@ -19,14 +19,19 @@ namespace Lilja.DebugMenu
         /// <inheritdoc/>
         public override VisualElement contentContainer => _scrollView.contentContainer;
 
+        // クラス
+        private const string UssClassName = "c-page";
+        private const string ScrollViewUssClassName = "c-scroll-view";
+        private const string SurfaceUssClassName = "t-surface";
+
         public DebugPage() : base()
         {
-            AddToClassList("t-surface");
-            AddToClassList("c-page");
+            AddToClassList(SurfaceUssClassName);
+            AddToClassList(UssClassName);
 
             // スクロースビュー
             _scrollView = new ScrollView();
-            _scrollView.AddToClassList("c-scroll-view");
+            _scrollView.AddToClassList(ScrollViewUssClassName);
             hierarchy.Add(_scrollView);
         }
 

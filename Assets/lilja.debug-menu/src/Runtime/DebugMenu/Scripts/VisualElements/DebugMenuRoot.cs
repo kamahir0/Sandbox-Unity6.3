@@ -9,12 +9,18 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugMenuRoot : VisualElement
     {
+        // クラス
+        private const string UssClassName = "t-root";
+        private const string ScreenLayoutUssClassName = "l-screen";
+        private const string CenterContentUssClassName = "u-center-content";
+        private const string BgTransparentUssClassName = "u-bg-transparent";
+
         public DebugMenuRoot()
         {
-            AddToClassList("t-root");
-            AddToClassList("l-screen");
-            AddToClassList("u-center-content");
-            AddToClassList("u-bg-transparent");
+            AddToClassList(UssClassName);
+            AddToClassList(ScreenLayoutUssClassName);
+            AddToClassList(CenterContentUssClassName);
+            AddToClassList(BgTransparentUssClassName);
         }
 
         /// <summary>
