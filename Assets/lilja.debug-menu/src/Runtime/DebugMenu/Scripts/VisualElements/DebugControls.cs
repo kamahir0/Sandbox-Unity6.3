@@ -10,6 +10,7 @@ namespace Lilja.DebugMenu
         public const string ControlSize = "c-control-size";
         public const string Button = "c-button";
         public const string Input = "c-input";
+        public const string HorizontalScope = "c-h-scope";
     }
 
     /// <summary>
