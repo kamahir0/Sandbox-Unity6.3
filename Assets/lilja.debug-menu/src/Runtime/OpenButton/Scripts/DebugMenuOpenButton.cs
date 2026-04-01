@@ -37,15 +37,15 @@ namespace Lilja.DebugMenu
         private void Awake()
         {
             var uiDoc = GetComponent<UIDocument>();
-            if (uiDoc.panelSettings == null) uiDoc.panelSettings = Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
-            if (uiDoc.visualTreeAsset == null) uiDoc.visualTreeAsset = Resources.Load<VisualTreeAsset>("DebugMenu/DebugMenuOpenButton");
+            if (uiDoc.panelSettings == null) uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
+            if (uiDoc.visualTreeAsset == null) uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
         }
 
         private void Reset()
         {
             var uiDoc = GetComponent<UIDocument>();
-            uiDoc.visualTreeAsset = Resources.Load<VisualTreeAsset>("DebugMenu/DebugMenuOpenButton");
-            uiDoc.panelSettings = Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
+            uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
+            uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
         }
 
         private void OnEnable()

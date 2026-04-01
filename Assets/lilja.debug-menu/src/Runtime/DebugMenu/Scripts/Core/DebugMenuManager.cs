@@ -25,7 +25,7 @@ namespace Lilja.DebugMenu
             var uiDoc = go.AddComponent<UIDocument>();
             uiDoc.panelSettings = panelSettings != null
                 ? panelSettings
-                : Resources.Load<PanelSettings>("DebugMenu/PanelSettings");
+                : DebugMenuResources.LoadDefaultPanelSettings();
             Initialize(uiDoc, rootPage);
         }
 
