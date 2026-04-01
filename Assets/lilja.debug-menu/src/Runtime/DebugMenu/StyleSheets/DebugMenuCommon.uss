@@ -92,7 +92,7 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    background-image: url("../Resources/debug-menu-navigation.svg");
+    background-image: url("../Resources/LiljaDebugMenu/debug-menu-navigation.svg");
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -280,7 +280,7 @@
 /* バックボタン内のアイコン */
 .c-menu-frame__back-button-icon {
     flex-grow: 1;
-    background-image: url("../Resources/debug-menu-back.svg");
+    background-image: url("../Resources/LiljaDebugMenu/debug-menu-back.svg");
     -unity-background-scale-mode: scale-to-fit;
 }
 

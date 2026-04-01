@@ -5,8 +5,8 @@ namespace Lilja.DebugMenu
 {
     internal static class DebugMenuResources
     {
-        private const string DefaultPanelSettingsPath = "DebugMenu/DefaultPanelSettings";
-        private const string OpenButtonVisualTreePath = "DebugMenu/DebugMenuOpenButton";
+        private const string DefaultPanelSettingsPath = "LiljaDebugMenu/DefaultPanelSettings";
+        private const string OpenButtonVisualTreePath = "LiljaDebugMenu/DebugMenuOpenButton";
 
         public static PanelSettings LoadDefaultPanelSettings()
             => Resources.Load<PanelSettings>(DefaultPanelSettingsPath);
