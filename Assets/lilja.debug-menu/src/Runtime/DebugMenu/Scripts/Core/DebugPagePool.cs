@@ -8,10 +8,10 @@ namespace Lilja.DebugMenu
     /// </summary>
     public sealed class DebugPagePool
     {
-        public const int MaxPerType = 2;
-
         private readonly Dictionary<string, Queue<DebugPage>> _pool = new();
         private readonly Dictionary<string, Func<DebugPage>> _factories = new();
+
+        public const int MaxPerType = 2;
 
         /// <summary>
         /// プールに pageName が登録済みか返す。循環防止チェックにも使う。

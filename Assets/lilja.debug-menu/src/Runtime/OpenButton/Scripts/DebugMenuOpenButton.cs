@@ -21,10 +21,6 @@ namespace Lilja.DebugMenu
     [RequireComponent(typeof(UIDocument))]
     public sealed class DebugMenuOpenButton : MonoBehaviour
     {
-        private const string ButtonName = "debug-menu-open-button";
-        private const string PressedClass = "c-open-button--pressed";
-        private const string OverlayClass = "c-open-button__overlay";
-
         [Header("ボタン設定")]
         [SerializeField] private DebugMenuButtonPosition buttonPosition = DebugMenuButtonPosition.BottomLeft;
         [SerializeField, Min(0.01f)] private float thresholdSeconds = 0.5f;
@@ -33,6 +29,10 @@ namespace Lilja.DebugMenu
         private Button _button;
         private int _clickCount;
         private float _firstClickTime;
+
+        private const string ButtonName = "debug-menu-open-button";
+        private const string PressedClass = "c-open-button--pressed";
+        private const string OverlayClass = "c-open-button__overlay";
 
         private void Awake()
         {
