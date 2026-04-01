@@ -311,7 +311,6 @@
 .c-menu-frame--default-size {
     width: var(--size-frame-width);
     max-width: var(--size-frame-max-width);
-    height: var(--size-frame-height);
 }
 
 /* ページスタック（スライドナビゲーション用コンテナ）

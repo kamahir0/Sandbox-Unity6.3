@@ -15,10 +15,14 @@ namespace Lilja.DebugMenu
         private readonly Button _backButton;
         private readonly Label _label;
         private readonly VisualElement _contentContainer;
+        private VisualElement _header;
 
         // ナビゲーション
         private readonly DebugPagePool _pagePool = new();
         private readonly Stack<DebugPage> _history = new();
+
+        // 位置コントロール
+        private DebugMenuPositionController _positionController;
         private const float AnimationDuration = 0.4f;
 
         private DebugPage _currentPage;
@@ -63,9 +67,9 @@ namespace Lilja.DebugMenu
             AddToClassList(DefaultSizeUssClassName);
 
             // ヘッダー
-            var header = new VisualElement();
-            header.AddToClassList(HeaderUssClassName);
-            hierarchy.Add(header);
+            _header = new VisualElement();
+            _header.AddToClassList(HeaderUssClassName);
+            hierarchy.Add(_header);
 
             // バックボタン
             _backButton = new Button();
@@ -75,19 +79,21 @@ namespace Lilja.DebugMenu
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
             _backButton.clicked += Back;
-            header.Add(_backButton);
+            _header.Add(_backButton);
 
             // タイトルラベル
             _label = new Label();
             _label.AddToClassList(TitleUssClassName);
-            header.Add(_label);
+            _header.Add(_label);
 
             // スペーサー
             // NOTE: バックボタンと同幅のスペーサーでタイトルを視覚的に中央寄せ
             var spacer = new VisualElement();
             spacer.AddToClassList(HeaderSpacerUssClassName);
             spacer.pickingMode = PickingMode.Ignore;
-            header.Add(spacer);
+            _header.Add(spacer);
+
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
 
             // コンテンツエリア（ページスタックを兼ねる）
             _contentContainer = new VisualElement();
@@ -237,6 +243,12 @@ namespace Lilja.DebugMenu
         private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete = null)
         {
             DebugMenuAnimator.Slide(page, this, (float)from, (float)to, duration, onComplete);
+        }
+
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            _positionController = new DebugMenuPositionController(this, _header);
+            _positionController.RestoreOrDefault();
         }
 
         public void SetHidden()
