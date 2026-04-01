@@ -1,7 +1,6 @@
 using Lilja.DebugMenu;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 /// <summary>
 /// デバッグメニューのセットアップ例。
@@ -99,16 +98,16 @@ public class SampleDebugMenu : MonoBehaviour
                 b.VisualElement(new DebugIntegerField("回数"));
             });
 
-            var buttonRow = new VisualElement();
-            buttonRow.style.flexDirection = FlexDirection.Row;
-            buttonRow.style.marginTop = 12;
-            var resetBtn = new DebugSecondaryButton("リセット");
-            resetBtn.style.flexGrow = 1;
-            var applyBtn = new DebugButton("適用");
-            applyBtn.style.flexGrow = 1;
-            buttonRow.Add(resetBtn);
-            buttonRow.Add(applyBtn);
-            builder.VisualElement(buttonRow);
+            builder.HorizontalScope(b =>
+            {
+                var resetBtn = new DebugSecondaryButton("リセット");
+                resetBtn.clicked += () => Debug.Log("[Debug] リセット");
+                b.VisualElement(resetBtn);
+
+                var applyBtn = new DebugButton("適用");
+                applyBtn.clicked += () => Debug.Log($"[Debug] 名前={nameField.value}");
+                b.VisualElement(applyBtn);
+            });
         }
     }
 
