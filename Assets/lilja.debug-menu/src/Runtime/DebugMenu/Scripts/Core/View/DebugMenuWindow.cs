@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -12,14 +12,15 @@ namespace Lilja.DebugMenu
     public partial class DebugMenuWindow : VisualElement
     {
         // UI
-        private readonly Button _backButton;
-        private readonly Label _label;
-        private readonly VisualElement _contentContainer;
+        private Button _backButton;
+        private Label _label;
+        private VisualElement _contentContainer;
         private VisualElement _header;
 
         // ナビゲーション
         private readonly DebugPagePool _pagePool = new();
         private readonly Stack<DebugPage> _history = new();
+
 
         // 位置コントロール
         private DebugMenuPositionController _positionController;
@@ -56,7 +57,17 @@ namespace Lilja.DebugMenu
             AddToClassList(DebugMenuWindowUssClass.Surface);
             AddToClassList(DebugMenuWindowUssClass.DefaultSize);
 
-            // ヘッダー
+            BuildHeader();
+            BuildContent();
+
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+        }
+
+        /// <summary>
+        /// ヘッダー領域（バックボタン・タイトル・スペーサー）を構築する
+        /// </summary>
+        private void BuildHeader()
+        {
             _header = new VisualElement();
             _header.AddToClassList(DebugMenuWindowUssClass.Header);
             hierarchy.Add(_header);
@@ -82,10 +93,13 @@ namespace Lilja.DebugMenu
             spacer.AddToClassList(DebugMenuWindowUssClass.HeaderSpacer);
             spacer.pickingMode = PickingMode.Ignore;
             _header.Add(spacer);
+        }
 
-            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
-
-            // コンテンツエリア（ページスタックを兼ねる）
+        /// <summary>
+        /// コンテンツエリア（ページスタック）を構築する
+        /// </summary>
+        private void BuildContent()
+        {
             _contentContainer = new VisualElement();
             _contentContainer.AddToClassList(DebugMenuWindowUssClass.Content);
             _contentContainer.AddToClassList(DebugMenuWindowUssClass.PageStack);
@@ -148,9 +162,9 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
         /// </summary>
-        public void RegisterPage(string name, Func<DebugPage> factory)
+        public void RegisterPage(string pageName, Func<DebugPage> factory)
         {
-            _pagePool.Register(name, factory);
+            _pagePool.Register(pageName, factory);
         }
 
         /// <summary>
