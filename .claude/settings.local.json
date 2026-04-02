@@ -3,22 +3,5 @@
         "allow": [
             "Bash(unicli exec:*)"
         ]
-    },
-    "hooks": {
-        "Stop": [
-            {
-                "matcher": "*",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "unicli exec AssetDatabase.Import --json"
-                    },
-                    {
-                        "type": "command",
-                        "command": "unicli exec Compile --json"
-                    }
-                ]
-            }
-        ]
     }
 }
