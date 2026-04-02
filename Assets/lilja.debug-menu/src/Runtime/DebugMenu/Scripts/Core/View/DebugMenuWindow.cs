@@ -28,17 +28,7 @@ namespace Lilja.DebugMenu
         private DebugPage _currentPage;
         private bool _isAnimating;
 
-        // クラス
-        private const string UssClassName = "c-menu-window";
-        private const string HeaderUssClassName = UssClassName + "__header";
-        private const string BackButtonUssClassName = UssClassName + "__back-button";
-        private const string BackButtonIconUssClassName = UssClassName + "__back-button-icon";
-        private const string HeaderSpacerUssClassName = UssClassName + "__header-spacer";
-        private const string TitleUssClassName = UssClassName + "__title";
-        private const string ContentUssClassName = UssClassName + "__content";
-        private const string DefaultSizeUssClassName = UssClassName + "--default-size";
-        private const string SurfaceUssClassName = "t-surface";
-        private const string PageStackUssClassName = "c-page-stack";
+
 
         private enum PagePosition
         {
@@ -62,20 +52,20 @@ namespace Lilja.DebugMenu
         /// </summary>
         public DebugMenuWindow()
         {
-            AddToClassList(UssClassName);
-            AddToClassList(SurfaceUssClassName);
-            AddToClassList(DefaultSizeUssClassName);
+            AddToClassList(DebugMenuWindowUssClass.Root);
+            AddToClassList(DebugMenuWindowUssClass.Surface);
+            AddToClassList(DebugMenuWindowUssClass.DefaultSize);
 
             // ヘッダー
             _header = new VisualElement();
-            _header.AddToClassList(HeaderUssClassName);
+            _header.AddToClassList(DebugMenuWindowUssClass.Header);
             hierarchy.Add(_header);
 
             // バックボタン
             _backButton = new Button();
-            _backButton.AddToClassList(BackButtonUssClassName);
+            _backButton.AddToClassList(DebugMenuWindowUssClass.BackButton);
             var backButtonIcon = new VisualElement();
-            backButtonIcon.AddToClassList(BackButtonIconUssClassName);
+            backButtonIcon.AddToClassList(DebugMenuWindowUssClass.BackButtonIcon);
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
             _backButton.clicked += Back;
@@ -83,13 +73,13 @@ namespace Lilja.DebugMenu
 
             // タイトルラベル
             _label = new Label();
-            _label.AddToClassList(TitleUssClassName);
+            _label.AddToClassList(DebugMenuWindowUssClass.Title);
             _header.Add(_label);
 
             // スペーサー
             // NOTE: バックボタンと同幅のスペーサーでタイトルを視覚的に中央寄せ
             var spacer = new VisualElement();
-            spacer.AddToClassList(HeaderSpacerUssClassName);
+            spacer.AddToClassList(DebugMenuWindowUssClass.HeaderSpacer);
             spacer.pickingMode = PickingMode.Ignore;
             _header.Add(spacer);
 
@@ -97,8 +87,8 @@ namespace Lilja.DebugMenu
 
             // コンテンツエリア（ページスタックを兼ねる）
             _contentContainer = new VisualElement();
-            _contentContainer.AddToClassList(ContentUssClassName);
-            _contentContainer.AddToClassList(PageStackUssClassName);
+            _contentContainer.AddToClassList(DebugMenuWindowUssClass.Content);
+            _contentContainer.AddToClassList(DebugMenuWindowUssClass.PageStack);
             hierarchy.Add(_contentContainer);
         }
 
