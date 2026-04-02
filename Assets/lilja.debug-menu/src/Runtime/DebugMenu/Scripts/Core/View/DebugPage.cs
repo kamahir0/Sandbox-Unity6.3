@@ -10,7 +10,9 @@ namespace Lilja.DebugMenu
     public partial class DebugPage : VisualElement
     {
         #region Virtual
+
         public virtual void Configure(IDebugPageBuilder builder) { }
+
         #endregion
 
         // UI
@@ -24,7 +26,7 @@ namespace Lilja.DebugMenu
         private const string ScrollViewUssClassName = "c-scroll-view";
         private const string SurfaceUssClassName = "t-surface";
 
-        public DebugPage() : base()
+        public DebugPage()
         {
             AddToClassList(SurfaceUssClassName);
             AddToClassList(UssClassName);

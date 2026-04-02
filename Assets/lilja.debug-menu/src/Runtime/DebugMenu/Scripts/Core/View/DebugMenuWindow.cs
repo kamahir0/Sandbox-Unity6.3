@@ -10,16 +10,25 @@ namespace Lilja.DebugMenu
     public partial class DebugMenuWindow : VisualElement
     {
         // UI
-        private Button _backButton;
         private Label _label;
-        private VisualElement _contentContainer;
         private VisualElement _header;
+        private Button _backButton;
+        private VisualElement _contentContainer;
 
-        // ナビゲーション
         private DebugPageNavigator _navigator;
-
-        // 位置コントロール
         private DebugMenuPositionController _positionController;
+
+        // クラス
+        private const string UssClassName = "c-menu-window";
+        private const string HeaderUssClassName = UssClassName + "__header";
+        private const string BackButtonUssClassName = UssClassName + "__back-button";
+        private const string BackButtonIconUssClassName = UssClassName + "__back-button-icon";
+        private const string HeaderSpacerUssClassName = UssClassName + "__header-spacer";
+        private const string TitleUssClassName = UssClassName + "__title";
+        private const string ContentUssClassName = UssClassName + "__content";
+        private const string DefaultSizeUssClassName = UssClassName + "--default-size";
+        private const string SurfaceUssClassName = "t-surface";
+        private const string PageStackUssClassName = "c-page-stack";
 
         /// <inheritdoc/>
         public override VisualElement contentContainer => _contentContainer;
@@ -36,9 +45,9 @@ namespace Lilja.DebugMenu
         /// </summary>
         public DebugMenuWindow()
         {
-            AddToClassList(DebugMenuWindowUssClass.Root);
-            AddToClassList(DebugMenuWindowUssClass.Surface);
-            AddToClassList(DebugMenuWindowUssClass.DefaultSize);
+            AddToClassList(UssClassName);
+            AddToClassList(SurfaceUssClassName);
+            AddToClassList(DefaultSizeUssClassName);
 
             BuildHeader();
             BuildContent();
@@ -55,7 +64,7 @@ namespace Lilja.DebugMenu
                 _contentContainer,
                 this,
                 label => Label = label,
-                visible => SetBackButtonVisibility(visible));
+                SetBackButtonVisibility);
 
             _navigator.InitRootPage(rootPage);
         }
@@ -65,7 +74,8 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// 指定したページへ遷移する
         /// </summary>
-        internal void Navigate(string pageName) => _navigator?.Navigate(pageName);
+        internal void Navigate(string pageName)
+            => _navigator?.Navigate(pageName);
 
         /// <summary>
         /// GenericDebugPage を即席生成して遷移する。事前登録不要。
@@ -96,14 +106,14 @@ namespace Lilja.DebugMenu
         private void BuildHeader()
         {
             _header = new VisualElement();
-            _header.AddToClassList(DebugMenuWindowUssClass.Header);
+            _header.AddToClassList(HeaderUssClassName);
             hierarchy.Add(_header);
 
             // バックボタン
             _backButton = new Button();
-            _backButton.AddToClassList(DebugMenuWindowUssClass.BackButton);
+            _backButton.AddToClassList(BackButtonUssClassName);
             var backButtonIcon = new VisualElement();
-            backButtonIcon.AddToClassList(DebugMenuWindowUssClass.BackButtonIcon);
+            backButtonIcon.AddToClassList(BackButtonIconUssClassName);
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
             _backButton.clicked += Back;
@@ -111,13 +121,13 @@ namespace Lilja.DebugMenu
 
             // タイトルラベル
             _label = new Label();
-            _label.AddToClassList(DebugMenuWindowUssClass.Title);
+            _label.AddToClassList(TitleUssClassName);
             _header.Add(_label);
 
             // スペーサー
             // NOTE: バックボタンと同幅のスペーサーでタイトルを視覚的に中央寄せ
             var spacer = new VisualElement();
-            spacer.AddToClassList(DebugMenuWindowUssClass.HeaderSpacer);
+            spacer.AddToClassList(HeaderSpacerUssClassName);
             spacer.pickingMode = PickingMode.Ignore;
             _header.Add(spacer);
         }
@@ -128,8 +138,8 @@ namespace Lilja.DebugMenu
         private void BuildContent()
         {
             _contentContainer = new VisualElement();
-            _contentContainer.AddToClassList(DebugMenuWindowUssClass.Content);
-            _contentContainer.AddToClassList(DebugMenuWindowUssClass.PageStack);
+            _contentContainer.AddToClassList(ContentUssClassName);
+            _contentContainer.AddToClassList(PageStackUssClassName);
             hierarchy.Add(_contentContainer);
         }
 
@@ -150,9 +160,9 @@ namespace Lilja.DebugMenu
             style.opacity = 0f;
         }
 
-        private void SetBackButtonVisibility(bool visible)
+        private void SetBackButtonVisibility(bool visiblity)
         {
-            _backButton.style.visibility = visible
+            _backButton.style.visibility = visiblity
                 ? Visibility.Visible
                 : Visibility.Hidden;
         }
