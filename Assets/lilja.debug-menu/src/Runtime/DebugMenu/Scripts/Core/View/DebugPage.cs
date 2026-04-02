@@ -31,6 +31,7 @@ namespace Lilja.DebugMenu
 
             // スクロースビュー
             _scrollView = new ScrollView();
+            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
             _scrollView.AddToClassList(ScrollViewUssClassName);
             hierarchy.Add(_scrollView);
         }
