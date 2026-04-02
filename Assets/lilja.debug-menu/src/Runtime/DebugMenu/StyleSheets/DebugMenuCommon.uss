@@ -36,7 +36,7 @@
 
 /* DebugButton / DebugSecondaryButton */
 .c-button {
-    border-radius: 4px;
+    border-radius: var(--radius-button);
     border-width: 1px;
     -unity-font-style: bold;
     padding: 4px 12px;
@@ -74,7 +74,7 @@
     border-right-width: 0;
     border-top-width: 1px;
     border-bottom-width: 1px;
-    border-color: var(--color-input-border);
+    border-color: var(--color-nav-button-separator);
     padding: 0 16px;
 }
 
@@ -248,7 +248,7 @@
    ============================================================ */
 
 .c-menu-frame {
-    border-radius: 12px;
+    border-radius: var(--radius-frame);
     border-width: 1px;
     border-color: var(--color-input-border);
     border-bottom-width: 3px;
@@ -260,8 +260,8 @@
     background-color: var(--color-window-header-bg);
     color: var(--color-window-header-text);
     padding: 8px 16px;
-    border-top-left-radius: 11px;
-    border-top-right-radius: 11px;
+    border-top-left-radius: var(--radius-frame);
+    border-top-right-radius: var(--radius-frame);
     flex-direction: row;
     align-items: center;
 }
@@ -294,7 +294,7 @@
 /* ヘッダータイトルテキスト */
 .c-menu-frame__title {
     flex-grow: 1;
-    font-size: var(--font-size-standard);
+    font-size: var(--font-size-title);
     -unity-font-style: bold;
     color: var(--color-window-header-text);
     -unity-text-align: middle-center;
@@ -302,7 +302,7 @@
 
 /* コンテンツエリア */
 .c-menu-frame__content {
-    padding: 24px;
+    padding: var(--size-page-padding);
     flex-direction: column;
     flex-grow: 1;
 }

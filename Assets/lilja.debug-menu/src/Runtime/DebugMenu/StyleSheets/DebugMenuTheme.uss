@@ -49,5 +49,17 @@
     /* DebugMenuFrame のデフォルトサイズ */
     --size-frame-width: 700px;
     --size-frame-max-width: 90%;
-    --size-frame-height: 80%;
+
+    /* 角丸 */
+    --radius-frame: 12px;
+    --radius-button: 4px;
+
+    /* ページコンテンツの内側余白 */
+    --size-page-padding: 24px;
+
+    /* ヘッダータイトルのフォントサイズ（--font-size-standard と独立して調整可能） */
+    --font-size-title: 26px;
+
+    /* ナビゲーションボタンのセパレーター線色 */
+    --color-nav-button-separator: #CCCCCC;
 }
