@@ -22,14 +22,14 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// 矩形外タップ検知を設定する。フレーム外をタップしたときに onOutsideTap を呼び出す。
+        /// 矩形外タップ検知を設定する。ウィンドウ外をタップしたときに onOutsideTap を呼び出す。
         /// </summary>
-        internal void SetupOutsideTapHandler(Func<VisualElement> getFrame, Action onOutsideTap)
+        internal void SetupOutsideTapHandler(Func<VisualElement> getWindow, Action onOutsideTap)
         {
             RegisterCallback<PointerDownEvent>(evt =>
             {
-                var frame = getFrame();
-                if (frame != null && !frame.worldBound.Contains(evt.position))
+                var window = getWindow();
+                if (window != null && !window.worldBound.Contains(evt.position))
                 {
                     onOutsideTap();
                 }

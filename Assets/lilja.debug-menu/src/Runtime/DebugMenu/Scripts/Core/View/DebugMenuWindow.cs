@@ -6,10 +6,10 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// デバッグメニューのフレーム
+    /// デバッグメニューのウィンドウ
     /// </summary>
     [UxmlElement]
-    public partial class DebugMenuFrame : VisualElement
+    public partial class DebugMenuWindow : VisualElement
     {
         // UI
         private readonly Button _backButton;
@@ -29,7 +29,7 @@ namespace Lilja.DebugMenu
         private bool _isAnimating;
 
         // クラス
-        private const string UssClassName = "c-menu-frame";
+        private const string UssClassName = "c-menu-window";
         private const string HeaderUssClassName = UssClassName + "__header";
         private const string BackButtonUssClassName = UssClassName + "__back-button";
         private const string BackButtonIconUssClassName = UssClassName + "__back-button-icon";
@@ -60,7 +60,7 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public DebugMenuFrame()
+        public DebugMenuWindow()
         {
             AddToClassList(UssClassName);
             AddToClassList(SurfaceUssClassName);
@@ -105,7 +105,7 @@ namespace Lilja.DebugMenu
         /// <summary>
         /// コンストラクタ（ランタイム）
         /// </summary>
-        public DebugMenuFrame(DebugPage rootPage) : this()
+        public DebugMenuWindow(DebugPage rootPage) : this()
         {
             if (rootPage == null) return;
 

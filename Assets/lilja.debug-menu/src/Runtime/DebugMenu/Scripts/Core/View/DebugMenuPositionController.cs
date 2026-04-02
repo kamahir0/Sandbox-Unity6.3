@@ -7,31 +7,31 @@ using UnityEditor;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// デバッグメニューフレームの位置を制御する。
+    /// デバッグメニューウィンドウの位置を制御する。
     /// ドラッグによる移動・ダブルクリックによる初期位置リセット・位置の保存と復元を担う。
     /// </summary>
     internal sealed class DebugMenuPositionController
     {
-        private readonly VisualElement _frame;
+        private readonly VisualElement _window;
         private readonly VisualElement _header;
 
         // ドラッグ状態
         private bool _isDragging;
         private bool _dragStarted;
         private Vector2 _pointerStartPos;
-        private Vector2 _frameStartPos;
+        private Vector2 _windowStartPos;
         private bool _hasFixedHeight;
 
         private const float DragThreshold = 5f;
 
         // EditorPrefs / PlayerPrefs キー
-        private const string PrefKeyLeft = "LiljaDebugMenu.FrameLeft";
-        private const string PrefKeyTop = "LiljaDebugMenu.FrameTop";
-        private const string PrefKeyHasPosition = "LiljaDebugMenu.FrameHasPosition";
+        private const string PrefKeyLeft = "LiljaDebugMenu.WindowLeft";
+        private const string PrefKeyTop = "LiljaDebugMenu.WindowTop";
+        private const string PrefKeyHasPosition = "LiljaDebugMenu.WindowHasPosition";
 
-        public DebugMenuPositionController(VisualElement frame, VisualElement header)
+        public DebugMenuPositionController(VisualElement window, VisualElement header)
         {
-            _frame = frame;
+            _window = window;
             _header = header;
 
             header.RegisterCallback<PointerDownEvent>(OnPointerDown);
@@ -44,7 +44,7 @@ namespace Lilja.DebugMenu
         /// </summary>
         public void RestoreOrDefault()
         {
-            _frame.style.position = Position.Absolute;
+            _window.style.position = Position.Absolute;
 
             if (HasSavedPosition())
             {
@@ -66,10 +66,10 @@ namespace Lilja.DebugMenu
         private void ApplyDefaultPosition()
         {
             _hasFixedHeight = false;
-            _frame.style.left = 0f;
-            _frame.style.top = 0f;
-            _frame.style.bottom = 0f;
-            _frame.style.height = StyleKeyword.Auto;
+            _window.style.left = 0f;
+            _window.style.top = 0f;
+            _window.style.bottom = 0f;
+            _window.style.height = StyleKeyword.Auto;
         }
 
         /// <summary>
@@ -78,10 +78,10 @@ namespace Lilja.DebugMenu
         private void ApplyRestoredPosition(float left, float top)
         {
             _hasFixedHeight = false;
-            _frame.style.left = left;
-            _frame.style.top = top;
-            _frame.style.bottom = 0f;
-            _frame.style.height = StyleKeyword.Auto;
+            _window.style.left = left;
+            _window.style.top = top;
+            _window.style.bottom = 0f;
+            _window.style.height = StyleKeyword.Auto;
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Lilja.DebugMenu
             _isDragging = true;
             _dragStarted = false;
             _pointerStartPos = evt.position;
-            _frameStartPos = new Vector2(_frame.resolvedStyle.left, _frame.resolvedStyle.top);
+            _windowStartPos = new Vector2(_window.resolvedStyle.left, _window.resolvedStyle.top);
             _header.CapturePointer(evt.pointerId);
         }
 
@@ -130,14 +130,14 @@ namespace Lilja.DebugMenu
                 if (!_hasFixedHeight)
                 {
                     _hasFixedHeight = true;
-                    var h = _frame.resolvedStyle.height;
-                    _frame.style.bottom = StyleKeyword.Auto;
-                    _frame.style.height = h;
+                    var h = _window.resolvedStyle.height;
+                    _window.style.bottom = StyleKeyword.Auto;
+                    _window.style.height = h;
                 }
             }
 
-            _frame.style.left = _frameStartPos.x + delta.x;
-            _frame.style.top = _frameStartPos.y + delta.y;
+            _window.style.left = _windowStartPos.x + delta.x;
+            _window.style.top = _windowStartPos.y + delta.y;
             evt.StopPropagation();
         }
 
@@ -151,7 +151,7 @@ namespace Lilja.DebugMenu
             if (!_dragStarted) return;
 
             ClampPosition();
-            SavePosition(_frame.resolvedStyle.left, _frame.resolvedStyle.top);
+            SavePosition(_window.resolvedStyle.left, _window.resolvedStyle.top);
             evt.StopPropagation();
         }
 
@@ -159,26 +159,26 @@ namespace Lilja.DebugMenu
 
         /// <summary>
         /// ヘッダーが画面外に半分以上出た場合に内側へ押し戻す。
-        /// 縦: ヘッダー高さの半分 / 横: フレーム幅の半分 を限界とする。
+        /// 縦: ヘッダー高さの半分 / 横: ウィンドウ幅の半分 を限界とする。
         /// </summary>
         private void ClampPosition()
         {
-            if (_frame.panel == null) return;
+            if (_window.panel == null) return;
 
-            var panelRect = _frame.panel.visualTree.layout;
-            var left = _frame.resolvedStyle.left;
-            var top = _frame.resolvedStyle.top;
-            var frameWidth = _frame.resolvedStyle.width;
+            var panelRect = _window.panel.visualTree.layout;
+            var left = _window.resolvedStyle.left;
+            var top = _window.resolvedStyle.top;
+            var windowWidth = _window.resolvedStyle.width;
             var headerHeight = _header.resolvedStyle.height;
 
-            // 横方向: フレーム幅の半分以上が画面外に出ないようにする
-            left = Mathf.Clamp(left, -(frameWidth * 0.5f), panelRect.width - frameWidth * 0.5f);
+            // 横方向: ウィンドウ幅の半分以上が画面外に出ないようにする
+            left = Mathf.Clamp(left, -(windowWidth * 0.5f), panelRect.width - windowWidth * 0.5f);
 
             // 縦方向: ヘッダー高さの半分以上が画面外に出ないようにする
             top = Mathf.Clamp(top, -(headerHeight * 0.5f), panelRect.height - headerHeight * 0.5f);
 
-            _frame.style.left = left;
-            _frame.style.top = top;
+            _window.style.left = left;
+            _window.style.top = top;
         }
 
         // ── 位置の保存・復元（EditorPrefs / PlayerPrefs） ────────────

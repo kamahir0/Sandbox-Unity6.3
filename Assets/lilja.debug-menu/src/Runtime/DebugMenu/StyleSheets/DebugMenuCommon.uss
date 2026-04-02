@@ -243,12 +243,12 @@
 }
 
 /* ============================================================
-   DebugMenuFrame (c-menu-frame) : ヘッダー付き共通ウィンドウ
+   DebugMenuWindow (c-menu-window) : ヘッダー付き共通ウィンドウ
    ヘッダーとコンテンツエリアを分離する。
    ============================================================ */
 
-.c-menu-frame {
-    border-radius: var(--radius-frame);
+.c-menu-window {
+    border-radius: var(--radius-window);
     border-width: 1px;
     border-color: var(--color-input-border);
     border-bottom-width: 3px;
@@ -256,18 +256,18 @@
 }
 
 /* ヘッダー: テーマ変数で配色を切り替え、上端の角丸を維持 */
-.c-menu-frame__header {
+.c-menu-window__header {
     background-color: var(--color-window-header-bg);
     color: var(--color-window-header-text);
     padding: 8px 16px;
-    border-top-left-radius: var(--radius-frame);
-    border-top-right-radius: var(--radius-frame);
+    border-top-left-radius: var(--radius-window);
+    border-top-right-radius: var(--radius-window);
     flex-direction: row;
     align-items: center;
 }
 
 /* バックボタン */
-.c-menu-frame__back-button {
+.c-menu-window__back-button {
     width: 52px;
     height: 52px;
     flex-shrink: 0;
@@ -278,21 +278,21 @@
 }
 
 /* バックボタン内のアイコン */
-.c-menu-frame__back-button-icon {
+.c-menu-window__back-button-icon {
     flex-grow: 1;
     background-image: url("../Resources/LiljaDebugMenu/debug-menu-back.svg");
     -unity-background-scale-mode: scale-to-fit;
 }
 
 /* バックボタンと対になるスペーサー（タイトルの中央寄せ用） */
-.c-menu-frame__header-spacer {
+.c-menu-window__header-spacer {
     width: 52px;
     height: 52px;
     flex-shrink: 0;
 }
 
 /* ヘッダータイトルテキスト */
-.c-menu-frame__title {
+.c-menu-window__title {
     flex-grow: 1;
     font-size: var(--font-size-title);
     -unity-font-style: bold;
@@ -301,16 +301,16 @@
 }
 
 /* コンテンツエリア */
-.c-menu-frame__content {
+.c-menu-window__content {
     padding: var(--size-page-padding);
     flex-direction: column;
     flex-grow: 1;
 }
 
-/* DebugMenuFrame にデフォルトサイズを付与する Modifier */
-.c-menu-frame--default-size {
-    width: var(--size-frame-width);
-    max-width: var(--size-frame-max-width);
+/* DebugMenuWindow にデフォルトサイズを付与する Modifier */
+.c-menu-window--default-size {
+    width: var(--size-window-width);
+    max-width: var(--size-window-max-width);
 }
 
 /* ページスタック（スライドナビゲーション用コンテナ）

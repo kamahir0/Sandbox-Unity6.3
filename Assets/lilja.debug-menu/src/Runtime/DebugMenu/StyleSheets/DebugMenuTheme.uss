@@ -46,12 +46,12 @@
     /* フォーカス時の共通色 */
     --color-focus: #006AA6;
 
-    /* DebugMenuFrame のデフォルトサイズ */
-    --size-frame-width: 700px;
-    --size-frame-max-width: 90%;
+    /* DebugMenuWindow のデフォルトサイズ */
+    --size-window-width: 700px;
+    --size-window-max-width: 90%;
 
     /* 角丸 */
-    --radius-frame: 12px;
+    --radius-window: 12px;
     --radius-button: 4px;
 
     /* ページコンテンツの内側余白 */

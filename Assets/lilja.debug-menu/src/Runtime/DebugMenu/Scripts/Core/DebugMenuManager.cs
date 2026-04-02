@@ -6,7 +6,7 @@ namespace Lilja.DebugMenu
 {
     public class DebugMenuManager
     {
-        private static DebugMenuFrame _frame;
+        private static DebugMenuWindow _window;
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
@@ -38,27 +38,27 @@ namespace Lilja.DebugMenu
             root.Add(menuRoot);
             _menuRoot = menuRoot;
 
-            var frame = new DebugMenuFrame(rootPage);
-            menuRoot.Add(frame);
-            _frame = frame;
+            var window = new DebugMenuWindow(rootPage);
+            menuRoot.Add(window);
+            _window = window;
 
             // 初期状態は即時非表示（アニメーションなし）
-            frame.SetHidden();
+            window.SetHidden();
 
             // 矩形外タップで閉じる（DebugMenuRoot に委譲）
-            menuRoot.SetupOutsideTapHandler(() => _frame, Hide);
+            menuRoot.SetupOutsideTapHandler(() => _window, Hide);
         }
 
         public static void Show()
         {
-            if (_frame == null || _menuRoot == null) return;
+            if (_window == null || _menuRoot == null) return;
 
             _menuRoot.pickingMode = PickingMode.Position;
-            _frame.style.display = DisplayStyle.Flex;
+            _window.style.display = DisplayStyle.Flex;
 
             var version = ++_animVersion;
             DebugMenuAnimator.AnimateScaleOpacity(
-                _frame,
+                _window,
                 scaleFrom: HideScale, scaleTo: 1f,
                 opacityFrom: 0f, opacityTo: 1f,
                 duration: ShowDuration,
@@ -70,19 +70,19 @@ namespace Lilja.DebugMenu
 
         public static void Hide()
         {
-            if (_frame == null || _menuRoot == null) return;
+            if (_window == null || _menuRoot == null) return;
 
             _menuRoot.pickingMode = PickingMode.Ignore;
 
             var version = ++_animVersion;
             DebugMenuAnimator.AnimateScaleOpacity(
-                _frame,
+                _window,
                 scaleFrom: 1f, scaleTo: HideScale,
                 opacityFrom: 1f, opacityTo: 0f,
                 duration: HideDuration,
                 easing: DebugMenuAnimator.EaseInCubic,
                 shouldCancel: () => _animVersion != version,
-                onComplete: _frame.SetHidden
+                onComplete: _window.SetHidden
             );
         }
 
@@ -91,18 +91,18 @@ namespace Lilja.DebugMenu
         /// </summary>
         public static void NavigateTo(string pageName)
         {
-            if (_frame == null) return;
-            if (!_frame.IsPageRegistered(pageName))
+            if (_window == null) return;
+            if (!_window.IsPageRegistered(pageName))
             {
                 Debug.LogError($"[DebugMenuManager] Page '{pageName}' is not registered. Use NavigationButton or RegisterPage to register it first.");
                 return;
             }
-            _frame.Navigate(pageName);
+            _window.Navigate(pageName);
         }
 
         public static void Back()
         {
-            _frame?.Back();
+            _window?.Back();
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Lilja.DebugMenu
         /// </summary>
         public static void NavigateToTemp(string pageName, Action<IDebugPageBuilder> configure)
         {
-            _frame?.NavigateTemp(pageName, configure);
+            _window?.NavigateTemp(pageName, configure);
         }
 
     }
