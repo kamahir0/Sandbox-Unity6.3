@@ -284,11 +284,22 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
-/* バックボタンと対になるスペーサー（タイトルの中央寄せ用） */
-.c-menu-window__header-spacer {
+/* バックトゥルートボタン（バックボタンと対になる位置でタイトルを視覚的に中央寄せ） */
+.c-menu-window__back-to-root-button {
     width: 52px;
     height: 52px;
     flex-shrink: 0;
+    border-radius: 6px;
+    border-width: 0;
+    padding: 6px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* バックトゥルートボタン内のアイコン */
+.c-menu-window__back-to-root-button-icon {
+    flex-grow: 1;
+    background-image: url("../Resources/LiljaDebugMenu/debug-menu-home.svg");
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 /* ヘッダータイトルテキスト */

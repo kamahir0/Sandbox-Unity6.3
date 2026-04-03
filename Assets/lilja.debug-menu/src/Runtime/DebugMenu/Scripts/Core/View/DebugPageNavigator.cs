@@ -107,6 +107,39 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
+        /// 履歴を全て破棄してルートページへ戻る
+        /// </summary>
+        public void BackToRoot()
+        {
+            if (_isAnimating) return;
+            if (_history.Count == 0) return;
+
+            _isAnimating = true;
+
+            // history を top→bottom 順の配列に変換（末尾がルートページ）
+            var historyArray = _history.ToArray();
+            var rootPage = historyArray[^1];
+            _history.Clear();
+
+            // ルート以外の中間ページをプールへ返却
+            for (var i = 0; i < historyArray.Length - 1; i++)
+                _pagePool.Return(historyArray[i]);
+
+            var currentPage = _currentPage;
+            _currentPage = rootPage;
+            _onLabelChanged(rootPage.name);
+
+            // Back と同じ方向のアニメーション
+            SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, () =>
+                _pagePool.Return(currentPage));
+            SlidePage(rootPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
+            {
+                _isAnimating = false;
+                NotifyBackVisibility();
+            });
+        }
+
+        /// <summary>
         /// 前のページへ戻る
         /// </summary>
         public void Back()

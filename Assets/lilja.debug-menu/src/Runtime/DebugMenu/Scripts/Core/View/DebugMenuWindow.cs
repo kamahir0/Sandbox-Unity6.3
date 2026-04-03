@@ -13,6 +13,7 @@ namespace Lilja.DebugMenu
         private Label _label;
         private VisualElement _header;
         private Button _backButton;
+        private Button _backToRootButton;
         private VisualElement _contentContainer;
 
         private DebugPageNavigator _navigator;
@@ -23,7 +24,8 @@ namespace Lilja.DebugMenu
         private const string HeaderUssClassName = UssClassName + "__header";
         private const string BackButtonUssClassName = UssClassName + "__back-button";
         private const string BackButtonIconUssClassName = UssClassName + "__back-button-icon";
-        private const string HeaderSpacerUssClassName = UssClassName + "__header-spacer";
+        private const string BackToRootButtonUssClassName = UssClassName + "__back-to-root-button";
+        private const string BackToRootButtonIconUssClassName = UssClassName + "__back-to-root-button-icon";
         private const string TitleUssClassName = UssClassName + "__title";
         private const string ContentUssClassName = UssClassName + "__content";
         private const string DefaultSizeUssClassName = UssClassName + "--default-size";
@@ -98,6 +100,9 @@ namespace Lilja.DebugMenu
         /// <summary> 前のページへ戻る </summary>
         internal void Back() => _navigator?.Back();
 
+        /// <summary> 履歴を全て破棄してルートページへ戻る </summary>
+        internal void BackToRoot() => _navigator?.BackToRoot();
+
         // ── UI 構築 ────────────────────────────────────────────────────
 
         /// <summary>
@@ -124,12 +129,15 @@ namespace Lilja.DebugMenu
             _label.AddToClassList(TitleUssClassName);
             _header.Add(_label);
 
-            // スペーサー
-            // NOTE: バックボタンと同幅のスペーサーでタイトルを視覚的に中央寄せ
-            var spacer = new VisualElement();
-            spacer.AddToClassList(HeaderSpacerUssClassName);
-            spacer.pickingMode = PickingMode.Ignore;
-            _header.Add(spacer);
+            // バックトゥルートボタン（バックボタンと対になる位置でタイトルを視覚的に中央寄せ）
+            _backToRootButton = new Button();
+            _backToRootButton.AddToClassList(BackToRootButtonUssClassName);
+            var backToRootButtonIcon = new VisualElement();
+            backToRootButtonIcon.AddToClassList(BackToRootButtonIconUssClassName);
+            backToRootButtonIcon.pickingMode = PickingMode.Ignore;
+            _backToRootButton.Add(backToRootButtonIcon);
+            _backToRootButton.clicked += BackToRoot;
+            _header.Add(_backToRootButton);
         }
 
         /// <summary>
@@ -162,9 +170,9 @@ namespace Lilja.DebugMenu
 
         private void SetBackButtonVisibility(bool visiblity)
         {
-            _backButton.style.visibility = visiblity
-                ? Visibility.Visible
-                : Visibility.Hidden;
+            var v = visiblity ? Visibility.Visible : Visibility.Hidden;
+            _backButton.style.visibility = v;
+            _backToRootButton.style.visibility = v;
         }
     }
 }
