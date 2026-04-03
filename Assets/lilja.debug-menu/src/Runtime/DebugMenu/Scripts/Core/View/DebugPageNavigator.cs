@@ -71,8 +71,6 @@ namespace Lilja.DebugMenu
             _currentPage = rootPage;
             _onLabelChanged(rootPage.name);
 
-            // 循環防止マーカー設置後に Configure
-            _pagePool.Reserve(rootPage.name);
             rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
 
             rootPage.SetLayout();

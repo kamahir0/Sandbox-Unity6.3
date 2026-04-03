@@ -46,17 +46,6 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// キーだけを登録して空のキューを確保する（ルートページ等の循環防止マーカー用）。
-        /// </summary>
-        internal void Reserve(string pageName)
-        {
-            if (!_pool.ContainsKey(pageName))
-            {
-                _pool[pageName] = new Queue<DebugPage>();
-            }
-        }
-
-        /// <summary>
         /// プールからインスタンスを1つ借りる。キューが空なら新規生成して返す。ファクトリ未登録なら null を返す。
         /// </summary>
         public DebugPage Rent(string pageName)
