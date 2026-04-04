@@ -62,4 +62,23 @@
 
     /* ナビゲーションボタンのセパレーター線色 */
     --color-nav-button-separator: #CCCCCC;
+
+    /* DebugPage スクロールバー余白（上下、左右） */
+    --size-scrollbar-margin-v: 16px;
+    --size-scrollbar-margin-h: 10px;
+    --size-scrollbar-button-gap: 8px;
+
+    /* RepeatButton */
+    --radius-scrollbar-button: 4px;
+    --color-scrollbar-button-bg: #ffffffff;
+    --color-scrollbar-button-arrow: #000000ff;
+
+    /* Slider */
+    --radius-scrollbar-handle: 4px;
+    --color-scrollbar-bg: rgb(223, 223, 223);
+    --size-scrollbar-bg-border-width: 1px;
+    --color-scrollbar-bg-border: rgba(0, 0, 0, 0);
+    --color-scrollbar-handle: #ffffff;
+    --size-scrollbar-handle-border-width: 1px;
+    --color-scrollbar-handle-border: rgb(132, 132, 132);
 }

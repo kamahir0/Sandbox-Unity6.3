@@ -125,6 +125,44 @@
     flex-grow: 1;
 }
 
+/* DebugPage スクロールバー: 上下左右に余白を持たせる */
+.c-scroll-view .unity-scroller--vertical {
+    margin-top: var(--size-scrollbar-margin-v);
+    margin-bottom: var(--size-scrollbar-margin-v);
+    margin-left: var(--size-scrollbar-margin-h);
+    margin-right: var(--size-scrollbar-margin-h);
+    padding-top: var(--size-scrollbar-button-gap);
+    padding-bottom: var(--size-scrollbar-button-gap);
+}
+
+/* RepeatButton スタイル */
+.c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
+.c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    background-color: var(--color-scrollbar-button-bg);
+    border-radius: var(--radius-scrollbar-button);
+    -unity-background-image-tint-color: var(--color-scrollbar-button-arrow);
+}
+
+/* Slider 背景（トラック） */
+.c-scroll-view .unity-scroller--vertical #unity-tracker {
+    background-color: var(--color-scrollbar-bg);
+    border-radius: var(--radius-scrollbar-handle);
+    border-width: var(--size-scrollbar-bg-border-width);
+    border-color: var(--color-scrollbar-bg-border);
+}
+
+/* Slider ノブ */
+.c-scroll-view .unity-scroller--vertical #unity-dragger {
+    background-color: var(--color-scrollbar-handle);
+    border-radius: var(--radius-scrollbar-handle);
+    border-width: var(--size-scrollbar-handle-border-width);
+    border-color: var(--color-scrollbar-handle-border);
+}
+
+.c-scroll-view .unity-scroller--vertical #unity-dragger:hover {
+    opacity: 0.8;
+}
+
 /* DebugRadioButtonGroup */
 .c-radio-group {
     height: auto;
