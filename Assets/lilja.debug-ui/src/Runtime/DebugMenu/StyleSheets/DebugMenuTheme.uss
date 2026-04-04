@@ -41,7 +41,7 @@
     --size-toggle-checkbox: 30px;
 
     /* Foldout チェックマークサイズ */
-    --size-foldout-checkbox: 54px;
+    --size-foldout-checkbox: 50px;
 
     /* チェックボックス・ラジオボタンとラベルの間隔 */
     --size-item-gap: 8px;
@@ -59,6 +59,8 @@
 
     /* ページコンテンツの内側余白 */
     --size-page-padding: 24px;
+    --size-page-padding-top: 12px;
+    --size-page-padding-bottom: 12px;
 
     /* ヘッダータイトルのフォントサイズ（--font-size-standard と独立して調整可能） */
     --font-size-title: 26px;

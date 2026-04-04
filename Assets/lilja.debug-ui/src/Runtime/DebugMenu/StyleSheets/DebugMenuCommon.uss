@@ -135,6 +135,11 @@
     flex-grow: 1;
 }
 
+.c-scroll-view .unity-scroll-view__content-container {
+    padding-top: var(--size-page-padding-top);
+    padding-bottom: var(--size-page-padding-bottom);
+}
+
 /* DebugPage スクロールバー: 上下左右に余白を持たせる */
 .c-scroll-view .unity-scroller--vertical {
     margin-top: var(--size-scrollbar-margin-v);
