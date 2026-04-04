@@ -10,9 +10,6 @@ namespace Lilja.DebugMenu
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
-        private const float ShowDuration = 0.2f;
-        private const float HideDuration = 0.15f;
-        private const float HideScale = 0.9f;
 
         /// <summary>
         /// UIDocument を自動生成して初期化する簡易版。
@@ -59,9 +56,9 @@ namespace Lilja.DebugMenu
             var version = ++_animVersion;
             DebugMenuAnimator.AnimateScaleOpacity(
                 _window,
-                scaleFrom: HideScale, scaleTo: 1f,
+                scaleFrom: DebugMenuSettings.HideScale, scaleTo: 1f,
                 opacityFrom: 0f, opacityTo: 1f,
-                duration: ShowDuration,
+                duration: DebugMenuSettings.ShowDuration,
                 easing: DebugMenuAnimator.EaseOutCubic,
                 shouldCancel: () => _animVersion != version,
                 onComplete: null
@@ -77,9 +74,9 @@ namespace Lilja.DebugMenu
             var version = ++_animVersion;
             DebugMenuAnimator.AnimateScaleOpacity(
                 _window,
-                scaleFrom: 1f, scaleTo: HideScale,
+                scaleFrom: 1f, scaleTo: DebugMenuSettings.HideScale,
                 opacityFrom: 1f, opacityTo: 0f,
-                duration: HideDuration,
+                duration: DebugMenuSettings.HideDuration,
                 easing: DebugMenuAnimator.EaseInCubic,
                 shouldCancel: () => _animVersion != version,
                 onComplete: _window.SetHidden

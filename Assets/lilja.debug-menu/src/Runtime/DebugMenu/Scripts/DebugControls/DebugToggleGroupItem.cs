@@ -15,11 +15,6 @@ namespace Lilja.DebugMenu
         private bool _value;
         private DebugToggleGroup _registeredGroup;
 
-        // クラス
-        private const string UssClassName = "c-toggle-group-item";
-        private const string CheckedUssClassName = UssClassName + "--checked";
-        private const string CheckboxUssClassName = UssClassName + "__checkbox";
-        private const string LabelUssClassName = UssClassName + "__label";
 
         [UxmlAttribute]
         public string Label
@@ -53,19 +48,19 @@ namespace Lilja.DebugMenu
 
         public DebugToggleGroupItem(string text)
         {
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.ToggleGroupItem.Root);
             focusable = true;
 
             // チェックボックス
             _checkbox = new Toggle();
-            _checkbox.AddToClassList(CheckboxUssClassName);
+            _checkbox.AddToClassList(DebugMenuUssClass.ToggleGroupItem.Checkbox);
             _checkbox.pickingMode = PickingMode.Ignore;
             _checkbox.focusable = false;
             Add(_checkbox);
 
             // ラベル
             _label = new Label();
-            _label.AddToClassList(LabelUssClassName);
+            _label.AddToClassList(DebugMenuUssClass.ToggleGroupItem.LabelElement);
             _label.pickingMode = PickingMode.Ignore;
             Add(_label);
             Label = text;
@@ -80,7 +75,7 @@ namespace Lilja.DebugMenu
         {
             _value = v;
             _checkbox.SetValueWithoutNotify(v);
-            EnableInClassList(CheckedUssClassName, v);
+            EnableInClassList(DebugMenuUssClass.ToggleGroupItem.Checked, v);
         }
 
         private void OnClick(ClickEvent e)

@@ -19,10 +19,6 @@ namespace Lilja.DebugMenu
         /// <inheritdoc/>
         public override VisualElement contentContainer => _itemsContainer;
 
-        // クラス
-        private const string UssClassName = "c-toggle-group";
-        private const string LabelUssClassName = UssClassName + "__label";
-        private const string ItemsUssClassName = UssClassName + "__items";
 
         [UxmlAttribute]
         public string Label
@@ -57,17 +53,17 @@ namespace Lilja.DebugMenu
 
         public DebugToggleGroup(string label)
         {
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.ToggleGroup.Root);
             AddToClassList(DebugMenuUssClass.ControlSize);
 
             // ラベル
             _labelElement = new Label(label);
-            _labelElement.AddToClassList(LabelUssClassName);
+            _labelElement.AddToClassList(DebugMenuUssClass.ToggleGroup.LabelElement);
             hierarchy.Add(_labelElement);
 
             // コンテンツエリア
             _itemsContainer = new VisualElement();
-            _itemsContainer.AddToClassList(ItemsUssClassName);
+            _itemsContainer.AddToClassList(DebugMenuUssClass.ToggleGroup.Items);
             hierarchy.Add(_itemsContainer);
         }
 

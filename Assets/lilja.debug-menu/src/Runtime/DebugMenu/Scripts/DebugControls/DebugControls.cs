@@ -3,14 +3,57 @@ using UnityEngine.UIElements;
 namespace Lilja.DebugMenu
 {
     /// <summary>
-    /// 複数のコントロールクラスで共有される USS クラス名
+    /// デバッグメニュー全体で使用する USS クラス名の一元管理
     /// </summary>
     public static class DebugMenuUssClass
     {
         public const string ControlSize = "c-control-size";
-        public const string Button = "c-button";
         public const string Input = "c-input";
         public const string HorizontalScope = "c-h-scope";
+
+        public static class Button
+        {
+            public const string Root = "c-button";
+            public const string Primary = Root + "--primary";
+            public const string Secondary = Root + "--secondary";
+        }
+
+        public static class NavigationButton
+        {
+            public const string Root = "c-nav-button";
+            public const string Label = Root + "__label";
+            public const string Icon = Root + "__icon";
+        }
+
+        public static class Label
+        {
+            public const string Root = "c-label";
+        }
+
+        public static class Foldout
+        {
+            public const string Root = "c-foldout";
+        }
+
+        public static class RadioButtonGroup
+        {
+            public const string Root = "c-radio-group";
+        }
+
+        public static class ToggleGroup
+        {
+            public const string Root = "c-toggle-group";
+            public const string LabelElement = Root + "__label";
+            public const string Items = Root + "__items";
+        }
+
+        public static class ToggleGroupItem
+        {
+            public const string Root = "c-toggle-group-item";
+            public const string Checked = Root + "--checked";
+            public const string Checkbox = Root + "__checkbox";
+            public const string LabelElement = Root + "__label";
+        }
     }
 
     /// <summary>
@@ -21,24 +64,19 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugNavigationButton : Button
     {
-        // クラス
-        private const string UssClassName = "c-nav-button";
-        private const string LabelUssClassName = UssClassName + "__label";
-        private const string IconUssClassName = UssClassName + "__icon";
-
         public DebugNavigationButton() : this(string.Empty) { }
 
         public DebugNavigationButton(string text) : base()
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.NavigationButton.Root);
 
             var label = new Label(text);
-            label.AddToClassList(LabelUssClassName);
+            label.AddToClassList(DebugMenuUssClass.NavigationButton.Label);
             Add(label);
 
             var icon = new VisualElement();
-            icon.AddToClassList(IconUssClassName);
+            icon.AddToClassList(DebugMenuUssClass.NavigationButton.Icon);
             Add(icon);
         }
     }
@@ -49,18 +87,14 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugButton : Button
     {
-        // クラス
-        private const string UssClassName = DebugMenuUssClass.Button;
-        private const string PrimaryUssClassName = UssClassName + "--primary";
-
         public DebugButton() : this(string.Empty) { }
 
         public DebugButton(string text) : base()
         {
             this.text = text;
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
-            AddToClassList(PrimaryUssClassName);
+            AddToClassList(DebugMenuUssClass.Button.Root);
+            AddToClassList(DebugMenuUssClass.Button.Primary);
         }
     }
 
@@ -70,18 +104,14 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugSecondaryButton : Button
     {
-        // クラス
-        private const string UssClassName = DebugMenuUssClass.Button;
-        private const string SecondaryUssClassName = UssClassName + "--secondary";
-
         public DebugSecondaryButton() : this(string.Empty) { }
 
         public DebugSecondaryButton(string text) : base()
         {
             this.text = text;
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
-            AddToClassList(SecondaryUssClassName);
+            AddToClassList(DebugMenuUssClass.Button.Root);
+            AddToClassList(DebugMenuUssClass.Button.Secondary);
         }
     }
 
@@ -106,15 +136,12 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugLabel : Label
     {
-        // クラス
-        private const string UssClassName = "c-label";
-
         public DebugLabel() : this(string.Empty) { }
 
         public DebugLabel(string text) : base(text)
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.Label.Root);
         }
     }
 
@@ -124,16 +151,13 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugFoldout : Foldout
     {
-        // クラス
-        private const string UssClassName = "c-foldout";
-
         public DebugFoldout() : this(string.Empty) { }
 
         public DebugFoldout(string label) : base()
         {
             text = label;
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.Foldout.Root);
         }
     }
 
@@ -143,15 +167,12 @@ namespace Lilja.DebugMenu
     [UxmlElement]
     public partial class DebugRadioButtonGroup : RadioButtonGroup
     {
-        // クラス
-        private const string UssClassName = "c-radio-group";
-
         public DebugRadioButtonGroup() : this(string.Empty) { }
 
         public DebugRadioButtonGroup(string label) : base(label)
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(UssClassName);
+            AddToClassList(DebugMenuUssClass.RadioButtonGroup.Root);
         }
     }
 

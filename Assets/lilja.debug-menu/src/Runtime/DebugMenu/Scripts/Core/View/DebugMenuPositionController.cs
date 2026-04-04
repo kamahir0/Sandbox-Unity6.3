@@ -22,7 +22,6 @@ namespace Lilja.DebugMenu
         private Vector2 _windowStartPos;
         private bool _hasFixedHeight;
 
-        private const float DragThreshold = 5f;
 
         // EditorPrefs / PlayerPrefs キー
         private const string PrefKeyLeft = "LiljaDebugMenu.WindowLeft";
@@ -107,7 +106,7 @@ namespace Lilja.DebugMenu
                 return;
             }
 
-            // ドラッグ準備（実際の移動は DragThreshold を超えてから開始）
+            // ドラッグ準備（実際の移動は DebugMenuSettings.DragThreshold を超えてから開始）
             _isDragging = true;
             _dragStarted = false;
             _pointerStartPos = evt.position;
@@ -123,7 +122,7 @@ namespace Lilja.DebugMenu
 
             if (!_dragStarted)
             {
-                if (delta.magnitude < DragThreshold) return;
+                if (delta.magnitude < DebugMenuSettings.DragThreshold) return;
 
                 // 閾値を超えたらドラッグ開始。bottom: auto + height 固定に切り替える。
                 _dragStarted = true;
