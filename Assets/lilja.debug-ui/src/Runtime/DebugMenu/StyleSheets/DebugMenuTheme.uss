@@ -47,8 +47,8 @@
     --color-focus: #006AA6;
 
     /* DebugMenuWindow のデフォルトサイズ */
-    --size-window-width: 700px;
-    --size-window-max-width: 90%;
+    --size-window-width: 50%;
+    --size-window-max-width: 50%;
 
     /* 角丸 */
     --radius-window: 12px;
