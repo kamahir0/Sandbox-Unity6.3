@@ -1,6 +1,6 @@
 using System;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// ラムダ式でUIを構成できる汎用DebugPage。

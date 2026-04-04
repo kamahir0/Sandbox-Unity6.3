@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// デバッグメニュー用のページ

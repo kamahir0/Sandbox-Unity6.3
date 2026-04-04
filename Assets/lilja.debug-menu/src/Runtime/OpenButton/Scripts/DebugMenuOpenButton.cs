@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     public enum DebugMenuButtonPosition
     {
@@ -98,7 +98,7 @@ namespace Lilja.DebugMenu
             if (_clickCount >= requiredClicks)
             {
                 _clickCount = 0;
-                DebugMenuManager.Show();
+                DebugMenu.Show();
             }
         }
 

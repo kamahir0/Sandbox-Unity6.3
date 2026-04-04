@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// ToggleButtonGroup と同様の構造で複数選択が可能なカスタムトグルグループ。

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     public static class IDebugPageBuilderExtensions
     {
@@ -65,7 +65,7 @@ namespace Lilja.DebugMenu
             builder.RegisterPage(pageName, () => pageFactory());
 
             var button = new DebugNavigationButton(pageName);
-            button.clicked += () => DebugMenuManager.NavigateTo(pageName);
+            button.clicked += () => DebugMenu.NavigateTo(pageName);
             builder.VisualElement(button);
         }
 

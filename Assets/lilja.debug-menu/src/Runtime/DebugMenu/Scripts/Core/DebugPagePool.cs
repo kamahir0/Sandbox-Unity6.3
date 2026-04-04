@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// ページ名をキーとし、同一ページのインスタンスを最大 MaxPerType 個プールする。

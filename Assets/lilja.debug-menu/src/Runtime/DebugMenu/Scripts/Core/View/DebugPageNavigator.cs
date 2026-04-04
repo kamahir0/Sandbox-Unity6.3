@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// DebugMenuWindow のページナビゲーションを担う。

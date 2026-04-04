@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 using UnityEditor;
 #endif
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// デバッグメニューウィンドウの位置を制御する。

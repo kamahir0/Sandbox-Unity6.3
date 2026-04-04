@@ -1,4 +1,4 @@
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// デバッグメニュー全体で共有するアニメーション・操作定数

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// 画面全体に広がる共通ルートコンテナ

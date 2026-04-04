@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     public interface IDebugPageBuilder
     {

@@ -1,6 +1,6 @@
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
     /// <summary>
     /// デバッグメニュー全体で使用する USS クラス名の一元管理
@@ -156,6 +156,7 @@ namespace Lilja.DebugMenu
         public DebugFoldout(string label) : base()
         {
             text = label;
+            value = false;
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Foldout.Root);
         }

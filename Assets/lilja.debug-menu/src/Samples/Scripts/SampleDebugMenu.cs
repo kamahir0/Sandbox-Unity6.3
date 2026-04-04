@@ -1,4 +1,4 @@
-using Lilja.DebugMenu;
+using Lilja.DebugUI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,7 +11,7 @@ public class SampleDebugMenu : MonoBehaviour
 {
     private void Start()
     {
-        DebugMenuManager.Initialize(new RootPage());
+        DebugMenu.Initialize(new RootPage());
     }
 
     // ─── Root ─────────────────────────────────────────────────────

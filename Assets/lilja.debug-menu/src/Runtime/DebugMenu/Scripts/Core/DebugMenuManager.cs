@@ -2,19 +2,14 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Lilja.DebugMenu
+namespace Lilja.DebugUI
 {
-    public class DebugMenuManager
+    public static class DebugMenu
     {
         private static DebugMenuWindow _window;
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
-
-        /// <summary>
-        /// UIDocument を自動生成して初期化する簡易版。
-        /// PanelSettings を省略するとパッケージ付属のデフォルトを使用する。
-        /// </summary>
         public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
         {
             var go = new GameObject("[DebugMenu]");
@@ -39,10 +34,10 @@ namespace Lilja.DebugMenu
             menuRoot.Add(window);
             _window = window;
 
-            // 初期状態は即時非表示（アニメーションなし）
+            // 初期状態は即時非表示
             window.SetHidden();
 
-            // 矩形外タップで閉じる（DebugMenuRoot に委譲）
+            // 矩形外タップで閉じる
             menuRoot.SetupOutsideTapHandler(() => _window, Hide);
         }
 
@@ -83,9 +78,6 @@ namespace Lilja.DebugMenu
             );
         }
 
-        /// <summary>
-        /// 事前登録済みのページへナビゲートする。未登録の場合は LogError を出して何もしない。
-        /// </summary>
         public static void NavigateTo(string pageName)
         {
             if (_window == null) return;
@@ -102,10 +94,11 @@ namespace Lilja.DebugMenu
             _window?.Back();
         }
 
-        /// <summary>
-        /// GenericDebugPage を即席生成してナビゲートする。事前登録不要。
-        /// 主に動的コンテンツや GenericDebugPage を使うケース向け。
-        /// </summary>
+        public static void BackToRoot()
+        {
+            _window?.BackToRoot();
+        }
+
         public static void NavigateToTemp(string pageName, Action<IDebugPageBuilder> configure)
         {
             _window?.NavigateTemp(pageName, configure);
