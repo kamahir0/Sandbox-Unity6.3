@@ -89,6 +89,14 @@
     padding: 0;
 }
 
+.c-nav-button__left-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .c-nav-button__icon {
     width: 32px;
     height: 32px;

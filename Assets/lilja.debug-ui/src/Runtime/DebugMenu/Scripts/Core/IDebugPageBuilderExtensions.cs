@@ -53,18 +53,18 @@ namespace Lilja.DebugUI
             builder.VisualElement(foldout);
         }
 
-        public static void NavigationButton<T>(this IDebugPageBuilder builder)
+        public static void NavigationButton<T>(this IDebugPageBuilder builder, StyleBackground? icon = null)
             where T : DebugPage, new()
         {
-            builder.NavigationButton(typeof(T).Name, () => new T());
+            builder.NavigationButton(typeof(T).Name, () => new T(), icon);
         }
 
-        public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory)
+        public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory, StyleBackground? icon = null)
             where T : DebugPage
         {
             builder.RegisterPage(pageName, () => pageFactory());
 
-            var button = new DebugNavigationButton(pageName);
+            var button = new DebugNavigationButton(pageName, icon);
             button.clicked += () => DebugMenu.NavigateTo(pageName);
             builder.VisualElement(button);
         }
@@ -72,9 +72,9 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ラムダ式でUIを構成する汎用ページへのナビゲーションボタンを追加する。
         /// </summary>
-        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure)
+        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure, StyleBackground? icon = null)
         {
-            builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure));
+            builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure), icon);
         }
     }
 }

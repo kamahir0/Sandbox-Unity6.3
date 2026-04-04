@@ -22,6 +22,7 @@ namespace Lilja.DebugUI
         {
             public const string Root = "c-nav-button";
             public const string Label = Root + "__label";
+            public const string LeftIcon = Root + "__left-icon";
             public const string Icon = Root + "__icon";
         }
 
@@ -66,10 +67,19 @@ namespace Lilja.DebugUI
     {
         public DebugNavigationButton() : this(string.Empty) { }
 
-        public DebugNavigationButton(string text) : base()
+        public DebugNavigationButton(string text, StyleBackground? leftIcon = null) : base()
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.NavigationButton.Root);
+
+            if (leftIcon.HasValue)
+            {
+                var iconLeft = new VisualElement();
+                iconLeft.AddToClassList(DebugMenuUssClass.NavigationButton.LeftIcon);
+                iconLeft.style.backgroundImage = leftIcon.Value;
+                iconLeft.pickingMode = PickingMode.Ignore;
+                Add(iconLeft);
+            }
 
             var label = new Label(text);
             label.AddToClassList(DebugMenuUssClass.NavigationButton.Label);

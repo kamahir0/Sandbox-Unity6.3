@@ -1,6 +1,7 @@
 using Lilja.DebugUI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// デバッグメニューのセットアップ例。
@@ -20,9 +21,15 @@ public class SampleDebugMenu : MonoBehaviour
     {
         public override void Configure(IDebugPageBuilder builder)
         {
-            builder.NavigationButton("Player", () => new PlayerPage());
-            builder.NavigationButton("Audio", () => new AudioPage());
-            builder.NavigationButton("Settings", () => new SettingsPage());
+            var playerIcon = Resources.Load<Sprite>("sample_icon_1");
+            builder.NavigationButton("Player", () => new PlayerPage(), new StyleBackground(playerIcon));
+
+            var audioIcon = Resources.Load<Texture2D>("sample_icon_2");
+            builder.NavigationButton("Audio", () => new AudioPage(), new StyleBackground(audioIcon));
+
+            var settingsIcon = Resources.Load<VectorImage>("sample_icon_3");
+            builder.NavigationButton("Settings", () => new SettingsPage(), new StyleBackground(settingsIcon));
+
             builder.NavigationButton("Scene", b =>
             {
                 var titleBtn = new DebugButton("Title");
