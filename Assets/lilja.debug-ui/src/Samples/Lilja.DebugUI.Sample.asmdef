@@ -1,7 +1,9 @@
 {
-    "name": "Lilja.DebugMenu",
-    "rootNamespace": "Lilja.DebugMenu",
-    "references": [],
+    "name": "Lilja.DebugUI.Sample",
+    "rootNamespace": "Lilja.DebugUI.Sample",
+    "references": [
+        "GUID:a9d473f5a81841d4785af519e376fbc1"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
