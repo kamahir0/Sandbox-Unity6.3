@@ -34,6 +34,9 @@ namespace Lilja.DebugMenu
 
             public IDebugPageBuilder CreateChildBuilder(VisualElement parent)
                 => _inner.CreateChildBuilder(parent);
+
+            public void RegisterPage(string pageName, Func<DebugPage> factory)
+                => _inner.RegisterPage(pageName, factory);
         }
 
 
@@ -59,8 +62,7 @@ namespace Lilja.DebugMenu
         public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory)
             where T : DebugPage
         {
-            var b = (DebugPageBuilder)builder;
-            b.PagePool.Register(pageName, () => pageFactory());
+            builder.RegisterPage(pageName, () => pageFactory());
 
             var button = new DebugNavigationButton(pageName);
             button.clicked += () => DebugMenuManager.NavigateTo(pageName);

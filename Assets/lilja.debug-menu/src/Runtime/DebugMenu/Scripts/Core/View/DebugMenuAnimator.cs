@@ -44,13 +44,14 @@ namespace Lilja.DebugMenu
         }
 
         /// <summary>
-        /// 水平スライドアニメーション（% 単位）。
+        /// 水平スライドアニメーション（% 単位）。shouldCancel が true を返したら即座に停止する。
         /// </summary>
         internal static void Slide(
             VisualElement target,
             VisualElement scheduler,
             float fromPercent, float toPercent,
             float duration,
+            Func<bool> shouldCancel,
             Action onComplete)
         {
             target.style.left = new StyleLength(new Length(fromPercent, LengthUnit.Percent));
@@ -58,6 +59,8 @@ namespace Lilja.DebugMenu
             float elapsed = 0f;
             scheduler.schedule.Execute(timer =>
             {
+                if (shouldCancel()) return;
+
                 elapsed += timer.deltaTime / 1000f;
                 var t = EaseInOutCubic(Mathf.Clamp01(elapsed / duration));
                 target.style.left = new StyleLength(
@@ -68,7 +71,7 @@ namespace Lilja.DebugMenu
                     target.style.left = new StyleLength(new Length(toPercent, LengthUnit.Percent));
                     onComplete?.Invoke();
                 }
-            }).Every(0).Until(() => elapsed >= duration);
+            }).Every(0).Until(() => elapsed >= duration || shouldCancel());
         }
 
         internal static float EaseOutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);

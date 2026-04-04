@@ -28,6 +28,7 @@ namespace Lilja.DebugMenu
 
         private DebugPage _currentPage;
         private bool _isAnimating;
+        private int _animVersion;
 
         private const float AnimationDuration = 0.4f;
 
@@ -71,11 +72,10 @@ namespace Lilja.DebugMenu
             _currentPage = rootPage;
             _onLabelChanged(rootPage.name);
 
-            rootPage.Configure(new DebugPageBuilder(rootPage, _pagePool));
-
-            rootPage.SetLayout();
+            _pagePool.PreparePage(rootPage);
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
+            rootPage.OnPageShown();
             NotifyBackVisibility();
         }
 
@@ -102,7 +102,7 @@ namespace Lilja.DebugMenu
             if (_currentPage == null) return;
 
             var page = new GenericDebugPage(pageName, configure);
-            page.Configure(new DebugPageBuilder(page, _pagePool));
+            _pagePool.PreparePage(page);
             OnNavigate(page);
         }
 
@@ -114,6 +114,7 @@ namespace Lilja.DebugMenu
             if (_isAnimating) return;
             if (_history.Count == 0) return;
 
+            ++_animVersion;
             _isAnimating = true;
 
             // history を top→bottom 順の配列に変換（末尾がルートページ）
@@ -123,7 +124,10 @@ namespace Lilja.DebugMenu
 
             // ルート以外の中間ページをプールへ返却
             for (var i = 0; i < historyArray.Length - 1; i++)
+            {
+                historyArray[i].OnPageHidden();
                 _pagePool.Return(historyArray[i]);
+            }
 
             var currentPage = _currentPage;
             _currentPage = rootPage;
@@ -131,9 +135,13 @@ namespace Lilja.DebugMenu
 
             // Back と同じ方向のアニメーション
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, () =>
-                _pagePool.Return(currentPage));
+            {
+                currentPage.OnPageHidden();
+                _pagePool.Return(currentPage);
+            });
             SlidePage(rootPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
             {
+                rootPage.OnPageShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -147,6 +155,7 @@ namespace Lilja.DebugMenu
             if (_isAnimating) return;
             if (_history.Count == 0) return;
 
+            ++_animVersion;
             _isAnimating = true;
 
             var prevPage = _history.Pop();
@@ -158,10 +167,12 @@ namespace Lilja.DebugMenu
             // アニメーション完了後にプールへ返却（スクロールリセットはページが画面外に出てから）
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, AnimationDuration, () =>
             {
+                currentPage.OnPageHidden();
                 _pagePool.Return(currentPage);
             });
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, AnimationDuration, () =>
             {
+                prevPage.OnPageShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -186,23 +197,29 @@ namespace Lilja.DebugMenu
             var prevPage = _currentPage;
             _currentPage = targetPage;
 
+            ++_animVersion;
             _isAnimating = true;
             if (prevPage.name == targetPage.name)
             {
                 // 同一名ナビゲーション: 履歴にpushせず、アニメーション完了後にプールへ返却
                 SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, () =>
                 {
+                    prevPage.OnPageHidden();
                     _pagePool.Return(prevPage);
                 });
             }
             else
             {
                 _history.Push(prevPage);
-                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration);
+                SlidePage(prevPage, PagePosition.In, PagePosition.OutL, AnimationDuration, () =>
+                {
+                    prevPage.OnPageHidden();
+                });
             }
 
             SlidePage(targetPage, PagePosition.OutR, PagePosition.In, AnimationDuration, () =>
             {
+                targetPage.OnPageShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -215,7 +232,10 @@ namespace Lilja.DebugMenu
 
         private void SlidePage(DebugPage page, PagePosition from, PagePosition to, float duration, Action onComplete = null)
         {
-            DebugMenuAnimator.Slide(page, _animationScheduler, (float)from, (float)to, duration, onComplete);
+            var version = _animVersion;
+            DebugMenuAnimator.Slide(page, _animationScheduler, (float)from, (float)to, duration,
+                shouldCancel: () => _animVersion != version,
+                onComplete);
         }
 
         private void NotifyBackVisibility()

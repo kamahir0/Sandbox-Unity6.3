@@ -13,6 +13,16 @@ namespace Lilja.DebugMenu
 
         public virtual void Configure(IDebugPageBuilder builder) { }
 
+        /// <summary>
+        /// ページが表示された直後に呼ばれる（スライドアニメーション完了後）
+        /// </summary>
+        public virtual void OnPageShown() { }
+
+        /// <summary>
+        /// ページが非表示になった直後に呼ばれる（スライドアニメーション完了後・プール返却前）
+        /// </summary>
+        public virtual void OnPageHidden() { }
+
         #endregion
 
         // UI
@@ -31,7 +41,14 @@ namespace Lilja.DebugMenu
             AddToClassList(SurfaceUssClassName);
             AddToClassList(UssClassName);
 
-            // スクロースビュー
+            // 画面外右端に絶対配置（ナビゲーション時にスライドで表示される）
+            style.position = Position.Absolute;
+            style.left = new StyleLength(new Length(100, LengthUnit.Percent));
+            style.top = 0;
+            style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+            style.height = new StyleLength(new Length(100, LengthUnit.Percent));
+
+            // スクロールビュー
             _scrollView = new ScrollView();
             _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
             _scrollView.AddToClassList(ScrollViewUssClassName);
@@ -44,18 +61,6 @@ namespace Lilja.DebugMenu
         public void ResetScrollPosition()
         {
             _scrollView.scrollOffset = Vector2.zero;
-        }
-
-        /// <summary>
-        /// コンテナへ追加される前の初期レイアウトを設定する。画面外右端に絶対配置する。
-        /// </summary>
-        internal void SetLayout()
-        {
-            style.position = Position.Absolute;
-            style.left = new StyleLength(new Length(100, LengthUnit.Percent));
-            style.top = 0;
-            style.width = new StyleLength(new Length(100, LengthUnit.Percent));
-            style.height = new StyleLength(new Length(100, LengthUnit.Percent));
         }
     }
 }

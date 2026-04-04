@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugMenu
@@ -6,27 +7,37 @@ namespace Lilja.DebugMenu
     {
         void VisualElement(VisualElement visualElement);
         IDebugPageBuilder CreateChildBuilder(VisualElement parent);
+
+        /// <summary>
+        /// ページをプールに登録する。NavigationButton から利用される。
+        /// </summary>
+        void RegisterPage(string pageName, Func<DebugPage> factory);
     }
 
     internal sealed class DebugPageBuilder : IDebugPageBuilder
     {
-        public VisualElement Parent { get; }
-        public DebugPagePool PagePool { get; }
+        private readonly VisualElement _parent;
+        private readonly DebugPagePool _pagePool;
 
         public DebugPageBuilder(VisualElement parent, DebugPagePool pagePool)
         {
-            Parent = parent;
-            PagePool = pagePool;
+            _parent = parent;
+            _pagePool = pagePool;
         }
 
         public void VisualElement(VisualElement visualElement)
         {
-            Parent.Add(visualElement);
+            _parent.Add(visualElement);
         }
 
         public IDebugPageBuilder CreateChildBuilder(VisualElement parent)
         {
-            return new DebugPageBuilder(parent, PagePool);
+            return new DebugPageBuilder(parent, _pagePool);
+        }
+
+        public void RegisterPage(string pageName, Func<DebugPage> factory)
+        {
+            _pagePool.Register(pageName, factory);
         }
     }
 }

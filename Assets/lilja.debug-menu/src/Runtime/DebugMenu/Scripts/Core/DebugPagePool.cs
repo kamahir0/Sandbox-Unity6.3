@@ -37,12 +37,20 @@ namespace Lilja.DebugMenu
             _factories[pageName] = wrappedFactory;
 
             var page = wrappedFactory();
-            page.SetLayout();
-            page.Configure(new DebugPageBuilder(page, this));
+            PreparePage(page);
             if (_pool[pageName].Count < MaxPerType)
             {
                 _pool[pageName].Enqueue(page);
             }
+        }
+
+        /// <summary>
+        /// 外部から渡された既存ページを初期化する。
+        /// ルートページや一時ページなど、プール経由でない場合にも統一的な初期化を行う。
+        /// </summary>
+        internal void PreparePage(DebugPage page)
+        {
+            page.Configure(new DebugPageBuilder(page, this));
         }
 
         /// <summary>
@@ -62,8 +70,7 @@ namespace Lilja.DebugMenu
             if (!_factories.TryGetValue(pageName, out var factory)) return null;
 
             var page = factory();
-            page.SetLayout();
-            page.Configure(new DebugPageBuilder(page, this));
+            PreparePage(page);
             return page;
         }
 
