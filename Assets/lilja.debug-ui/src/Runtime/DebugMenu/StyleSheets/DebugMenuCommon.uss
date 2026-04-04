@@ -4,13 +4,13 @@
 
 /* UIのルートに付与し、変数のスコープと文字色の継承を保証する */
 .t-root {
-    color: var(--color-window-text);
+    color: var(--color-on-surface);
 }
 
-/* 実体のある「面」に適用し、背景色と文字色をセットで適用する */
+/* 実体のある「面」に適用し、背景色と前景色をセットで適用する */
 .t-surface {
-    background-color: var(--color-window-bg);
-    color: var(--color-window-text);
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
 }
 
 /* ============================================================
@@ -27,11 +27,12 @@
    Component (c-) : 個別のUIパーツ
    ============================================================ */
 
-/* 共通の寸法設定 (DebugControls.cs の各コントロールが付与するベースクラス) */
+/* 共通の寸法設定 (DebugControls.cs の各コントロールが付与するベースクラス)
+   垂直マージンは水平の半分（隣接すると合計が水平と同じ --size-control-margin になる）。 */
 .c-control-size {
     height: var(--size-control-height);
     font-size: var(--font-size-standard);
-    margin: var(--size-control-margin);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
 }
 
 /* DebugButton / DebugSecondaryButton */
@@ -43,36 +44,36 @@
 }
 
 .c-button--primary {
-    background-color: var(--color-primary-bg);
-    color: var(--color-primary-text);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
     border-color: var(--color-primary-border);
 }
 
 .c-button--secondary {
-    background-color: var(--color-secondary-bg);
-    color: var(--color-secondary-text);
+    background-color: var(--color-secondary);
+    color: var(--color-on-secondary);
     border-color: var(--color-secondary-border);
 }
 
 .c-button--danger {
-    background-color: var(--color-danger-bg);
-    color: var(--color-danger-text);
+    background-color: var(--color-danger);
+    color: var(--color-on-danger);
     border-color: var(--color-danger-border);
 }
 
 /* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
-   背景色はページと同一、上下のセパレーターで矩形を可視化する。
-   c-control-size の margin を打ち消して幅いっぱいに拡張する。
-   子要素として c-nav-button__label（テキスト）と c-nav-button__icon（右矢印）を持つ。 */
+   margin: 0 で高さを --size-nav-button-height（= control-height + margin-half × 2）に設定し、
+   他コントロールのスロット高さと一致させる。
+   上下の border がセパレーターとして機能する。
+   連続するナビボタン間は border-top を消して二重線を防ぐ。 */
 .c-nav-button {
+    height: var(--size-nav-button-height);
     margin: 0;
     flex-direction: row;
     align-items: center;
-    background-color: var(--color-window-bg);
+    background-color: var(--color-surface);
     border-radius: 0;
-    border-left-width: 0;
-    border-right-width: 0;
-    border-top-width: 1px;
+    border-width: 0;
     border-bottom-width: 1px;
     border-color: var(--color-nav-button-separator);
     padding: 0 16px;
@@ -81,7 +82,7 @@
 .c-nav-button__label {
     flex-grow: 1;
     font-size: var(--font-size-standard);
-    color: var(--color-window-text);
+    color: var(--color-on-surface);
     -unity-text-align: middle-left;
     -unity-font-style: normal;
     margin: 0;
@@ -94,6 +95,7 @@
     flex-shrink: 0;
     background-image: url("../Resources/LiljaDebugMenu/debug-menu-navigation.svg");
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--color-on-surface);
 }
 
 /* DebugLabel */
@@ -110,14 +112,14 @@
 }
 
 .c-input .unity-base-field__input {
-    background-color: var(--color-input-bg);
-    color: var(--color-input-text);
+    background-color: var(--color-input);
+    color: var(--color-on-input);
     border-color: var(--color-input-border);
     border-radius: 4px;
     border-width: 1px;
     padding: 0 8px;
     -unity-text-align: middle-left;
-    --unity-cursor-color: var(--color-input-cursor);
+    --unity-cursor-color: var(--color-on-input);
 }
 
 /* DebugPage (ScrollView ラッパー) */
@@ -138,17 +140,17 @@
 /* RepeatButton スタイル */
 .c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
 .c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
-    background-color: var(--color-scrollbar-button-bg);
+    background-color: var(--color-scrollbar-button);
     border-radius: var(--radius-scrollbar-button);
-    -unity-background-image-tint-color: var(--color-scrollbar-button-arrow);
+    -unity-background-image-tint-color: var(--color-on-scrollbar-button);
 }
 
 /* Slider 背景（トラック） */
 .c-scroll-view .unity-scroller--vertical #unity-tracker {
-    background-color: var(--color-scrollbar-bg);
+    background-color: var(--color-scrollbar-track);
     border-radius: var(--radius-scrollbar-handle);
     border-width: var(--size-scrollbar-bg-border-width);
-    border-color: var(--color-scrollbar-bg-border);
+    border-color: var(--color-scrollbar-track-border);
 }
 
 /* Slider ノブ */
@@ -177,6 +179,12 @@
     padding: 0;
 }
 
+/* 各ラジオボタン行の高さを他のコントロールと共通化する */
+.c-radio-group .unity-radio-button {
+    height: var(--size-control-height);
+    margin: 0;
+}
+
 /* チェックマークとラベルの間隔を c-toggle-group の --size-item-gap に合わせる */
 .c-radio-group .unity-radio-button__checkmark-background {
     margin-right: var(--size-item-gap);
@@ -190,7 +198,7 @@
 
 .c-foldout > .unity-foldout__toggle {
     height: var(--size-control-height);
-    margin: var(--size-control-margin);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
     margin-left: 0; /* チェックマーク分を考慮した微調整 */
 }
 
@@ -295,8 +303,8 @@
 
 /* ヘッダー: テーマ変数で配色を切り替え、上端の角丸を維持 */
 .c-menu-window__header {
-    background-color: var(--color-window-header-bg);
-    color: var(--color-window-header-text);
+    background-color: var(--color-surface-header);
+    color: var(--color-on-surface-header);
     padding: 8px 16px;
     border-top-left-radius: var(--radius-window);
     border-top-right-radius: var(--radius-window);
@@ -320,6 +328,7 @@
     flex-grow: 1;
     background-image: url("../Resources/LiljaDebugMenu/debug-menu-back.svg");
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--color-on-surface-header);
 }
 
 /* バックトゥルートボタン（バックボタンと対になる位置でタイトルを視覚的に中央寄せ） */
@@ -338,6 +347,7 @@
     flex-grow: 1;
     background-image: url("../Resources/LiljaDebugMenu/debug-menu-home.svg");
     -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--color-on-surface-header);
 }
 
 /* ヘッダータイトルテキスト */
@@ -345,7 +355,7 @@
     flex-grow: 1;
     font-size: var(--font-size-title);
     -unity-font-style: bold;
-    color: var(--color-window-header-text);
+    color: var(--color-on-surface-header);
     -unity-text-align: middle-center;
 }
 
@@ -389,4 +399,3 @@
 .u-bg-transparent {
     background-color: rgba(0, 0, 0, 0);
 }
-

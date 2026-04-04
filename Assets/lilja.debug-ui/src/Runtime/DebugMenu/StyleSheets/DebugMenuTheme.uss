@@ -1,38 +1,41 @@
 :root {
-    /* グローバル配色: 白背景 / 黒文字 */
-    --color-window-bg: #FFFFFF;
-    --color-window-text: #000000;
+    /* ベースサーフェス: 白背景 / 黒前景
+       --color-on-surface はフォント・アイコン・区切り線など surface 上の全要素で共用する */
+    --color-surface:    #FFFFFF;
+    --color-on-surface: #000000;
 
     /* レイアウト定数 */
     --size-control-height: 64px;
     --size-control-margin: 12px;
+    --size-control-margin-half: 6px;
+    /* ナビボタン高さ = control-height + control-margin-half × 2（margin 0 でスロット高さを揃える） */
+    --size-nav-button-height: 76px;
     --size-label-width: 35%;
     --font-size-standard: 26px;
 
     /* プライマリ（決定など）: 青 */
-    --color-primary-bg: #2196F3;
-    --color-primary-text: #FFFFFF;
+    --color-primary:        #2196F3;
+    --color-on-primary:     #FFFFFF;
     --color-primary-border: #1976D2;
 
     /* セカンダリ（キャンセルなど）: 白 */
-    --color-secondary-bg: #FFFFFF;
-    --color-secondary-text: #333333;
+    --color-secondary:        #FFFFFF;
+    --color-on-secondary:     #333333;
     --color-secondary-border: #DDDDDD;
 
     /* デンジャー（削除など）: 赤 */
-    --color-danger-bg: #F44336;
-    --color-danger-text: #FFFFFF;
+    --color-danger:        #F44336;
+    --color-on-danger:     #FFFFFF;
     --color-danger-border: #D32F2F;
 
-    /* TextField: 薄いグレー背景 */
-    --color-input-bg: #F0F0F0;
-    --color-input-text: #000000;
+    /* インプット: 薄いグレー背景 */
+    --color-input:        #F0F0F0;
+    --color-on-input:     #000000;
     --color-input-border: #CCCCCC;
-    --color-input-cursor: #000000;
 
-    /* ウィンドウヘッダー: 青 */
-    --color-window-header-bg: #1565C0;
-    --color-window-header-text: #FFFFFF;
+    /* ウィンドウヘッダーサーフェス: 青 */
+    --color-surface-header:    #1565C0;
+    --color-on-surface-header: #FFFFFF;
 
     /* DebugToggleGroup チェックボックスサイズ */
     --size-toggle-checkbox: 30px;
@@ -68,17 +71,19 @@
     --size-scrollbar-margin-h: 10px;
     --size-scrollbar-button-gap: 8px;
 
-    /* RepeatButton */
-    --radius-scrollbar-button: 4px;
-    --color-scrollbar-button-bg: #ffffffff;
-    --color-scrollbar-button-arrow: #000000ff;
+    /* RepeatButton: ボタン背景 / ボタン上の矢印アイコン */
+    --radius-scrollbar-button:    4px;
+    --color-scrollbar-button:     #FFFFFF;
+    --color-on-scrollbar-button:  #000000;
 
-    /* Slider */
-    --radius-scrollbar-handle: 4px;
-    --color-scrollbar-bg: rgb(223, 223, 223);
-    --size-scrollbar-bg-border-width: 1px;
-    --color-scrollbar-bg-border: rgba(0, 0, 0, 0);
-    --color-scrollbar-handle: #ffffff;
+    /* スクロールバートラック（背景） */
+    --radius-scrollbar-handle:          4px;
+    --color-scrollbar-track:            rgb(223, 223, 223);
+    --size-scrollbar-bg-border-width:   1px;
+    --color-scrollbar-track-border:     rgba(0, 0, 0, 0);
+
+    /* スクロールバーハンドル */
+    --color-scrollbar-handle:           #FFFFFF;
     --size-scrollbar-handle-border-width: 1px;
-    --color-scrollbar-handle-border: rgb(132, 132, 132);
+    --color-scrollbar-handle-border:    rgb(132, 132, 132);
 }
