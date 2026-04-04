@@ -2,8 +2,8 @@
     <debug:DebugMenuRoot>
         <debug:DebugMenuWindow label="Debug Menu" style="width: 700px; max-width: 90%;">
             <debug:DebugPage>
-                <debug:DebugLabel text="プレイヤー設定"/>
                 <debug:DebugTextField label="プレイヤー名" value="Player1"/>
+                <debug:DebugLabel text="プレイヤー設定"/>
                 <debug:DebugRadioButtonGroup label="テーマ" choices="ライト,ダーク"/>
                 <debug:DebugNavigationButton text="詳細"/>
                 <debug:DebugToggleGroup label="有効機能">
