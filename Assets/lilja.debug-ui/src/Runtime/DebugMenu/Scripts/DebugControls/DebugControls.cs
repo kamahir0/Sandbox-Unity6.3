@@ -60,6 +60,14 @@ namespace Lilja.DebugUI
         }
     }
 
+    /// USS カスタムプロパティ --hover-color / --active-color の C# バインディング。
+    /// ButtonInteractionHelper と VisualElementInteractionHelper の両方から使用する。
+    internal static class InteractionColorProperties
+    {
+        internal static readonly CustomStyleProperty<Color> HoverColor  = new("--hover-color");
+        internal static readonly CustomStyleProperty<Color> ActiveColor = new("--active-color");
+    }
+
     /// <summary>
     /// Clickable のサブクラス。ProcessDownEvent / ProcessUpEvent をフックして
     /// ボタン押下・解放の通知を外部に公開する。
@@ -95,9 +103,6 @@ namespace Lilja.DebugUI
     /// </summary>
     internal static class ButtonInteractionHelper
     {
-        static readonly CustomStyleProperty<Color> s_HoverColor  = new("--hover-color");
-        static readonly CustomStyleProperty<Color> s_ActiveColor = new("--active-color");
-
         internal static void Register(Button button)
         {
             Color hoverColor  = default;
@@ -110,8 +115,8 @@ namespace Lilja.DebugUI
 
             button.RegisterCallback<CustomStyleResolvedEvent>(e =>
             {
-                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
-                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.ActiveColor, out activeColor);
             });
 
             button.RegisterCallback<PointerEnterEvent>(_ =>
@@ -145,9 +150,6 @@ namespace Lilja.DebugUI
     /// </summary>
     internal static class VisualElementInteractionHelper
     {
-        static readonly CustomStyleProperty<Color> s_HoverColor  = new("--hover-color");
-        static readonly CustomStyleProperty<Color> s_ActiveColor = new("--active-color");
-
         // ホバー + クリック（PointerDown/Up でクリックを検知。RepeatButton など用）
         internal static void Register(VisualElement element)
         {
@@ -158,8 +160,8 @@ namespace Lilja.DebugUI
 
             element.RegisterCallback<CustomStyleResolvedEvent>(e =>
             {
-                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
-                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.ActiveColor, out activeColor);
             });
 
             element.RegisterCallback<PointerEnterEvent>(_ =>
@@ -199,8 +201,8 @@ namespace Lilja.DebugUI
 
             dragger.RegisterCallback<CustomStyleResolvedEvent>(e =>
             {
-                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
-                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.ActiveColor, out activeColor);
             });
 
             dragger.RegisterCallback<PointerEnterEvent>(_ =>
@@ -245,7 +247,7 @@ namespace Lilja.DebugUI
 
             element.RegisterCallback<CustomStyleResolvedEvent>(e =>
             {
-                e.customStyle.TryGetValue(s_HoverColor, out hoverColor);
+                e.customStyle.TryGetValue(InteractionColorProperties.HoverColor, out hoverColor);
             });
 
             element.RegisterCallback<PointerEnterEvent>(_ =>
