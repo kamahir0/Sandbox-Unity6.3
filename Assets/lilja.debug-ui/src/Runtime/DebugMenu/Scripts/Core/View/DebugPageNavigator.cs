@@ -74,7 +74,7 @@ namespace Lilja.DebugUI
             _pagePool.PreparePage(rootPage);
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
-            rootPage.OnPageShown();
+            rootPage.OnShown();
             NotifyBackVisibility();
 
             // プール内の全ページを OutR 位置に事前アタッチし、起動時にパネルへの接続コストを分散させる
@@ -134,7 +134,7 @@ namespace Lilja.DebugUI
             // ルート以外の中間ページをプールへ返却
             for (var i = 0; i < historyArray.Length - 1; i++)
             {
-                historyArray[i].OnPageHidden();
+                historyArray[i].OnHidden();
                 _pagePool.Return(historyArray[i]);
             }
 
@@ -145,12 +145,12 @@ namespace Lilja.DebugUI
             // Back と同じ方向のアニメーション
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, DebugMenuSettings.PageSlideDuration, () =>
             {
-                currentPage.OnPageHidden();
+                currentPage.OnHidden();
                 _pagePool.Return(currentPage);
             });
             SlidePage(rootPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                rootPage.OnPageShown();
+                rootPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -176,12 +176,12 @@ namespace Lilja.DebugUI
             // アニメーション完了後にプールへ返却（スクロールリセットはページが画面外に出てから）
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, DebugMenuSettings.PageSlideDuration, () =>
             {
-                currentPage.OnPageHidden();
+                currentPage.OnHidden();
                 _pagePool.Return(currentPage);
             });
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                prevPage.OnPageShown();
+                prevPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -213,7 +213,7 @@ namespace Lilja.DebugUI
                 // 同一名ナビゲーション: 履歴にpushせず、アニメーション完了後にプールへ返却
                 SlidePage(prevPage, PagePosition.In, PagePosition.OutL, DebugMenuSettings.PageSlideDuration, () =>
                 {
-                    prevPage.OnPageHidden();
+                    prevPage.OnHidden();
                     _pagePool.Return(prevPage);
                 });
             }
@@ -222,13 +222,13 @@ namespace Lilja.DebugUI
                 _history.Push(prevPage);
                 SlidePage(prevPage, PagePosition.In, PagePosition.OutL, DebugMenuSettings.PageSlideDuration, () =>
                 {
-                    prevPage.OnPageHidden();
+                    prevPage.OnHidden();
                 });
             }
 
             SlidePage(targetPage, PagePosition.OutR, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                targetPage.OnPageShown();
+                targetPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });

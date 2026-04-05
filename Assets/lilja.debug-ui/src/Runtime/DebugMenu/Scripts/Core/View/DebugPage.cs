@@ -16,12 +16,12 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ページが表示された直後に呼ばれる（スライドアニメーション完了後）
         /// </summary>
-        public virtual void OnPageShown() { }
+        public virtual void OnShown() { }
 
         /// <summary>
         /// ページが非表示になった直後に呼ばれる（スライドアニメーション完了後・プール返却前）
         /// </summary>
-        public virtual void OnPageHidden() { }
+        public virtual void OnHidden() { }
 
         #endregion
 
@@ -65,7 +65,7 @@ namespace Lilja.DebugUI
             VisualElementInteractionHelper.Register(scroller.lowButton);
 
             // ドラッガー: ClampedDragger が TrickleDown で PointerDown を処理するため親 Slider 経由で検知
-            var slider  = scroller.slider;
+            var slider = scroller.slider;
             var dragger = slider.Q("unity-dragger");
             if (dragger != null)
                 VisualElementInteractionHelper.RegisterSliderDragger(slider, dragger);
