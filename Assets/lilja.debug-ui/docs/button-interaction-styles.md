@@ -5,10 +5,10 @@
 Unity UI Toolkit のデフォルトテーマ (`unity-theme://default`) は、ボタンのホバー・クリック時に `background-color` を強制上書きする。
 このため、以下のアプローチはいずれも機能しない。
 
-| 試みたアプローチ | 結果 | 理由 |
-|---|---|---|
-| USS `:hover` に `background-color` | 効かない | デフォルトテーマが後段で上書き |
-| USS `!important` | 効かない | 同上（Unity の実装上 `!important` が無効） |
+| 試みたアプローチ                                          | 結果                             | 理由                                                                               |
+| --------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------- |
+| USS `:hover` に `background-color`                        | 効かない                         | デフォルトテーマが後段で上書き                                                     |
+| USS `!important`                                          | 効かない                         | 同上（Unity の実装上 `!important` が無効）                                         |
 | `PointerDownEvent` コールバックで `style.backgroundColor` | ホバーは効く、クリックは効かない | `Clickable` が `StopImmediatePropagation()` を呼ぶため PointerDownEvent が届かない |
 
 ただし `color` や `border-color` は USS `:hover` で変更できる（background-color だけが特殊）。
@@ -74,12 +74,12 @@ clickable.OnReleased += () => button.style.backgroundColor = isOver ? (StyleColo
 
 ScrollView の `verticalScroller` 配下には以下の要素がある。
 
-| 要素 | クラス / ID | アクセス方法 |
-|---|---|---|
-| 上矢印ボタン | `.unity-scroller__high-button` | `scroller.highButton` |
-| 下矢印ボタン | `.unity-scroller__low-button` | `scroller.lowButton` |
-| スライダーノブ | `#unity-dragger` | `scroller.slider.Q("unity-dragger")` |
-| スライダー背景 | `#unity-tracker` | `scroller.slider.Q("unity-tracker")` |
+| 要素           | クラス / ID                    | アクセス方法                         |
+| -------------- | ------------------------------ | ------------------------------------ |
+| 上矢印ボタン   | `.unity-scroller__high-button` | `scroller.highButton`                |
+| 下矢印ボタン   | `.unity-scroller__low-button`  | `scroller.lowButton`                 |
+| スライダーノブ | `#unity-dragger`               | `scroller.slider.Q("unity-dragger")` |
+| スライダー背景 | `#unity-tracker`               | `scroller.slider.Q("unity-tracker")` |
 
 ### RepeatButton（上下矢印）
 
@@ -92,11 +92,11 @@ ScrollView の `verticalScroller` 配下には以下の要素がある。
 `Slider` の内部 `ClampedDragger` マニピュレータは `TrickleDown` フェーズで `PointerDownEvent` を処理し、
 `StopImmediatePropagation()` を呼ぶため、ノブ自身への登録では一切届かない。
 
-| 試みたアプローチ | 結果 | 理由 |
-|---|---|---|
-| `PointerDownEvent` BubbleUp（ノブ） | 効かない | ClampedDragger が TrickleDown で StopImmediatePropagation |
-| `PointerCaptureEvent`（ノブ） | 効かない | キャプチャは Slider 側が行うためノブに届かない |
-| `PointerUpEvent` TrickleDown（Slider） | 効かない | Slider の内部処理が先に StopImmediatePropagation |
+| 試みたアプローチ                       | 結果     | 理由                                                      |
+| -------------------------------------- | -------- | --------------------------------------------------------- |
+| `PointerDownEvent` BubbleUp（ノブ）    | 効かない | ClampedDragger が TrickleDown で StopImmediatePropagation |
+| `PointerCaptureEvent`（ノブ）          | 効かない | キャプチャは Slider 側が行うためノブに届かない            |
+| `PointerUpEvent` TrickleDown（Slider） | 効かない | Slider の内部処理が先に StopImmediatePropagation          |
 
 **解決策（確定）**:
 
@@ -184,12 +184,12 @@ button.RegisterCallback<CustomStyleResolvedEvent>(e =>
 
 ## 実装場所
 
-| ファイル | 役割 |
-|---|---|
+| ファイル                                                       | 役割                                                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `src/Runtime/DebugMenu/Scripts/DebugControls/DebugControls.cs` | `InteractiveClickable` / `ButtonInteractionHelper` / `VisualElementInteractionHelper` の定義 |
-| `src/Runtime/DebugMenu/Scripts/Core/View/DebugPage.cs` | ScrollView スクローラー要素への登録 |
-| `src/Runtime/DebugMenu/StyleSheets/DebugMenuDefaultTheme.uss` | `--hover-color` / `--active-color` の Default テーマ値 |
-| `src/Runtime/DebugMenu/StyleSheets/DebugMenuDarkTheme.uss` | `--hover-color` / `--active-color` の Dark テーマ値 |
+| `src/Runtime/DebugMenu/Scripts/Core/View/DebugPage.cs`         | ScrollView スクローラー要素への登録                                                          |
+| `src/Runtime/DebugMenu/StyleSheets/DebugMenuDefaultTheme.uss`  | `--hover-color` / `--active-color` の Default テーマ値                                       |
+| `src/Runtime/DebugMenu/StyleSheets/DebugMenuDarkTheme.uss`     | `--hover-color` / `--active-color` の Dark テーマ値                                          |
 
 ### テーマファイルの記述例
 
