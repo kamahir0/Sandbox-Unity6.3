@@ -193,10 +193,6 @@
     border-color: var(--color-scrollbar-handle-border);
 }
 
-.c-scroll-view .unity-scroller--vertical #unity-dragger:hover {
-    opacity: 0.8;
-}
-
 /* DebugRadioButtonGroup */
 .c-radio-group {
     height: auto;

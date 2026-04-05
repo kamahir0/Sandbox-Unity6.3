@@ -139,6 +139,128 @@ namespace Lilja.DebugUI
     }
 
     /// <summary>
+    /// VisualElement のホバー・アクティブ状態の背景色をインラインスタイルで管理するヘルパー。
+    /// Button 以外の VisualElement（RepeatButton、Slider ドラッガーなど）に使用する。
+    /// ホバー色・アクティブ色は USS カスタムプロパティ --hover-color / --active-color で定義する。
+    /// </summary>
+    internal static class VisualElementInteractionHelper
+    {
+        static readonly CustomStyleProperty<Color> s_HoverColor  = new("--hover-color");
+        static readonly CustomStyleProperty<Color> s_ActiveColor = new("--active-color");
+
+        // ホバー + クリック（PointerDown/Up でクリックを検知。RepeatButton など用）
+        internal static void Register(VisualElement element)
+        {
+            Color hoverColor  = default;
+            Color activeColor = default;
+            bool  isOver      = false;
+            bool  isPressed   = false;
+
+            element.RegisterCallback<CustomStyleResolvedEvent>(e =>
+            {
+                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+            });
+
+            element.RegisterCallback<PointerEnterEvent>(_ =>
+            {
+                isOver = true;
+                element.style.backgroundColor = isPressed ? activeColor : hoverColor;
+            });
+
+            element.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                isOver = false;
+                element.style.backgroundColor = StyleKeyword.Null;
+            });
+
+            element.RegisterCallback<PointerDownEvent>(_ =>
+            {
+                isPressed = true;
+                element.style.backgroundColor = activeColor;
+            });
+
+            element.RegisterCallback<PointerUpEvent>(_ =>
+            {
+                isPressed = false;
+                element.style.backgroundColor = isOver ? (StyleColor)hoverColor : StyleKeyword.Null;
+            });
+        }
+
+        // ホバー + クリック（Slider ドラッガー専用）
+        // ClampedDragger が TrickleDown で PointerDown を処理するため、
+        // 親 slider に TrickleDown 登録して先に拾う。
+        internal static void RegisterSliderDragger(VisualElement slider, VisualElement dragger)
+        {
+            Color hoverColor  = default;
+            Color activeColor = default;
+            bool  isOver      = false;
+            bool  isPressed   = false;
+
+            dragger.RegisterCallback<CustomStyleResolvedEvent>(e =>
+            {
+                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+            });
+
+            dragger.RegisterCallback<PointerEnterEvent>(_ =>
+            {
+                isOver = true;
+                dragger.style.backgroundColor = isPressed ? activeColor : hoverColor;
+            });
+
+            dragger.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                isOver = false;
+                if (!isPressed)
+                    dragger.style.backgroundColor = StyleKeyword.Null;
+            });
+
+            // 押下: TrickleDown で親から登録し ClampedDragger より先に検知
+            slider.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.target == dragger)
+                {
+                    isPressed = true;
+                    dragger.style.backgroundColor = activeColor;
+                }
+            }, TrickleDown.TrickleDown);
+
+            // 解放: PointerUp は内部処理でブロックされるため PointerCaptureOutEvent を使う。
+            // どちらの要素がキャプチャしているか不明なので両方に登録し、isPressed で二重実行を防ぐ。
+            void OnRelease()
+            {
+                if (!isPressed) return;
+                isPressed = false;
+                dragger.style.backgroundColor = isOver ? (StyleColor)hoverColor : StyleKeyword.Null;
+            }
+            slider.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
+            dragger.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
+        }
+
+        // ホバーのみ（トラック背景など、クリック時の色変化が不要な要素用）
+        internal static void RegisterHoverOnly(VisualElement element)
+        {
+            Color hoverColor = default;
+
+            element.RegisterCallback<CustomStyleResolvedEvent>(e =>
+            {
+                e.customStyle.TryGetValue(s_HoverColor, out hoverColor);
+            });
+
+            element.RegisterCallback<PointerEnterEvent>(_ =>
+            {
+                element.style.backgroundColor = hoverColor;
+            });
+
+            element.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                element.style.backgroundColor = StyleKeyword.Null;
+            });
+        }
+    }
+
+    /// <summary>
     /// ナビゲーションボタン（iOS設定アプリ風）
     /// 背景色はページと同一、上下のセパレーターで矩形を可視化する。
     /// テキストラベルと右端矢印アイコンを子要素として保持する。

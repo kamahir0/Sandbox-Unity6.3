@@ -54,6 +54,26 @@ namespace Lilja.DebugUI
             _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
             _scrollView.AddToClassList(ScrollViewUssClassName);
             hierarchy.Add(_scrollView);
+
+            RegisterScrollerInteractions();
+        }
+
+        private void RegisterScrollerInteractions()
+        {
+            var scroller = _scrollView.verticalScroller;
+            VisualElementInteractionHelper.Register(scroller.highButton);
+            VisualElementInteractionHelper.Register(scroller.lowButton);
+
+            // ドラッガー: ClampedDragger が TrickleDown で PointerDown を処理するため親 Slider 経由で検知
+            var slider  = scroller.slider;
+            var dragger = slider.Q("unity-dragger");
+            if (dragger != null)
+                VisualElementInteractionHelper.RegisterSliderDragger(slider, dragger);
+
+            // トラック背景: ホバーのみ変化
+            var tracker = scroller.slider.Q("unity-tracker");
+            if (tracker != null)
+                VisualElementInteractionHelper.RegisterHoverOnly(tracker);
         }
 
         /// <summary>
