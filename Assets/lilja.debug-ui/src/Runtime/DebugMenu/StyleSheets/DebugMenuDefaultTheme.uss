@@ -1,5 +1,5 @@
 :root {
-    /* ベースサーフェス: 白背景 / 黒前景
+    /* ベースサーフェス
        --color-on-surface はフォント・アイコン・区切り線など surface 上の全要素で共用する */
     --color-surface:    #ffffff64;
     --color-on-surface: #000000;
@@ -8,32 +8,32 @@
     --size-control-height: 64px;
     --size-control-margin: 12px;
     --size-control-margin-half: 6px;
-    /* ナビボタン高さ = control-height + control-margin-half × 2（margin 0 でスロット高さを揃える） */
+    /* ナビゲーションボタン高さ = control-height + control-margin-half × 2（margin 0 でスロット高さを揃える） */
     --size-nav-button-height: 76px;
     --size-label-width: 35%;
     --font-size-standard: 26px;
 
-    /* プライマリ（決定など）: 青 */
+    /* プライマリ（決定など） */
     --color-primary:        #007aff;
     --color-on-primary:     #FFFFFF;
     --color-primary-border: #1976D2;
 
-    /* セカンダリ（キャンセルなど）: 白 */
+    /* セカンダリ（キャンセルなど） */
     --color-secondary:        #FFFFFF;
     --color-on-secondary:     #333333;
     --color-secondary-border: #DDDDDD;
 
-    /* デンジャー（削除など）: 赤 */
+    /* デンジャー（削除など） */
     --color-danger:        #F44336;
     --color-on-danger:     #FFFFFF;
     --color-danger-border: #D32F2F;
 
-    /* インプット: 薄いグレー背景 */
+    /* インプット */
     --color-input:        #F0F0F0;
     --color-on-input:     #000000;
     --color-input-border: #CCCCCC;
 
-    /* ウィンドウヘッダーサーフェス: 青 */
+    /* ウィンドウヘッダーサーフェス */
     --color-surface-header:    #ffffff;
     --color-on-surface-header: #4e4e4e;
 
