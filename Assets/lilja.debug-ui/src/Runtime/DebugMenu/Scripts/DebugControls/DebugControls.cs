@@ -16,6 +16,7 @@ namespace Lilja.DebugUI
             public const string Root = "c-button";
             public const string Primary = Root + "--primary";
             public const string Secondary = Root + "--secondary";
+            public const string Danger = Root + "--danger";
         }
 
         public static class NavigationButton
@@ -122,6 +123,23 @@ namespace Lilja.DebugUI
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Button.Root);
             AddToClassList(DebugMenuUssClass.Button.Secondary);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用のデンジャーボタン（削除・リセットなど破壊的操作用）
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugDangerButton : Button
+    {
+        public DebugDangerButton() : this(string.Empty) { }
+
+        public DebugDangerButton(string text) : base()
+        {
+            this.text = text;
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Button.Root);
+            AddToClassList(DebugMenuUssClass.Button.Danger);
         }
     }
 

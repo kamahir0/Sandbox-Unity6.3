@@ -115,6 +115,10 @@ public class SampleDebugMenu : MonoBehaviour
                 applyBtn.clicked += () => Debug.Log($"[Debug] 名前={nameField.value}");
                 b.VisualElement(applyBtn);
             });
+
+            var deleteBtn = new DebugDangerButton("設定を削除");
+            deleteBtn.clicked += () => Debug.Log("[Debug] 設定を削除");
+            builder.VisualElement(deleteBtn);
         }
     }
 

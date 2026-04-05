@@ -1,7 +1,7 @@
 :root {
     /* ベースサーフェス: 白背景 / 黒前景
        --color-on-surface はフォント・アイコン・区切り線など surface 上の全要素で共用する */
-    --color-surface:    #FFFFFF;
+    --color-surface:    #ffffff64;
     --color-on-surface: #000000;
 
     /* レイアウト定数 */
@@ -14,7 +14,7 @@
     --font-size-standard: 26px;
 
     /* プライマリ（決定など）: 青 */
-    --color-primary:        #2196F3;
+    --color-primary:        #007aff;
     --color-on-primary:     #FFFFFF;
     --color-primary-border: #1976D2;
 
@@ -34,8 +34,8 @@
     --color-input-border: #CCCCCC;
 
     /* ウィンドウヘッダーサーフェス: 青 */
-    --color-surface-header:    #1565C0;
-    --color-on-surface-header: #FFFFFF;
+    --color-surface-header:    #ffffff;
+    --color-on-surface-header: #4e4e4e;
 
     /* DebugToggleGroup チェックボックスサイズ */
     --size-toggle-checkbox: 30px;

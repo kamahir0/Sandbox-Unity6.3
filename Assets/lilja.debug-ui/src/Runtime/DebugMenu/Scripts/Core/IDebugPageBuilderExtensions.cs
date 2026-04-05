@@ -3,11 +3,21 @@ using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
 {
+    /// <summary>
+    /// ボタンの系統を表す列挙型
+    /// </summary>
+    public enum ButtonType
+    {
+        /// <summary>プライマリ（決定・適用など）: 青</summary>
+        Primary,
+        /// <summary>セカンダリ（キャンセル・戻るなど）: 白</summary>
+        Secondary,
+        /// <summary>デンジャー（削除・リセットなど破壊的操作）: 赤</summary>
+        Danger,
+    }
+
     public static class IDebugPageBuilderExtensions
     {
-        /// <summary>
-        /// 子要素を横並びにするスコープを作る。スコープ内に追加した要素には flex-grow: 1 が自動付与される。
-        /// </summary>
         public static void HorizontalScope(this IDebugPageBuilder builder, Action<IDebugPageBuilder> configure)
         {
             var row = new VisualElement();
@@ -16,9 +26,6 @@ namespace Lilja.DebugUI
             builder.VisualElement(row);
         }
 
-        /// <summary>
-        /// HorizontalScope 内専用のビルダー。追加する要素に flex-grow: 1 を自動付与する。
-        /// </summary>
         private sealed class HorizontalScopeBuilder : IDebugPageBuilder
         {
             private readonly IDebugPageBuilder _inner;
@@ -39,11 +46,14 @@ namespace Lilja.DebugUI
                 => _inner.RegisterPage(pageName, factory);
         }
 
-
-        public static void Button(this IDebugPageBuilder builder, string text)
+        public static void Button(this IDebugPageBuilder builder, string text, ButtonType buttonType = ButtonType.Primary)
         {
-            var button = new DebugButton(text);
-            builder.VisualElement(button);
+            builder.VisualElement(buttonType switch
+            {
+                ButtonType.Secondary => new DebugSecondaryButton(text),
+                ButtonType.Danger => new DebugDangerButton(text),
+                _ => new DebugButton(text)
+            });
         }
 
         public static void Foldout(this IDebugPageBuilder builder, string text, Action<IDebugPageBuilder> configure)
@@ -69,9 +79,6 @@ namespace Lilja.DebugUI
             builder.VisualElement(button);
         }
 
-        /// <summary>
-        /// ラムダ式でUIを構成する汎用ページへのナビゲーションボタンを追加する。
-        /// </summary>
         public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure, StyleBackground? icon = null)
         {
             builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure), icon);
