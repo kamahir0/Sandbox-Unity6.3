@@ -18,6 +18,44 @@ namespace Lilja.DebugUI
 
     public static class IDebugPageBuilderExtensions
     {
+        public static void Button(this IDebugPageBuilder builder, string text, ButtonType buttonType = ButtonType.Primary)
+        {
+            builder.VisualElement(buttonType switch
+            {
+                ButtonType.Secondary => new DebugSecondaryButton(text),
+                ButtonType.Danger => new DebugDangerButton(text),
+                _ => new DebugButton(text)
+            });
+        }
+
+        public static void NavigationButton<T>(this IDebugPageBuilder builder, StyleBackground? icon = null)
+            where T : DebugPage, new()
+        {
+            builder.NavigationButton(typeof(T).Name, () => new T(), icon);
+        }
+
+        public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory, StyleBackground? icon = null)
+            where T : DebugPage
+        {
+            builder.RegisterPage(pageName, () => pageFactory());
+
+            var button = new DebugNavigationButton(pageName, icon);
+            button.clicked += () => DebugMenu.NavigateTo(pageName);
+            builder.VisualElement(button);
+        }
+
+        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure, StyleBackground? icon = null)
+        {
+            builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure), icon);
+        }
+
+        public static void Foldout(this IDebugPageBuilder builder, string text, Action<IDebugPageBuilder> configure)
+        {
+            var foldout = new DebugFoldout(text);
+            configure(builder.CreateChildBuilder(foldout));
+            builder.VisualElement(foldout);
+        }
+
         public static void HorizontalScope(this IDebugPageBuilder builder, Action<IDebugPageBuilder> configure)
         {
             var row = new VisualElement();
@@ -46,42 +84,5 @@ namespace Lilja.DebugUI
                 => _inner.RegisterPage(pageName, factory);
         }
 
-        public static void Button(this IDebugPageBuilder builder, string text, ButtonType buttonType = ButtonType.Primary)
-        {
-            builder.VisualElement(buttonType switch
-            {
-                ButtonType.Secondary => new DebugSecondaryButton(text),
-                ButtonType.Danger => new DebugDangerButton(text),
-                _ => new DebugButton(text)
-            });
-        }
-
-        public static void Foldout(this IDebugPageBuilder builder, string text, Action<IDebugPageBuilder> configure)
-        {
-            var foldout = new DebugFoldout(text);
-            configure(builder.CreateChildBuilder(foldout));
-            builder.VisualElement(foldout);
-        }
-
-        public static void NavigationButton<T>(this IDebugPageBuilder builder, StyleBackground? icon = null)
-            where T : DebugPage, new()
-        {
-            builder.NavigationButton(typeof(T).Name, () => new T(), icon);
-        }
-
-        public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory, StyleBackground? icon = null)
-            where T : DebugPage
-        {
-            builder.RegisterPage(pageName, () => pageFactory());
-
-            var button = new DebugNavigationButton(pageName, icon);
-            button.clicked += () => DebugMenu.NavigateTo(pageName);
-            builder.VisualElement(button);
-        }
-
-        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure, StyleBackground? icon = null)
-        {
-            builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure), icon);
-        }
     }
 }
