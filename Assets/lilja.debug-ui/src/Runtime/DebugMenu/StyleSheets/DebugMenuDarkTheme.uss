@@ -3,14 +3,6 @@
     --color-surface:    #1e1e1e64;
     --color-on-surface: #e0e0e0;
 
-    /* レイアウト定数 */
-    --size-control-height: 64px;
-    --size-control-margin: 12px;
-    --size-control-margin-half: 6px;
-    --size-nav-button-height: 76px;
-    --size-label-width: 35%;
-    --font-size-standard: 26px;
-
     /* プライマリ（決定など） */
     --color-primary:        #2196f3;
     --color-on-primary:     #FFFFFF;
@@ -35,64 +27,37 @@
     --color-surface-header:    #2a2a2a;
     --color-on-surface-header: #b0b0b0;
 
-    /* DebugToggleGroup チェックボックスサイズ */
-    --size-toggle-checkbox: 30px;
-
-    /* Foldout チェックマークサイズ */
-    --size-foldout-checkbox: 50px;
-
-    /* チェックボックス・ラジオボタンとラベルの間隔 */
-    --size-item-gap: 8px;
-
-    /* DebugMenuWindow のデフォルトサイズ */
-    --size-window-width: 50%;
-    --size-window-max-width: 50%;
-
-    /* 角丸 */
-    --radius-window: 12px;
-    --radius-button: 4px;
-
-    /* ページコンテンツの内側余白 */
-    --size-page-padding: 24px;
-    --size-page-padding-top: 12px;
-    --size-page-padding-bottom: 12px;
-
-    /* ヘッダータイトルのフォントサイズ */
-    --font-size-title: 26px;
-
     /* ナビゲーションボタンのセパレーター線色 */
     --color-nav-button-separator: #444444;
 
-    /* DebugPage スクロールバー余白（上下、左右） */
-    --size-scrollbar-margin-v: 16px;
-    --size-scrollbar-margin-h: 10px;
-    --size-scrollbar-button-gap: 8px;
-
     /* RepeatButton: ボタン背景 / ボタン上の矢印アイコン */
-    --radius-scrollbar-button:    4px;
     --color-scrollbar-button:     #3a3a3a;
     --color-on-scrollbar-button:  #e0e0e0;
 
     /* スクロールバートラック（背景） */
-    --radius-scrollbar-handle:          4px;
     --color-scrollbar-track:            rgb(50, 50, 50);
-    --size-scrollbar-bg-border-width:   1px;
-    --color-scrollbar-track-border:     rgba(0, 0, 0, 0);
 
     /* スクロールバーハンドル */
     --color-scrollbar-handle:           #555555;
-    --size-scrollbar-handle-border-width: 1px;
     --color-scrollbar-handle-border:    rgb(90, 90, 90);
-}
 
-/* ホバー色・アクティブ色: 各ボタンクラスに直接定義（C# の ICustomStyle で読み取るため :root では不可） */
-.c-button--primary   { --hover-color: #42A5F5; --active-color: #1565C0; }
-.c-button--secondary { --hover-color: #4a4a4a; --active-color: #333333; }
-.c-button--danger    { --hover-color: #E57373; --active-color: #B71C1C; }
-.c-nav-button        { --hover-color: #2d2d2d; --active-color: #222222; }
-.c-menu-window__back-button,
-.c-menu-window__back-to-root-button { --hover-color: #383838; --active-color: #2a2a2a; }
-.c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
-.c-scroll-view .unity-scroller--vertical .unity-scroller__high-button { --hover-color: #4a4a4a; --active-color: #333333; }
-.c-scroll-view .unity-scroller--vertical #unity-dragger { --hover-color: #666666; --active-color: #444444; }
-.c-scroll-view .unity-scroller--vertical #unity-tracker { --hover-color: #484848; }
+    /* ホバー色・アクティブ色（セマンティック定数を上書き） */
+    --color-primary-hover:   #42A5F5;
+    --color-primary-active:  #1565C0;
+    --color-secondary-hover: #4a4a4a;
+    --color-secondary-active: #333333;
+    --color-danger-hover:    #E57373;
+    --color-danger-active:   #B71C1C;
+
+    --color-nav-hover:       #2d2d2d;
+    --color-nav-active:      #222222;
+
+    --color-header-button-hover:  #383838;
+    --color-header-button-active: #2a2a2a;
+
+    --color-scrollbar-button-hover: #4a4a4a;
+    --color-scrollbar-button-active: #333333;
+    --color-scrollbar-handle-hover: #666666;
+    --color-scrollbar-handle-active: #444444;
+    --color-scrollbar-track-hover:  #484848;
+}
