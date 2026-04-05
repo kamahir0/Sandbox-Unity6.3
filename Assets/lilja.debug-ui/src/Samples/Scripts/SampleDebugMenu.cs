@@ -82,10 +82,12 @@ public class SampleDebugMenu : MonoBehaviour
     {
         public override void Configure(IDebugPageBuilder builder)
         {
-            builder.VisualElement(new DebugLabel("プレイヤー設定"));
-
             var nameField = new DebugTextField("プレイヤー名") { value = "Player1" };
             builder.VisualElement(nameField);
+
+            builder.NavigationButton<PlayerPage>();
+
+            builder.VisualElement(new DebugLabel("プレイヤー設定"));
 
             var themeGroup = new DebugRadioButtonGroup("テーマ") { choices = new System.Collections.Generic.List<string> { "ライト", "ダーク" } };
             builder.VisualElement(themeGroup);
