@@ -121,6 +121,7 @@ namespace Lilja.DebugUI
             backButtonIcon.AddToClassList(BackButtonIconUssClassName);
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
+            ButtonInteractionHelper.Register(_backButton);  // clickable 置き換えのため clicked += より先に呼ぶ
             _backButton.clicked += Back;
             _header.Add(_backButton);
 
@@ -136,6 +137,7 @@ namespace Lilja.DebugUI
             backToRootButtonIcon.AddToClassList(BackToRootButtonIconUssClassName);
             backToRootButtonIcon.pickingMode = PickingMode.Ignore;
             _backToRootButton.Add(backToRootButtonIcon);
+            ButtonInteractionHelper.Register(_backToRootButton);  // clickable 置き換えのため clicked += より先に呼ぶ
             _backToRootButton.clicked += BackToRoot;
             _header.Add(_backToRootButton);
         }

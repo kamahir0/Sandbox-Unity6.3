@@ -41,6 +41,7 @@
     border-width: 1px;
     -unity-font-style: bold;
     padding: 4px 12px;
+    background-image: none;
 }
 
 .c-button--primary {
@@ -49,16 +50,28 @@
     border-color: var(--color-primary-border);
 }
 
+.c-button--primary:hover {
+    background-color: var(--hover-color) !important;
+}
+
 .c-button--secondary {
     background-color: var(--color-secondary);
     color: var(--color-on-secondary);
     border-color: var(--color-secondary-border);
 }
 
+.c-button--secondary:hover {
+    background-color: var(--hover-color) !important;
+}
+
 .c-button--danger {
     background-color: var(--color-danger);
     color: var(--color-on-danger);
     border-color: var(--color-danger-border);
+}
+
+.c-button--danger:hover {
+    background-color: var(--hover-color) !important;
 }
 
 /* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
@@ -72,12 +85,17 @@
     flex-direction: row;
     align-items: center;
     background-color: var(--color-surface);
+    background-image: none;
     border-radius: 0;
     border-width: 0;
     border-bottom-width: 1px;
     border-color: var(--color-nav-button-separator);
     padding: 0 16px;
     -unity-text-align: middle-left;
+}
+
+.c-nav-button:hover {
+    background-color: var(--hover-color) !important;
 }
 
 .c-nav-button__label {
@@ -219,6 +237,7 @@
 .c-foldout > .unity-foldout__toggle .unity-toggle__checkmark {
     width: var(--size-foldout-checkbox);
     height: var(--size-foldout-checkbox);
+    -unity-background-image-tint-color: var(--color-on-surface);
 }
 
 /* ============================================================
@@ -335,6 +354,11 @@
     border-width: 0;
     padding: 6px;
     background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+}
+
+.c-menu-window__back-button:hover {
+    background-color: var(--hover-color) !important;
 }
 
 /* バックボタン内のアイコン */
@@ -354,6 +378,11 @@
     border-width: 0;
     padding: 6px;
     background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+}
+
+.c-menu-window__back-to-root-button:hover {
+    background-color: var(--hover-color) !important;
 }
 
 /* バックトゥルートボタン内のアイコン */

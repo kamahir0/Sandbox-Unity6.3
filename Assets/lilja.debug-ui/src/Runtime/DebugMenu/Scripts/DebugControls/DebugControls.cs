@@ -1,3 +1,5 @@
+using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
@@ -59,6 +61,84 @@ namespace Lilja.DebugUI
     }
 
     /// <summary>
+    /// Clickable のサブクラス。ProcessDownEvent / ProcessUpEvent をフックして
+    /// ボタン押下・解放の通知を外部に公開する。
+    /// Clickable は PointerDownEvent 内で StopImmediatePropagation() を呼ぶため
+    /// 通常の RegisterCallback では押下を検知できず、このサブクラスで対処する。
+    /// </summary>
+    internal class InteractiveClickable : Clickable
+    {
+        public event Action OnPressed;
+        public event Action OnReleased;
+
+        public InteractiveClickable() : base((Action)null) { }
+
+        protected override void ProcessDownEvent(EventBase evt, Vector2 localPosition, int pointerId)
+        {
+            OnPressed?.Invoke();
+            base.ProcessDownEvent(evt, localPosition, pointerId);
+        }
+
+        protected override void ProcessUpEvent(EventBase evt, Vector2 localPosition, int pointerId)
+        {
+            base.ProcessUpEvent(evt, localPosition, pointerId);
+            OnReleased?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// ボタンのホバー・アクティブ状態の背景色をインラインスタイルで管理するヘルパー。
+    /// Unity のデフォルトテーマが background-color を上書きするため USS では制御できず、
+    /// C# から直接 style.backgroundColor をセットして対応する。
+    /// ホバー色・アクティブ色は USS カスタムプロパティ --hover-color / --active-color で定義する。
+    /// 呼び出し前に button.clicked への購読を済ませないこと（clickable 置き換えで失われる）。
+    /// </summary>
+    internal static class ButtonInteractionHelper
+    {
+        static readonly CustomStyleProperty<Color> s_HoverColor  = new("--hover-color");
+        static readonly CustomStyleProperty<Color> s_ActiveColor = new("--active-color");
+
+        internal static void Register(Button button)
+        {
+            Color hoverColor  = default;
+            Color activeColor = default;
+            bool  isOver      = false;
+
+            // Clickable を置き換えてプレス/リリースをフック
+            var clickable = new InteractiveClickable();
+            button.clickable = clickable;
+
+            button.RegisterCallback<CustomStyleResolvedEvent>(e =>
+            {
+                e.customStyle.TryGetValue(s_HoverColor,  out hoverColor);
+                e.customStyle.TryGetValue(s_ActiveColor, out activeColor);
+            });
+
+            button.RegisterCallback<PointerEnterEvent>(_ =>
+            {
+                isOver = true;
+                button.style.backgroundColor = hoverColor;
+            });
+
+            button.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                isOver = false;
+                button.style.backgroundColor = StyleKeyword.Null;
+            });
+
+            clickable.OnPressed += () =>
+            {
+                button.style.backgroundColor = activeColor;
+            };
+
+            clickable.OnReleased += () =>
+            {
+                button.style.backgroundColor = isOver ? (StyleColor)hoverColor : StyleKeyword.Null;
+            };
+        }
+    }
+
+    /// <summary>
     /// ナビゲーションボタン（iOS設定アプリ風）
     /// 背景色はページと同一、上下のセパレーターで矩形を可視化する。
     /// テキストラベルと右端矢印アイコンを子要素として保持する。
@@ -89,6 +169,8 @@ namespace Lilja.DebugUI
             var icon = new VisualElement();
             icon.AddToClassList(DebugMenuUssClass.NavigationButton.Icon);
             Add(icon);
+
+            ButtonInteractionHelper.Register(this);
         }
     }
 
@@ -106,6 +188,7 @@ namespace Lilja.DebugUI
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Button.Root);
             AddToClassList(DebugMenuUssClass.Button.Primary);
+            ButtonInteractionHelper.Register(this);
         }
     }
 
@@ -123,6 +206,7 @@ namespace Lilja.DebugUI
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Button.Root);
             AddToClassList(DebugMenuUssClass.Button.Secondary);
+            ButtonInteractionHelper.Register(this);
         }
     }
 
@@ -140,6 +224,7 @@ namespace Lilja.DebugUI
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Button.Root);
             AddToClassList(DebugMenuUssClass.Button.Danger);
+            ButtonInteractionHelper.Register(this);
         }
     }
 
