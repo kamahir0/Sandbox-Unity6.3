@@ -102,7 +102,7 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    background-image: url("../Resources/LiljaDebugMenu/debug-menu-navigation.svg");
+    background-image: url("../Resources/DebugMenu/debug-menu-navigation.svg");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-on-surface);
 }
@@ -340,7 +340,7 @@
 /* バックボタン内のアイコン */
 .c-menu-window__back-button-icon {
     flex-grow: 1;
-    background-image: url("../Resources/LiljaDebugMenu/debug-menu-back.svg");
+    background-image: url("../Resources/DebugMenu/debug-menu-back.svg");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-on-surface-header);
 }
@@ -359,7 +359,7 @@
 /* バックトゥルートボタン内のアイコン */
 .c-menu-window__back-to-root-button-icon {
     flex-grow: 1;
-    background-image: url("../Resources/LiljaDebugMenu/debug-menu-home.svg");
+    background-image: url("../Resources/DebugMenu/debug-menu-home.svg");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-on-surface-header);
 }
