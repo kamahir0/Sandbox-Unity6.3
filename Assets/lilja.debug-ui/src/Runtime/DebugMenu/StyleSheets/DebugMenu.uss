@@ -291,7 +291,7 @@
 
 /* アイテムフォーカス時のラベル色 */
 .c-toggle-group-item:focus .c-toggle-group-item__label {
-    color: var(--color-focus);
+    color: #006AA6;
 }
 
 /* テキストラベル */
