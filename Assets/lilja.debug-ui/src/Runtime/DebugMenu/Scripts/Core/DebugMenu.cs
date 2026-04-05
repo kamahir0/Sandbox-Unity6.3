@@ -36,6 +36,7 @@ namespace Lilja.DebugUI
 
             // 初期状態は即時非表示
             window.SetHidden();
+            menuRoot.pickingMode = PickingMode.Ignore;
 
             // 矩形外タップで閉じる
             menuRoot.SetupOutsideTapHandler(() => _window, Hide);
@@ -46,7 +47,7 @@ namespace Lilja.DebugUI
             if (_window == null || _menuRoot == null) return;
 
             _menuRoot.pickingMode = PickingMode.Position;
-            _window.style.display = DisplayStyle.Flex;
+            _window.style.translate = StyleKeyword.None;
 
             var version = ++_animVersion;
             DebugMenuAnimator.AnimateScaleOpacity(

@@ -76,6 +76,16 @@ namespace Lilja.DebugUI
             ShowPageImmediately(rootPage, PagePosition.In);
             rootPage.OnPageShown();
             NotifyBackVisibility();
+
+            // プール内の全ページを OutR 位置に事前アタッチし、起動時にパネルへの接続コストを分散させる
+            foreach (var page in _pagePool.GetAllPooledPages())
+            {
+                if (page.parent != _contentContainer)
+                {
+                    _contentContainer.Add(page);
+                    ShowPageImmediately(page, PagePosition.OutR);
+                }
+            }
         }
 
         /// <summary>

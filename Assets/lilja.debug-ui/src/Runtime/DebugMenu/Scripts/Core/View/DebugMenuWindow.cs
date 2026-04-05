@@ -47,6 +47,7 @@ namespace Lilja.DebugUI
         /// </summary>
         public DebugMenuWindow()
         {
+            usageHints = UsageHints.DynamicTransform;
             AddToClassList(UssClassName);
             AddToClassList(SurfaceUssClassName);
             AddToClassList(DefaultSizeUssClassName);
@@ -166,7 +167,7 @@ namespace Lilja.DebugUI
         /// </summary>
         public void SetHidden()
         {
-            style.display = DisplayStyle.None;
+            style.translate = new StyleTranslate(new Translate(-5000, -5000));
             style.opacity = 0f;
         }
 

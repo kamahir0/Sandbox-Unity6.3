@@ -74,6 +74,18 @@ namespace Lilja.DebugUI
             return page;
         }
 
+        /// <summary>プールに格納されている全ページを列挙する（事前アタッチ用）</summary>
+        public IEnumerable<DebugPage> GetAllPooledPages()
+        {
+            foreach (var queue in _pool.Values)
+            {
+                foreach (var page in queue)
+                {
+                    yield return page;
+                }
+            }
+        }
+
         /// <summary>
         /// ページをプールへ返却する。MaxPerType を超えた分は DOM から除去して破棄する。
         /// </summary>
