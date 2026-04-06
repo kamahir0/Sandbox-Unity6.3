@@ -86,7 +86,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 初期位置へリセットし、保存済み位置を削除する。
         /// </summary>
-        private void ResetToDefault()
+        internal void ResetToDefault()
         {
             ClearSavedPosition();
             ApplyDefaultPosition();
@@ -205,7 +205,7 @@ namespace Lilja.DebugUI
 #endif
         }
 
-        private static void ClearSavedPosition()
+        internal static void ClearSavedPosition()
         {
 #if UNITY_EDITOR
             EditorPrefs.SetBool(PrefKeyHasPosition, false);

@@ -79,6 +79,18 @@ namespace Lilja.DebugUI
             );
         }
 
+        public static void ResetPosition()
+        {
+            if (_window != null)
+            {
+                _window.ResetPosition();
+            }
+            else
+            {
+                DebugMenuPositionController.ClearSavedPosition();
+            }
+        }
+
         public static void NavigateTo(string pageName)
         {
             if (_window == null) return;

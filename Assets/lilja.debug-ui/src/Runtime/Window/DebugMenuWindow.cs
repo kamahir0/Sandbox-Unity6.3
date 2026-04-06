@@ -163,6 +163,11 @@ namespace Lilja.DebugUI
         }
 
         /// <summary>
+        /// ウィンドウの位置を初期状態にリセットする
+        /// </summary>
+        internal void ResetPosition() => _positionController?.ResetToDefault();
+
+        /// <summary>
         /// 非表示状態にする（Manager の Show/Hide アニメーション後に呼ばれる）
         /// </summary>
         internal void SetHidden()
