@@ -28,7 +28,7 @@ namespace Lilja.DebugUI
         private const string PrefKeyTop = "LiljaDebugMenu.WindowTop";
         private const string PrefKeyHasPosition = "LiljaDebugMenu.WindowHasPosition";
 
-        public DebugMenuPositionController(VisualElement window, VisualElement header)
+        internal DebugMenuPositionController(VisualElement window, VisualElement header)
         {
             _window = window;
             _header = header;
@@ -41,7 +41,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 保存済み位置があれば復元し、なければデフォルト位置を適用する。
         /// </summary>
-        public void RestoreOrDefault()
+        internal void RestoreOrDefault()
         {
             _window.style.position = Position.Absolute;
 

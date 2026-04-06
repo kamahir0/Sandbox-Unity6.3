@@ -7,56 +7,56 @@ namespace Lilja.DebugUI
     /// <summary>
     /// デバッグメニュー全体で使用する USS クラス名の一元管理
     /// </summary>
-    public static class DebugMenuUssClass
+    internal static class DebugMenuUssClass
     {
-        public const string ControlSize = "c-control-size";
-        public const string Input = "c-input";
-        public const string HorizontalScope = "c-h-scope";
+        internal const string ControlSize = "c-control-size";
+        internal const string Input = "c-input";
+        internal const string HorizontalScope = "c-h-scope";
 
-        public static class Button
+        internal static class Button
         {
-            public const string Root = "c-button";
-            public const string Primary = Root + "--primary";
-            public const string Secondary = Root + "--secondary";
-            public const string Danger = Root + "--danger";
+            internal const string Root = "c-button";
+            internal const string Primary = Root + "--primary";
+            internal const string Secondary = Root + "--secondary";
+            internal const string Danger = Root + "--danger";
         }
 
-        public static class NavigationButton
+        internal static class NavigationButton
         {
-            public const string Root = "c-nav-button";
-            public const string Label = Root + "__label";
-            public const string LeftIcon = Root + "__left-icon";
-            public const string Icon = Root + "__icon";
+            internal const string Root = "c-nav-button";
+            internal const string Label = Root + "__label";
+            internal const string LeftIcon = Root + "__left-icon";
+            internal const string Icon = Root + "__icon";
         }
 
-        public static class Label
+        internal static class Label
         {
-            public const string Root = "c-label";
+            internal const string Root = "c-label";
         }
 
-        public static class Foldout
+        internal static class Foldout
         {
-            public const string Root = "c-foldout";
+            internal const string Root = "c-foldout";
         }
 
-        public static class RadioButtonGroup
+        internal static class RadioButtonGroup
         {
-            public const string Root = "c-radio-group";
+            internal const string Root = "c-radio-group";
         }
 
-        public static class ToggleGroup
+        internal static class ToggleGroup
         {
-            public const string Root = "c-toggle-group";
-            public const string LabelElement = Root + "__label";
-            public const string Items = Root + "__items";
+            internal const string Root = "c-toggle-group";
+            internal const string LabelElement = Root + "__label";
+            internal const string Items = Root + "__items";
         }
 
-        public static class ToggleGroupItem
+        internal static class ToggleGroupItem
         {
-            public const string Root = "c-toggle-group-item";
-            public const string Checked = Root + "--checked";
-            public const string Checkbox = Root + "__checkbox";
-            public const string LabelElement = Root + "__label";
+            internal const string Root = "c-toggle-group-item";
+            internal const string Checked = Root + "--checked";
+            internal const string Checkbox = Root + "__checkbox";
+            internal const string LabelElement = Root + "__label";
         }
     }
 

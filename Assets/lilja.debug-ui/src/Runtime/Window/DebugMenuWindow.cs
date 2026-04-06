@@ -7,7 +7,7 @@ namespace Lilja.DebugUI
     /// デバッグメニューのウィンドウ
     /// </summary>
     [UxmlElement]
-    public partial class DebugMenuWindow : VisualElement
+    internal partial class DebugMenuWindow : VisualElement
     {
         // UI
         private Label _label;
@@ -89,7 +89,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
         /// </summary>
-        public void RegisterPage(string pageName, Func<DebugPage> factory)
+        internal void RegisterPage(string pageName, Func<DebugPage> factory)
             => _navigator?.PagePool.Register(pageName, factory);
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 非表示状態にする（Manager の Show/Hide アニメーション後に呼ばれる）
         /// </summary>
-        public void SetHidden()
+        internal void SetHidden()
         {
             style.translate = new StyleTranslate(new Translate(-5000, -5000));
             style.opacity = 0f;

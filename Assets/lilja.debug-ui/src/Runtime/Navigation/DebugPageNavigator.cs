@@ -41,9 +41,9 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ページプールへの参照（外部から RegisterPage するために公開）
         /// </summary>
-        public DebugPagePool PagePool => _pagePool;
+        internal DebugPagePool PagePool => _pagePool;
 
-        public DebugPageNavigator(
+        internal DebugPageNavigator(
             VisualElement contentContainer,
             VisualElement animationScheduler,
             Action<string> onLabelChanged,
@@ -58,7 +58,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ルートページを初期化する。ウィンドウ生成時に一度だけ呼ぶ。
         /// </summary>
-        public void InitRootPage(DebugPage rootPage)
+        internal void InitRootPage(DebugPage rootPage)
         {
             if (rootPage == null) return;
 
@@ -91,7 +91,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 登録済みページへ遷移する
         /// </summary>
-        public void Navigate(string pageName)
+        internal void Navigate(string pageName)
         {
             if (_isAnimating) return;
             if (_currentPage == null) return;
@@ -105,7 +105,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// GenericDebugPage を即席生成して遷移する。事前登録不要。
         /// </summary>
-        public void NavigateTemp(string pageName, Action<IDebugPageBuilder> configure)
+        internal void NavigateTemp(string pageName, Action<IDebugPageBuilder> configure)
         {
             if (_isAnimating) return;
             if (_currentPage == null) return;
@@ -118,7 +118,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 履歴を全て破棄してルートページへ戻る
         /// </summary>
-        public void BackToRoot()
+        internal void BackToRoot()
         {
             if (_isAnimating) return;
             if (_history.Count == 0) return;
@@ -159,7 +159,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 前のページへ戻る
         /// </summary>
-        public void Back()
+        internal void Back()
         {
             if (_isAnimating) return;
             if (_history.Count == 0) return;
@@ -190,7 +190,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 指定ページ名がプールに登録済みか返す
         /// </summary>
-        public bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
+        internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
 
         // ── プライベート ────────────────────────────────────────
 

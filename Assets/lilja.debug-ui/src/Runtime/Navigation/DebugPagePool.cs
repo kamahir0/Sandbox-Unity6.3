@@ -6,23 +6,23 @@ namespace Lilja.DebugUI
     /// <summary>
     /// ページ名をキーとし、同一ページのインスタンスを最大 MaxPerType 個プールする。
     /// </summary>
-    public sealed class DebugPagePool
+    internal sealed class DebugPagePool
     {
         private readonly Dictionary<string, Queue<DebugPage>> _pool = new();
         private readonly Dictionary<string, Func<DebugPage>> _factories = new();
 
-        public const int MaxPerType = 2;
+        internal const int MaxPerType = 2;
 
         /// <summary>
         /// プールに pageName が登録済みか返す。循環防止チェックにも使う。
         /// </summary>
-        public bool Contains(string pageName) => _pool.ContainsKey(pageName);
+        internal bool Contains(string pageName) => _pool.ContainsKey(pageName);
 
         /// <summary>
         /// ページを登録する。循環防止マーカー設置・ファクトリ登録・初回インスタンス生成を一括実行する。
         /// 既に登録済みの場合は何もしない。
         /// </summary>
-        public void Register(string pageName, Func<DebugPage> factory)
+        internal void Register(string pageName, Func<DebugPage> factory)
         {
             if (Contains(pageName)) return;
 
@@ -56,7 +56,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// プールからインスタンスを1つ借りる。キューが空なら新規生成して返す。ファクトリ未登録なら null を返す。
         /// </summary>
-        public DebugPage Rent(string pageName)
+        internal DebugPage Rent(string pageName)
         {
             if (_pool.TryGetValue(pageName, out var queue) && queue.Count > 0)
             {
@@ -75,7 +75,7 @@ namespace Lilja.DebugUI
         }
 
         /// <summary>プールに格納されている全ページを列挙する（事前アタッチ用）</summary>
-        public IEnumerable<DebugPage> GetAllPooledPages()
+        internal IEnumerable<DebugPage> GetAllPooledPages()
         {
             foreach (var queue in _pool.Values)
             {
@@ -89,7 +89,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ページをプールへ返却する。MaxPerType を超えた分は DOM から除去して破棄する。
         /// </summary>
-        public void Return(DebugPage page)
+        internal void Return(DebugPage page)
         {
             var pageName = page.name;
             page.ResetScrollPosition();

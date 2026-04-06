@@ -7,7 +7,7 @@ namespace Lilja.DebugUI
     /// 画面全体に広がる共通ルートコンテナ
     /// </summary>
     [UxmlElement]
-    public partial class DebugMenuRoot : VisualElement
+    internal partial class DebugMenuRoot : VisualElement
     {
         // クラス
         private const string UssClassName = "t-root";
