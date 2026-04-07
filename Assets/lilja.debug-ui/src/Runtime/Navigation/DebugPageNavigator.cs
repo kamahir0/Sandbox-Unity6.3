@@ -11,7 +11,7 @@ namespace Lilja.DebugUI
     /// </summary>
     internal sealed class DebugPageNavigator
     {
-        private readonly DebugPagePool _pagePool = new();
+        private readonly DebugPageCache _pageCache = new();
         private readonly Stack<DebugPage> _history = new();
 
         /// <summary>アニメーションスケジュールの基点となる VisualElement（Window 自身）</summary>
@@ -41,7 +41,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// ページプールへの参照（外部から RegisterPage するために公開）
         /// </summary>
-        internal DebugPagePool PagePool => _pagePool;
+        internal DebugPageCache PageCache => _pageCache;
 
         internal DebugPageNavigator(
             VisualElement contentContainer,
@@ -71,14 +71,14 @@ namespace Lilja.DebugUI
             _currentPage = rootPage;
             _onLabelChanged(rootPage.name);
 
-            _pagePool.PreparePage(rootPage);
+            _pageCache.PreparePage(rootPage);
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
             rootPage.OnShown();
             NotifyBackVisibility();
 
             // プール内の全ページを OutR 位置に事前アタッチし、起動時にパネルへの接続コストを分散させる
-            foreach (var page in _pagePool.GetAllPooledPages())
+            foreach (var page in _pageCache.GetAllCachedPages())
             {
                 if (page.parent != _contentContainer)
                 {
@@ -96,7 +96,7 @@ namespace Lilja.DebugUI
             if (_isAnimating) return;
             if (_currentPage == null) return;
 
-            var targetPage = _pagePool.Rent(pageName);
+            var targetPage = _pageCache.Get(pageName);
             if (targetPage == null) return;
 
             OnNavigate(targetPage);
@@ -111,7 +111,7 @@ namespace Lilja.DebugUI
             if (_currentPage == null) return;
 
             var page = new GenericDebugPage(pageName, configure);
-            _pagePool.PreparePage(page);
+            _pageCache.PreparePage(page);
             OnNavigate(page);
         }
 
@@ -135,7 +135,7 @@ namespace Lilja.DebugUI
             for (var i = 0; i < historyArray.Length - 1; i++)
             {
                 historyArray[i].OnHidden();
-                _pagePool.Return(historyArray[i]);
+                _pageCache.Return(historyArray[i]);
             }
 
             var currentPage = _currentPage;
@@ -146,7 +146,7 @@ namespace Lilja.DebugUI
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, DebugMenuSettings.PageSlideDuration, () =>
             {
                 currentPage.OnHidden();
-                _pagePool.Return(currentPage);
+                _pageCache.Return(currentPage);
             });
             SlidePage(rootPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
@@ -177,7 +177,7 @@ namespace Lilja.DebugUI
             SlidePage(currentPage, PagePosition.In, PagePosition.OutR, DebugMenuSettings.PageSlideDuration, () =>
             {
                 currentPage.OnHidden();
-                _pagePool.Return(currentPage);
+                _pageCache.Return(currentPage);
             });
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
@@ -190,7 +190,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// 指定ページ名がプールに登録済みか返す
         /// </summary>
-        internal bool IsPageRegistered(string pageName) => _pagePool.Contains(pageName);
+        internal bool IsPageRegistered(string pageName) => _pageCache.Contains(pageName);
 
         // ── プライベート ────────────────────────────────────────
 
@@ -214,7 +214,7 @@ namespace Lilja.DebugUI
                 SlidePage(prevPage, PagePosition.In, PagePosition.OutL, DebugMenuSettings.PageSlideDuration, () =>
                 {
                     prevPage.OnHidden();
-                    _pagePool.Return(prevPage);
+                    _pageCache.Return(prevPage);
                 });
             }
             else

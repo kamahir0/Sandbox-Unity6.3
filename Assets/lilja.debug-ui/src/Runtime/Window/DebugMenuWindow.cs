@@ -90,7 +90,7 @@ namespace Lilja.DebugUI
         /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
         /// </summary>
         internal void RegisterPage(string pageName, Func<DebugPage> factory)
-            => _navigator?.PagePool.Register(pageName, factory);
+            => _navigator?.PageCache.Register(pageName, factory);
 
         /// <summary>
         /// 指定ページ名がプールに登録済みか返す。

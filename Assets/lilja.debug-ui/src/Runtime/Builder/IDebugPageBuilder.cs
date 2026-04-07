@@ -17,12 +17,12 @@ namespace Lilja.DebugUI
     internal sealed class DebugPageBuilder : IDebugPageBuilder
     {
         private readonly VisualElement _parent;
-        private readonly DebugPagePool _pagePool;
+        private readonly DebugPageCache _pageCache;
 
-        public DebugPageBuilder(VisualElement parent, DebugPagePool pagePool)
+        public DebugPageBuilder(VisualElement parent, DebugPageCache pageCache)
         {
             _parent = parent;
-            _pagePool = pagePool;
+            _pageCache = pageCache;
         }
 
         public void VisualElement(VisualElement visualElement)
@@ -32,12 +32,12 @@ namespace Lilja.DebugUI
 
         public IDebugPageBuilder CreateChildBuilder(VisualElement parent)
         {
-            return new DebugPageBuilder(parent, _pagePool);
+            return new DebugPageBuilder(parent, _pageCache);
         }
 
         public void RegisterPage(string pageName, Func<DebugPage> factory)
         {
-            _pagePool.Register(pageName, factory);
+            _pageCache.Register(pageName, factory);
         }
     }
 }
