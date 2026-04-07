@@ -35,7 +35,7 @@ namespace Lilja.DebugUI
         /// </summary>
         internal void PreparePage(DebugPage page)
         {
-            page.Configure(new DebugPageBuilder(page, this));
+            page.Configure(new DebugUIBuilder(page, this));
         }
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace Lilja.DebugUI
     {
         #region Virtual
 
-        public virtual void Configure(IDebugPageBuilder builder) { }
+        public virtual void Configure(IDebugUIBuilder builder) { }
 
         /// <summary>
         /// ページが表示された直後に呼ばれる（スライドアニメーション完了後）

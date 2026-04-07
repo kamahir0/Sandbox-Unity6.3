@@ -16,9 +16,9 @@ namespace Lilja.DebugUI
         Danger,
     }
 
-    public static class IDebugPageBuilderExtensions
+    public static class IDebugUIBuilderExtensions
     {
-        public static void Button(this IDebugPageBuilder builder, string text, ButtonType buttonType = ButtonType.Primary)
+        public static void Button(this IDebugUIBuilder builder, string text, ButtonType buttonType = ButtonType.Primary)
         {
             builder.VisualElement(buttonType switch
             {
@@ -28,13 +28,13 @@ namespace Lilja.DebugUI
             });
         }
 
-        public static void NavigationButton<T>(this IDebugPageBuilder builder, StyleBackground? icon = null)
+        public static void NavigationButton<T>(this IDebugUIBuilder builder, StyleBackground? icon = null)
             where T : DebugPage, new()
         {
             builder.NavigationButton(typeof(T).Name, () => new T(), icon);
         }
 
-        public static void NavigationButton<T>(this IDebugPageBuilder builder, string pageName, Func<T> pageFactory, StyleBackground? icon = null)
+        public static void NavigationButton<T>(this IDebugUIBuilder builder, string pageName, Func<T> pageFactory, StyleBackground? icon = null)
             where T : DebugPage
         {
             builder.RegisterPage(pageName, () => pageFactory());
@@ -44,19 +44,19 @@ namespace Lilja.DebugUI
             builder.VisualElement(button);
         }
 
-        public static void NavigationButton(this IDebugPageBuilder builder, string pageName, Action<IDebugPageBuilder> configure, StyleBackground? icon = null)
+        public static void NavigationButton(this IDebugUIBuilder builder, string pageName, Action<IDebugUIBuilder> configure, StyleBackground? icon = null)
         {
             builder.NavigationButton(pageName, () => new GenericDebugPage(pageName, configure), icon);
         }
 
-        public static void Foldout(this IDebugPageBuilder builder, string text, Action<IDebugPageBuilder> configure)
+        public static void Foldout(this IDebugUIBuilder builder, string text, Action<IDebugUIBuilder> configure)
         {
             var foldout = new DebugFoldout(text);
             configure(builder.CreateChildBuilder(foldout));
             builder.VisualElement(foldout);
         }
 
-        public static void HorizontalScope(this IDebugPageBuilder builder, Action<IDebugPageBuilder> configure)
+        public static void HorizontalScope(this IDebugUIBuilder builder, Action<IDebugUIBuilder> configure)
         {
             var row = new VisualElement();
             row.AddToClassList(DebugMenuUssClass.HorizontalScope);
@@ -64,11 +64,11 @@ namespace Lilja.DebugUI
             builder.VisualElement(row);
         }
 
-        private sealed class HorizontalScopeBuilder : IDebugPageBuilder
+        private sealed class HorizontalScopeBuilder : IDebugUIBuilder
         {
-            private readonly IDebugPageBuilder _inner;
+            private readonly IDebugUIBuilder _inner;
 
-            public HorizontalScopeBuilder(IDebugPageBuilder inner) => _inner = inner;
+            public HorizontalScopeBuilder(IDebugUIBuilder inner) => _inner = inner;
 
             public void VisualElement(VisualElement visualElement)
             {
@@ -77,7 +77,7 @@ namespace Lilja.DebugUI
                 _inner.VisualElement(visualElement);
             }
 
-            public IDebugPageBuilder CreateChildBuilder(VisualElement parent)
+            public IDebugUIBuilder CreateChildBuilder(VisualElement parent)
                 => _inner.CreateChildBuilder(parent);
 
             public void RegisterPage(string pageName, Func<DebugPage> factory)

@@ -112,7 +112,7 @@ namespace Lilja.DebugUI
             _window?.BackToRoot();
         }
 
-        public static void NavigateToTemp(string pageName, Action<IDebugPageBuilder> configure)
+        public static void NavigateToTemp(string pageName, Action<IDebugUIBuilder> configure)
         {
             _window?.NavigateTemp(pageName, configure);
         }

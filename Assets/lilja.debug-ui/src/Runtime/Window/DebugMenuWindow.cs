@@ -83,7 +83,7 @@ namespace Lilja.DebugUI
         /// <summary>
         /// GenericDebugPage を即席生成して遷移する。事前登録不要。
         /// </summary>
-        internal void NavigateTemp(string pageName, Action<IDebugPageBuilder> configure)
+        internal void NavigateTemp(string pageName, Action<IDebugUIBuilder> configure)
             => _navigator?.NavigateTemp(pageName, configure);
 
         /// <summary>

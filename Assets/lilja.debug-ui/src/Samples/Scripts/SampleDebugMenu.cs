@@ -19,7 +19,7 @@ public class SampleDebugMenu : MonoBehaviour
 
     class RootPage : DebugPage
     {
-        public override void Configure(IDebugPageBuilder builder)
+        public override void Configure(IDebugUIBuilder builder)
         {
             var playerIcon = Resources.Load<Sprite>("sample_icon_1");
             builder.NavigationButton("Player", () => new PlayerPage(), new StyleBackground(playerIcon));
@@ -52,7 +52,7 @@ public class SampleDebugMenu : MonoBehaviour
 
     class PlayerPage : DebugPage
     {
-        public override void Configure(IDebugPageBuilder builder)
+        public override void Configure(IDebugUIBuilder builder)
         {
             var hpField = new DebugIntegerField("HP") { value = 100 };
             var setHpBtn = new DebugButton("HP をセット");
@@ -80,7 +80,7 @@ public class SampleDebugMenu : MonoBehaviour
 
     class SettingsPage : DebugPage
     {
-        public override void Configure(IDebugPageBuilder builder)
+        public override void Configure(IDebugUIBuilder builder)
         {
             var nameField = new DebugTextField("プレイヤー名") { value = "Player1" };
             builder.VisualElement(nameField);
@@ -128,7 +128,7 @@ public class SampleDebugMenu : MonoBehaviour
 
     class AudioPage : DebugPage
     {
-        public override void Configure(IDebugPageBuilder builder)
+        public override void Configure(IDebugUIBuilder builder)
         {
             var bgmField = new DebugFloatField("BGM") { value = AudioListener.volume };
             var seField = new DebugFloatField("SE") { value = 1f };

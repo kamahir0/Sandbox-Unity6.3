@@ -3,10 +3,10 @@ using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
 {
-    public interface IDebugPageBuilder
+    public interface IDebugUIBuilder
     {
         void VisualElement(VisualElement visualElement);
-        IDebugPageBuilder CreateChildBuilder(VisualElement parent);
+        IDebugUIBuilder CreateChildBuilder(VisualElement parent);
 
         /// <summary>
         /// ページをプールに登録する。NavigationButton から利用される。
@@ -14,12 +14,12 @@ namespace Lilja.DebugUI
         void RegisterPage(string pageName, Func<DebugPage> factory);
     }
 
-    internal sealed class DebugPageBuilder : IDebugPageBuilder
+    internal sealed class DebugUIBuilder : IDebugUIBuilder
     {
         private readonly VisualElement _parent;
         private readonly DebugPageCache _pageCache;
 
-        public DebugPageBuilder(VisualElement parent, DebugPageCache pageCache)
+        public DebugUIBuilder(VisualElement parent, DebugPageCache pageCache)
         {
             _parent = parent;
             _pageCache = pageCache;
@@ -30,9 +30,9 @@ namespace Lilja.DebugUI
             _parent.Add(visualElement);
         }
 
-        public IDebugPageBuilder CreateChildBuilder(VisualElement parent)
+        public IDebugUIBuilder CreateChildBuilder(VisualElement parent)
         {
-            return new DebugPageBuilder(parent, _pageCache);
+            return new DebugUIBuilder(parent, _pageCache);
         }
 
         public void RegisterPage(string pageName, Func<DebugPage> factory)

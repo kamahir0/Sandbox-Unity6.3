@@ -8,14 +8,14 @@ namespace Lilja.DebugUI
     /// </summary>
     public sealed class GenericDebugPage : DebugPage
     {
-        private readonly Action<IDebugPageBuilder> _configure;
+        private readonly Action<IDebugUIBuilder> _configure;
 
-        public GenericDebugPage(string name, Action<IDebugPageBuilder> configure)
+        public GenericDebugPage(string name, Action<IDebugUIBuilder> configure)
         {
             this.name = name;
             _configure = configure;
         }
 
-        public override void Configure(IDebugPageBuilder builder) => _configure?.Invoke(builder);
+        public override void Configure(IDebugUIBuilder builder) => _configure?.Invoke(builder);
     }
 }
