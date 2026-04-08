@@ -148,9 +148,10 @@ namespace Lilja.DebugUI
                 currentPage.OnHidden();
                 _pageCache.Return(currentPage);
             });
+
+            rootPage.OnShown();
             SlidePage(rootPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                rootPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -179,9 +180,10 @@ namespace Lilja.DebugUI
                 currentPage.OnHidden();
                 _pageCache.Return(currentPage);
             });
+
+            prevPage.OnShown();
             SlidePage(prevPage, PagePosition.OutL, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                prevPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });
@@ -226,9 +228,9 @@ namespace Lilja.DebugUI
                 });
             }
 
+            targetPage.OnShown();
             SlidePage(targetPage, PagePosition.OutR, PagePosition.In, DebugMenuSettings.PageSlideDuration, () =>
             {
-                targetPage.OnShown();
                 _isAnimating = false;
                 NotifyBackVisibility();
             });

@@ -15,7 +15,7 @@ namespace Lilja.DebugUI
         public virtual void Configure(IDebugUIBuilder builder) { }
 
         /// <summary>
-        /// ページが表示された直後に呼ばれる（スライドアニメーション完了後）
+        /// ページが表示される直前に呼ばれる（スライドアニメーション開始前）
         /// </summary>
         public virtual void OnShown() { }
 
