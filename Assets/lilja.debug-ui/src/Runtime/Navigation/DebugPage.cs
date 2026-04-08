@@ -12,6 +12,9 @@ namespace Lilja.DebugUI
     {
         #region Virtual
 
+        /// <summary>
+        /// UIを構築する
+        /// </summary>
         public virtual void Configure(IDebugUIBuilder builder) { }
 
         /// <summary>
@@ -20,7 +23,7 @@ namespace Lilja.DebugUI
         public virtual void OnShown() { }
 
         /// <summary>
-        /// ページが非表示になった直後に呼ばれる（スライドアニメーション完了後・プール返却前）
+        /// ページが非表示になった直後に呼ばれる（スライドアニメーション完了後）
         /// </summary>
         public virtual void OnHidden() { }
 
