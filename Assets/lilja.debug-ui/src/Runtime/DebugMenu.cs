@@ -10,6 +10,8 @@ namespace Lilja.DebugUI
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
+        internal static DebugPageCache CurrentCache => _window?.PageCache;
+
         public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
         {
             var go = new GameObject("[DebugMenu]");
@@ -117,5 +119,14 @@ namespace Lilja.DebugUI
             _window?.NavigateTemp(pageName, configure);
         }
 
+        public static DebugPage GetPage(string pageName)
+        {
+            return _window?.GetPage(pageName);
+        }
+
+        public static T GetPage<T>() where T : DebugPage
+        {
+            return _window?.GetPage(typeof(T).Name) as T;
+        }
     }
 }

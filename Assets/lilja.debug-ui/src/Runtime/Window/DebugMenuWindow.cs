@@ -98,6 +98,16 @@ namespace Lilja.DebugUI
         internal bool IsPageRegistered(string pageName)
             => _navigator?.IsPageRegistered(pageName) ?? false;
 
+        /// <summary>
+        /// キャッシュからページインスタンスを返す。未登録なら null。
+        /// </summary>
+        internal DebugPage GetPage(string pageName) => _navigator?.PageCache.Get(pageName);
+
+        /// <summary>
+        /// ページキャッシュへの参照。AddDebugUI 内の NavigationButton サポート用。
+        /// </summary>
+        internal DebugPageCache PageCache => _navigator?.PageCache;
+
         /// <summary> 前のページへ戻る </summary>
         internal void Back() => _navigator?.Back();
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Lilja.DebugUI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,6 +15,13 @@ public class SampleDebugMenu : MonoBehaviour
     private void Start()
     {
         DebugMenu.Initialize(new RootPage());
+
+        // GetPage<T>() のデモ: 初期化後に外部からページへ動的追加
+        var root = DebugMenu.GetPage<RootPage>();
+        root?.AddDebugUI(b =>
+        {
+            b.VisualElement(new DebugLabel($"起動時刻: {System.DateTime.Now:HH:mm:ss}"));
+        });
     }
 
     // ─── Root ─────────────────────────────────────────────────────
@@ -40,11 +49,99 @@ public class SampleDebugMenu : MonoBehaviour
                 stage1Btn.clicked += () => SceneManager.LoadScene("Stage1");
                 b.VisualElement(stage1Btn);
             });
+
+            // 動的UIデモページへのナビゲーション
+            builder.NavigationButton("Dynamic UI Demo", () => new DynamicDemoPage());
+
             builder.Foldout("App Info", b =>
             {
                 b.VisualElement(new DebugLabel($"Version: {Application.version}"));
                 b.VisualElement(new DebugLabel($"Platform: {Application.platform}"));
             });
+        }
+    }
+
+    // ─── Dynamic UI Demo ──────────────────────────────────────────
+
+    /// <summary>
+    /// AddDebugUI / VirtualFoldout / PlaceBehind のデモページ。
+    /// </summary>
+    class DynamicDemoPage : DebugPage
+    {
+        private VirtualFoldout _enemyFoldout;
+        private readonly List<IDisposable> _enemyHandles = new();
+        private int _enemyCounter;
+        private IDisposable _placedHandle;
+
+        public override void Configure(IDebugUIBuilder builder)
+        {
+            // ── VirtualFoldout デモ ──────────────────────────────
+            // 子要素が0のとき非表示、1つ以上で表示される Foldout
+            _enemyFoldout = new VirtualFoldout("ポップ中エネミー");
+            builder.VisualElement(_enemyFoldout);
+
+            var spawnBtn = new DebugButton("エネミーをスポーン");
+            spawnBtn.clicked += SpawnEnemy;
+            builder.VisualElement(spawnBtn);
+
+            var clearBtn = new DebugDangerButton("全エネミーを撃破");
+            clearBtn.clicked += ClearAllEnemies;
+            builder.VisualElement(clearBtn);
+
+            // ── PlaceBehind デモ ─────────────────────────────────
+            var anchor = new DebugLabel("─── PlaceBehind アンカー ───");
+            builder.VisualElement(anchor);
+
+            var insertBtn = new DebugButton("PlaceBehind でボタンを挿入");
+            insertBtn.clicked += () =>
+            {
+                _placedHandle?.Dispose();
+                _placedHandle = anchor.PlaceBehind(b =>
+                {
+                    var btn = new DebugSecondaryButton("動的に挿入されたボタン");
+                    btn.clicked += () => Debug.Log("[DynamicDemo] PlaceBehind ボタンがタップされました");
+                    b.VisualElement(btn);
+                });
+            };
+            builder.VisualElement(insertBtn);
+
+            var removeBtn = new DebugDangerButton("挿入を削除");
+            removeBtn.clicked += () => _placedHandle?.Dispose();
+            builder.VisualElement(removeBtn);
+        }
+
+        private void SpawnEnemy()
+        {
+            var id = ++_enemyCounter;
+            var enemyName = $"Enemy-{id:D3}";
+
+            IDisposable handle = null;
+            handle = _enemyFoldout.AddDebugUI(b =>
+            {
+                b.HorizontalScope(hb =>
+                {
+                    hb.VisualElement(new DebugLabel(enemyName));
+
+                    var killBtn = new DebugDangerButton("即死");
+                    killBtn.clicked += () =>
+                    {
+                        Debug.Log($"[DynamicDemo] {enemyName} を撃破");
+                        handle?.Dispose();
+                        _enemyHandles.Remove(handle);
+                    };
+                    hb.VisualElement(killBtn);
+                });
+            });
+
+            _enemyHandles.Add(handle);
+            Debug.Log($"[DynamicDemo] {enemyName} がスポーンしました");
+        }
+
+        private void ClearAllEnemies()
+        {
+            foreach (var h in _enemyHandles) h.Dispose();
+            _enemyHandles.Clear();
+            Debug.Log("[DynamicDemo] 全エネミーを撃破しました");
         }
     }
 
@@ -89,7 +186,7 @@ public class SampleDebugMenu : MonoBehaviour
 
             builder.VisualElement(new DebugLabel("プレイヤー設定"));
 
-            var themeGroup = new DebugRadioButtonGroup("テーマ") { choices = new System.Collections.Generic.List<string> { "ライト", "ダーク" } };
+            var themeGroup = new DebugRadioButtonGroup("テーマ") { choices = new List<string> { "ライト", "ダーク" } };
             builder.VisualElement(themeGroup);
 
             var featureGroup = new DebugToggleGroup("有効機能");

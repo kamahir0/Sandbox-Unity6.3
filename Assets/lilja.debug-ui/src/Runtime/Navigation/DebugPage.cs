@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -82,6 +83,18 @@ namespace Lilja.DebugUI
         public void ResetScrollPosition()
         {
             _scrollView.scrollOffset = Vector2.zero;
+        }
+
+        /// <summary>
+        /// ページのコンテンツ末尾にUIを動的追加する。
+        /// 返り値を Dispose するとUIが削除される。
+        /// </summary>
+        public IDisposable AddDebugUI(Action<IDebugUIBuilder> configure)
+        {
+            var wrapper = new VisualElement();
+            configure(new DebugUIBuilder(wrapper, DebugMenu.CurrentCache));
+            Add(wrapper);
+            return new DelegateDisposable(() => wrapper.RemoveFromHierarchy());
         }
     }
 }

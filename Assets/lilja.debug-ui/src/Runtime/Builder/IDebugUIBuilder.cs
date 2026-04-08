@@ -5,11 +5,18 @@ namespace Lilja.DebugUI
 {
     public interface IDebugUIBuilder
     {
+        /// <summary>
+        /// VisualElement を追加する
+        /// </summary>
         void VisualElement(VisualElement visualElement);
+
+        /// <summary>
+        /// 子を作成する
+        /// </summary>
         IDebugUIBuilder CreateChildBuilder(VisualElement parent);
 
         /// <summary>
-        /// ページをプールに登録する。NavigationButton から利用される。
+        /// ページをプールに登録する
         /// </summary>
         void RegisterPage(string pageName, Func<DebugPage> factory);
     }
@@ -37,6 +44,11 @@ namespace Lilja.DebugUI
 
         public void RegisterPage(string pageName, Func<DebugPage> factory)
         {
+            if (_pageCache == null)
+            {
+                UnityEngine.Debug.LogWarning("[DebugMenu] DebugMenu.Initialize() が呼ばれる前に RegisterPage が呼ばれました。NavigationButton は無視されます。");
+                return;
+            }
             _pageCache.Register(pageName, factory);
         }
     }

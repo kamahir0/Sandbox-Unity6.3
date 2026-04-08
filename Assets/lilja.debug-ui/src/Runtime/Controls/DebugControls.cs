@@ -62,7 +62,7 @@ namespace Lilja.DebugUI
     /// テキストラベルと右端矢印アイコンを子要素として保持する。
     /// </summary>
     [UxmlElement]
-    public partial class DebugNavigationButton : Button
+    public partial class DebugNavigationButton : Button, IDebugUI
     {
         public DebugNavigationButton() : this(string.Empty) { }
 
@@ -96,7 +96,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のプライマリボタン
     /// </summary>
     [UxmlElement]
-    public partial class DebugButton : Button
+    public partial class DebugButton : Button, IDebugUI
     {
         public DebugButton() : this(string.Empty) { }
 
@@ -114,7 +114,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のセカンダリボタン
     /// </summary>
     [UxmlElement]
-    public partial class DebugSecondaryButton : Button
+    public partial class DebugSecondaryButton : Button, IDebugUI
     {
         public DebugSecondaryButton() : this(string.Empty) { }
 
@@ -132,7 +132,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のデンジャーボタン（削除・リセットなど破壊的操作用）
     /// </summary>
     [UxmlElement]
-    public partial class DebugDangerButton : Button
+    public partial class DebugDangerButton : Button, IDebugUI
     {
         public DebugDangerButton() : this(string.Empty) { }
 
@@ -150,7 +150,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のテキストフィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugTextField : TextField
+    public partial class DebugTextField : TextField, IDebugUI
     {
         public DebugTextField() : this(string.Empty) { }
 
@@ -165,7 +165,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のラベル
     /// </summary>
     [UxmlElement]
-    public partial class DebugLabel : Label
+    public partial class DebugLabel : Label, IDebugUI
     {
         public DebugLabel() : this(string.Empty) { }
 
@@ -180,24 +180,45 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のフォールドアウト
     /// </summary>
     [UxmlElement]
-    public partial class DebugFoldout : Foldout
+    public partial class DebugFoldout : Foldout, IDebugUI
     {
         public DebugFoldout() : this(string.Empty) { }
 
         public DebugFoldout(string label) : base()
         {
+            this.name = label;
             text = label;
             value = false;
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Foldout.Root);
         }
+
+        /// <summary>
+        /// フォールドアウト内の末尾にUIを動的追加する。
+        /// 返り値を Dispose するとUIが削除される。
+        /// </summary>
+        public IDisposable AddDebugUI(Action<IDebugUIBuilder> configure)
+        {
+            var wrapper = new VisualElement();
+            configure(new DebugUIBuilder(wrapper, DebugMenu.CurrentCache));
+            Add(wrapper);
+            OnDynamicChildAdded(wrapper);
+            return new DelegateDisposable(() =>
+            {
+                OnDynamicChildRemoved(wrapper);
+                wrapper.RemoveFromHierarchy();
+            });
+        }
+
+        protected virtual void OnDynamicChildAdded(VisualElement wrapper) { }
+        protected virtual void OnDynamicChildRemoved(VisualElement wrapper) { }
     }
 
     /// <summary>
     /// デバッグメニュー用のラジオボタングループ
     /// </summary>
     [UxmlElement]
-    public partial class DebugRadioButtonGroup : RadioButtonGroup
+    public partial class DebugRadioButtonGroup : RadioButtonGroup, IDebugUI
     {
         public DebugRadioButtonGroup() : this(string.Empty) { }
 
@@ -212,7 +233,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の整数フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugIntegerField : IntegerField
+    public partial class DebugIntegerField : IntegerField, IDebugUI
     {
         public DebugIntegerField() : this(string.Empty) { }
 
@@ -227,7 +248,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の浮動小数点フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugFloatField : FloatField
+    public partial class DebugFloatField : FloatField, IDebugUI
     {
         public DebugFloatField() : this(string.Empty) { }
 
