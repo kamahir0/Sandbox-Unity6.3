@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -128,5 +129,27 @@ namespace Lilja.DebugUI
         {
             return _window?.GetPage(typeof(T).Name) as T;
         }
+
+        // ── エディタウィンドウ用 API ──────────────────────────────────────
+
+        /// <summary>
+        /// 登録済みページ名の一覧を返す。PlayMode 外・未初期化時は null。
+        /// </summary>
+        public static IReadOnlyList<string> GetRegisteredPageNames()
+            => _window?.GetRegisteredPageNames();
+
+        /// <summary>
+        /// 指定ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
+        /// 未登録・未初期化時は null。
+        /// </summary>
+        public static DebugPage BorrowPage(string pageName)
+            => _window?.BorrowPage(pageName);
+
+        /// <summary>
+        /// 借用したページをランタイムの contentContainer に返却する。
+        /// PlayMode 終了後（_window が null）に呼んでも安全。
+        /// </summary>
+        public static void ReturnPage(DebugPage page)
+            => _window?.ReturnPage(page);
     }
 }

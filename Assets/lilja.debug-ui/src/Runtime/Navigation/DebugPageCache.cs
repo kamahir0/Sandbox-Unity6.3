@@ -52,6 +52,11 @@ namespace Lilja.DebugUI
         internal IEnumerable<DebugPage> GetAllCachedPages() => _cache.Values;
 
         /// <summary>
+        /// 登録済みページ名の一覧を返す。
+        /// </summary>
+        internal IReadOnlyList<string> GetPageNames() => new List<string>(_cache.Keys);
+
+        /// <summary>
         /// ページ使用完了時の処理。スクロール位置をリセットする。
         /// </summary>
         internal void Return(DebugPage page)

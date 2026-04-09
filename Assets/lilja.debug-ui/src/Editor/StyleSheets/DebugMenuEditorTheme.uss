@@ -1,0 +1,77 @@
+/* DebugMenuEditorTheme.uss
+ * DebugMenu コントロールをエディタウィンドウで使用するためのテーマ。
+ * .editor-debug-window クラスのスコープ内で CSS 変数をオーバーライドする。
+ * --unity-colors-* 変数は Unity エディタのデフォルトテーマから提供される。
+ */
+
+.editor-debug-window {
+    /* サイズ: Unity エディタ標準に合わせる */
+    --size-control-height: 22px;
+    --size-control-margin: 2px;
+    --size-control-margin-half: 1px;
+    --font-size-standard: 12px;
+    --font-size-title: 12px;
+    --size-nav-button-height: 24px;
+    --size-page-padding: 4px;
+    --size-page-padding-top: 2px;
+    --size-page-padding-bottom: 2px;
+    --size-label-width: 40%;
+    --size-scrollbar-margin-v: 0px;
+    --size-scrollbar-margin-h: 0px;
+    --size-scrollbar-button-gap: 0px;
+    --size-toggle-checkbox: 14px;
+    --size-foldout-checkbox: 14px;
+    --size-item-gap: 2px;
+
+    /* 角丸: エディタ標準 */
+    --radius-window: 0px;
+    --radius-button: 3px;
+
+    /* 配色: Unity エディタのテーマ変数を参照（ライト/ダーク自動追従） */
+    --color-surface: var(--unity-colors-window-background);
+    --color-on-surface: var(--unity-colors-default-text-color);
+    --color-surface-header: var(--unity-colors-toolbar-background);
+    --color-on-surface-header: var(--unity-colors-default-text-color);
+
+    /* プライマリ（ハイライト） */
+    --color-primary: var(--unity-colors-highlight-background);
+    --color-on-primary: var(--unity-colors-highlight-text-color);
+    --color-primary-border: var(--unity-colors-highlight-background);
+    --color-primary-hover: var(--unity-colors-button-background-hover);
+    --color-primary-active: var(--unity-colors-button-background-pressed);
+
+    /* セカンダリ（通常ボタン） */
+    --color-secondary: var(--unity-colors-button-background);
+    --color-on-secondary: var(--unity-colors-default-text-color);
+    --color-secondary-border: var(--unity-colors-input-field-border);
+    --color-secondary-hover: var(--unity-colors-button-background-hover);
+    --color-secondary-active: var(--unity-colors-button-background-pressed);
+
+    /* デンジャー（破壊的操作） */
+    --color-danger: #c0392b;
+    --color-on-danger: #ffffff;
+    --color-danger-border: #922b21;
+    --color-danger-hover: #a93226;
+    --color-danger-active: #922b21;
+
+    /* 入力フィールド */
+    --color-input: var(--unity-colors-input-field-background);
+    --color-on-input: var(--unity-colors-default-text-color);
+    --color-input-border: var(--unity-colors-input-field-border);
+
+    /* ナビゲーションボタン */
+    --color-nav-button-separator: var(--unity-colors-input-field-border);
+    --color-nav-hover: var(--unity-colors-button-background-hover);
+    --color-nav-active: var(--unity-colors-button-background-pressed);
+
+    /* ヘッダーボタン */
+    --color-header-button-hover: var(--unity-colors-button-background-hover);
+    --color-header-button-active: var(--unity-colors-button-background-pressed);
+
+    /* スクロールバー */
+    --color-scrollbar-track: var(--unity-colors-scrollbar-background);
+    --color-scrollbar-handle: var(--unity-colors-scrollbar-thumb);
+    --color-scrollbar-handle-border: var(--unity-colors-input-field-border);
+    --color-scrollbar-handle-hover: var(--unity-colors-button-background-hover);
+    --color-scrollbar-handle-active: var(--unity-colors-button-background-pressed);
+}

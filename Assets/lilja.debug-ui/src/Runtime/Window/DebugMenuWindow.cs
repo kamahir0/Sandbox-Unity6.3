@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
@@ -18,6 +19,7 @@ namespace Lilja.DebugUI
 
         private DebugPageNavigator _navigator;
         private DebugMenuPositionController _positionController;
+        private readonly HashSet<string> _borrowedPageNames = new();
 
         // クラス
         private const string UssClassName = "c-menu-window";
@@ -108,6 +110,34 @@ namespace Lilja.DebugUI
         /// </summary>
         internal DebugPageCache PageCache => _navigator?.PageCache;
 
+        /// <summary>
+        /// 登録済みページ名の一覧を返す。エディタウィンドウ用。
+        /// </summary>
+        internal IReadOnlyList<string> GetRegisteredPageNames()
+            => _navigator?.PageCache.GetPageNames();
+
+        /// <summary>
+        /// ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
+        /// </summary>
+        internal DebugPage BorrowPage(string pageName)
+        {
+            var page = _navigator?.PageCache.Get(pageName);
+            if (page == null) return null;
+            _borrowedPageNames.Add(pageName);
+            return page;
+        }
+
+        /// <summary>
+        /// ページをランタイムの contentContainer に返却する（OutR 位置）。
+        /// </summary>
+        internal void ReturnPage(DebugPage page)
+        {
+            if (page == null) return;
+            _borrowedPageNames.Remove(page.name);
+            _contentContainer.Add(page);
+            page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
+        }
+
         /// <summary> 前のページへ戻る </summary>
         internal void Back() => _navigator?.Back();
 
@@ -161,7 +191,14 @@ namespace Lilja.DebugUI
             _contentContainer = new VisualElement();
             _contentContainer.AddToClassList(ContentUssClassName);
             _contentContainer.AddToClassList(PageStackUssClassName);
+            _contentContainer.RegisterCallback<DebugNavigateEvent>(OnNavigateEvent);
             hierarchy.Add(_contentContainer);
+        }
+
+        private void OnNavigateEvent(DebugNavigateEvent evt)
+        {
+            evt.StopPropagation();
+            Navigate(evt.PageName);
         }
 
         // ── View 状態反映 ──────────────────────────────────────────────

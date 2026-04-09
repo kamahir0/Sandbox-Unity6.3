@@ -40,7 +40,11 @@ namespace Lilja.DebugUI
             builder.RegisterPage(pageName, () => pageFactory());
 
             var button = new DebugNavigationButton(pageName, icon);
-            button.clicked += () => DebugMenu.NavigateTo(pageName);
+            button.clicked += () =>
+            {
+                using var evt = DebugNavigateEvent.GetPooled(button, pageName);
+                button.SendEvent(evt);
+            };
             builder.VisualElement(button);
         }
 
