@@ -39,6 +39,17 @@ namespace Lilja.DebugUI
         }
 
         /// <summary>
+        /// 既に生成・初期化済みのページをキャッシュに登録する。
+        /// ルートページのように外部でインスタンス化されたページを GetPage/NavigateTo の対象にする。
+        /// 既に同名が登録済みの場合は何もしない。
+        /// </summary>
+        internal void RegisterExisting(DebugPage page)
+        {
+            if (Contains(page.name)) return;
+            _cache[page.name] = page;
+        }
+
+        /// <summary>
         /// キャッシュされたインスタンスを返す。未登録なら null を返す。
         /// </summary>
         internal DebugPage Get(string pageName)

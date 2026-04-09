@@ -34,11 +34,26 @@ namespace Lilja.DebugUI
         private const string PressedClass = "c-open-button--pressed";
         private const string OverlayClass = "c-open-button__overlay";
 
+        private static DebugMenuOpenButton _instance;
+
         private void Awake()
         {
+            if (_instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+
             var uiDoc = GetComponent<UIDocument>();
             if (uiDoc.panelSettings == null) uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
             if (uiDoc.visualTreeAsset == null) uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
         }
 
         private void Reset()

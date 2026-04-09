@@ -12,21 +12,32 @@ using UnityEngine.UIElements;
 /// </summary>
 public class SampleDebugMenu : MonoBehaviour
 {
+    [SerializeField] private float _transitionDelay = 5f;
+
     private void Start()
     {
-        DebugMenu.Initialize(new RootPage());
-
-        // GetPage<T>() のデモ: 初期化後に外部からページへ動的追加
-        var root = DebugMenu.GetPage<RootPage>();
-        root?.AddDebugUI(b =>
+        if (!DebugMenu.IsInitialized)
         {
-            b.VisualElement(new DebugLabel($"起動時刻: {System.DateTime.Now:HH:mm:ss}"));
-        });
+
+            DebugMenu.Initialize(new RootPage());
+
+            // GetPage<T>() のデモ: 初期化後に外部からページへ動的追加
+            var root = DebugMenu.GetPage<RootPage>();
+            root?.AddDebugUI(b => { b.VisualElement(new DebugLabel($"起動時刻: {System.DateTime.Now:HH:mm:ss}")); });
+        }
+
+        // 5秒（可変）経過後に DynamicDemo シーンへ遷移
+        Invoke(nameof(TransitionToDynamicDemo), _transitionDelay);
+    }
+
+    private void TransitionToDynamicDemo()
+    {
+        SceneManager.LoadScene("DynamicDemo");
     }
 
     // ─── Root ─────────────────────────────────────────────────────
 
-    class RootPage : DebugPage
+    public class RootPage : DebugPage
     {
         public override void Configure(IDebugUIBuilder builder)
         {
@@ -50,9 +61,6 @@ public class SampleDebugMenu : MonoBehaviour
                 b.VisualElement(stage1Btn);
             });
 
-            // 動的UIデモページへのナビゲーション
-            builder.NavigationButton("Dynamic UI Demo", () => new DynamicDemoPage());
-
             builder.Foldout("App Info", b =>
             {
                 b.VisualElement(new DebugLabel($"Version: {Application.version}"));
@@ -66,7 +74,7 @@ public class SampleDebugMenu : MonoBehaviour
     /// <summary>
     /// AddDebugUI / VirtualFoldout / PlaceBehind のデモページ。
     /// </summary>
-    class DynamicDemoPage : DebugPage
+    public class DynamicDemoPage : DebugPage
     {
         private VirtualFoldout _enemyFoldout;
         private readonly List<IDisposable> _enemyHandles = new();
@@ -75,6 +83,13 @@ public class SampleDebugMenu : MonoBehaviour
 
         public override void Configure(IDebugUIBuilder builder)
         {
+            builder.NavigationButton("Sample シーンをロード", b =>
+            {
+                var btn = new DebugButton("Sample シーンをロード");
+                btn.clicked += () => SceneManager.LoadScene("Sample");
+                b.VisualElement(btn);
+            });
+
             // ── VirtualFoldout デモ ──────────────────────────────
             // 子要素が0のとき非表示、1つ以上で表示される Foldout
             _enemyFoldout = new VirtualFoldout("ポップ中エネミー");

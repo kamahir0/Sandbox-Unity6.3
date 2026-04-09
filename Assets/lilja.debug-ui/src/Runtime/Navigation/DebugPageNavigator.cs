@@ -72,6 +72,7 @@ namespace Lilja.DebugUI
             _onLabelChanged(rootPage.name);
 
             _pageCache.PreparePage(rootPage);
+            _pageCache.RegisterExisting(rootPage);
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
             rootPage.OnShown();

@@ -13,6 +13,12 @@ namespace Lilja.DebugUI
 
         internal static DebugPageCache CurrentCache => _window?.PageCache;
 
+        /// <summary>
+        /// Initialize() が呼ばれ、使用可能な状態かどうかを返す。
+        /// </summary>
+        public static bool IsInitialized => _window != null;
+
+
         public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
         {
             var go = new GameObject("[DebugMenu]");
