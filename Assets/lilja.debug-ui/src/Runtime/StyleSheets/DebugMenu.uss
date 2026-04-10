@@ -109,16 +109,16 @@
 }
 
 .c-nav-button__left-icon {
-    width: 32px;
-    height: 32px;
+    width: var(--size-nav-icon);
+    height: var(--size-nav-icon);
     margin-right: 12px;
     flex-shrink: 0;
     -unity-background-scale-mode: scale-to-fit;
 }
 
 .c-nav-button__icon {
-    width: 32px;
-    height: 32px;
+    width: var(--size-nav-icon);
+    height: var(--size-nav-icon);
     flex-shrink: 0;
     background-image: url("../Resources/DebugMenu/debug-menu-navigation.svg");
     -unity-background-scale-mode: scale-to-fit;

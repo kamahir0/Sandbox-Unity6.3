@@ -39,6 +39,7 @@
     /* --- 4. Navigation --- */
     /* 高さ = control-height + control-margin-half × 2（margin 0 でスロット高さを揃える） */
     --size-nav-button-height: 76px;
+    --size-nav-icon: 32px;
     --color-nav-button-separator: #CCCCCC;
     --color-nav-hover:       #EEEEEE;
     --color-nav-active:      #D5D5D5;

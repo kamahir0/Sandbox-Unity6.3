@@ -84,6 +84,14 @@ namespace Lilja.DebugUI
             {
                 button.style.backgroundColor = isOver ? (StyleColor)hoverColor : StyleKeyword.Null;
             };
+
+            // ページ遷移などで要素がパネルから切り離された場合、PointerLeave が届かず
+            // isOver=true・hoverColor がインラインスタイルに残るため、ここでリセットする。
+            button.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                isOver = false;
+                button.style.backgroundColor = StyleKeyword.Null;
+            });
         }
     }
 
