@@ -30,6 +30,11 @@ namespace Lilja.DebugUI
         private bool _isAnimating;
         private int _animVersion;
 
+        /// <summary>
+        /// ルートページ名。InitRootPage() 後に確定する。
+        /// </summary>
+        internal string RootPageName { get; private set; }
+
 
         private enum PagePosition
         {
@@ -69,10 +74,13 @@ namespace Lilja.DebugUI
             }
 
             _currentPage = rootPage;
+            RootPageName = rootPage.name;
             _onLabelChanged(rootPage.name);
 
-            _pageCache.PreparePage(rootPage);
+            // RegisterExisting を先に呼んでルートページを Dictionary の先頭に挿入し、
+            // その後 PreparePage（Configure → 子ページ登録）を実行する。
             _pageCache.RegisterExisting(rootPage);
+            _pageCache.PreparePage(rootPage);
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
             rootPage.OnShown();

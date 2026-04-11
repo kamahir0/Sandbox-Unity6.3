@@ -117,6 +117,11 @@ namespace Lilja.DebugUI
             => _navigator?.PageCache.GetPageNames();
 
         /// <summary>
+        /// ルートページ名を返す。エディタウィンドウ用。
+        /// </summary>
+        internal string GetRootPageName() => _navigator?.RootPageName;
+
+        /// <summary>
         /// ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
         /// </summary>
         internal DebugPage BorrowPage(string pageName)

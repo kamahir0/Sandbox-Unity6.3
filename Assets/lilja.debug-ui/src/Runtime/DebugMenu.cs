@@ -145,6 +145,12 @@ namespace Lilja.DebugUI
             => _window?.GetRegisteredPageNames();
 
         /// <summary>
+        /// ルートページ名を返す。PlayMode 外・未初期化時は null。
+        /// </summary>
+        public static string GetRootPageName()
+            => _window?.GetRootPageName();
+
+        /// <summary>
         /// 指定ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
         /// 未登録・未初期化時は null。
         /// </summary>

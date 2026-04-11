@@ -24,6 +24,7 @@ namespace Lilja.DebugUI.Editor
 
         private DebugPage _borrowedPage;
         private string _borrowedPageName;
+        private string _rootPageName;
         private readonly Stack<string> _editorHistory = new();
 
         // ── UI 要素 ────────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ namespace Lilja.DebugUI.Editor
         private VisualElement _playingView;
         private Label _headerTitle;
         private Button _backButton;
+        private Button _backToRootButton;
         private ScrollView _pageListScrollView;
         private VisualElement _rightPane;
 
@@ -83,6 +85,7 @@ namespace Lilja.DebugUI.Editor
                     // ランタイムが破棄される前に借用をキャンセル
                     _borrowedPage = null;
                     _borrowedPageName = null;
+                    _rootPageName = null;
                     _editorHistory.Clear();
                     break;
 
@@ -133,7 +136,15 @@ namespace Lilja.DebugUI.Editor
             if (_notPlayingView == null || _playingView == null) return;
             _notPlayingView.style.display = DisplayStyle.None;
             _playingView.style.display = DisplayStyle.Flex;
+
+            // ルートページ名を確定
+            _rootPageName = DebugMenu.GetRootPageName();
+
             RefreshPageList();
+
+            // 初期状態としてルートページを表示
+            if (!string.IsNullOrEmpty(_rootPageName))
+                EditorNavigateToWithReset(_rootPageName);
         }
 
         // ── ナビゲーション ─────────────────────────────────────────────────
@@ -144,6 +155,10 @@ namespace Lilja.DebugUI.Editor
             EditorNavigateTo(evt.PageName);
         }
 
+        /// <summary>
+        /// ページ内ナビゲーション（NavigationButton など）用。
+        /// 前のページをヒストリーに積んで指定ページへ遷移する。
+        /// </summary>
         private void EditorNavigateTo(string pageName)
         {
             if (string.IsNullOrEmpty(pageName)) return;
@@ -172,6 +187,32 @@ namespace Lilja.DebugUI.Editor
             UpdateHeader();
         }
 
+        /// <summary>
+        /// ページ一覧からの選択・バックルートボタン用。
+        /// ヒストリーをリセットして指定ページを最底（ルート位置）として表示する。
+        /// </summary>
+        private void EditorNavigateToWithReset(string pageName)
+        {
+            if (string.IsNullOrEmpty(pageName)) return;
+
+            _editorHistory.Clear();
+            ReturnCurrentPage();
+
+            var page = DebugMenu.BorrowPage(pageName);
+            if (page == null) return;
+
+            _borrowedPage = page;
+            _borrowedPageName = pageName;
+
+            _rightPane.Add(page);
+            page.style.left = new StyleLength(0f);
+            SuppressScrollbarFocus(page);
+            page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
+
+            page.OnShown();
+            UpdateHeader();
+        }
+
         private void EditorBack()
         {
             if (_editorHistory.Count == 0) return;
@@ -192,6 +233,15 @@ namespace Lilja.DebugUI.Editor
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
             page.OnShown();
             UpdateHeader();
+        }
+
+        /// <summary>
+        /// ヒストリーをリセットしてルートページへ戻る（バックルートボタン用）。
+        /// </summary>
+        private void EditorBackToRoot()
+        {
+            if (string.IsNullOrEmpty(_rootPageName)) return;
+            EditorNavigateToWithReset(_rootPageName);
         }
 
         private void ReturnCurrentPage()
@@ -235,7 +285,7 @@ namespace Lilja.DebugUI.Editor
             _playingView.style.flexGrow = 1;
             _playingView.style.flexDirection = FlexDirection.Column;
 
-            // ヘッダー
+            // ヘッダー（左：バックボタン、中央：ページ名、右：バックルートボタン）
             var header = new VisualElement();
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
@@ -246,14 +296,23 @@ namespace Lilja.DebugUI.Editor
             header.style.borderBottomWidth = 1;
             header.style.borderBottomColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f, 0.5f));
 
+            // 左端：バックボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backButton = new Button(EditorBack) { text = "←" };
-            _backButton.style.display = DisplayStyle.None;
+            _backButton.style.visibility = Visibility.Hidden;
             _backButton.style.marginRight = 4;
             header.Add(_backButton);
 
+            // 中央：現在のページ名
             _headerTitle = new Label("ページを選択してください");
             _headerTitle.style.flexGrow = 1;
+            _headerTitle.style.unityTextAlign = TextAnchor.MiddleCenter;
             header.Add(_headerTitle);
+
+            // 右端：バックルートボタン（Visibility で制御して常にレイアウト上の高さを確保する）
+            _backToRootButton = new Button(EditorBackToRoot) { text = "Root" };
+            _backToRootButton.style.visibility = Visibility.Hidden;
+            _backToRootButton.style.marginLeft = 4;
+            header.Add(_backToRootButton);
 
             _playingView.Add(header);
 
@@ -302,10 +361,18 @@ namespace Lilja.DebugUI.Editor
             var names = DebugMenu.GetRegisteredPageNames();
             if (names == null) return;
 
-            foreach (var name in names)
+            // ルートページを先頭に並べ直す
+            var orderedNames = new List<string>(names);
+            if (!string.IsNullOrEmpty(_rootPageName))
+            {
+                orderedNames.Remove(_rootPageName);
+                orderedNames.Insert(0, _rootPageName);
+            }
+
+            foreach (var name in orderedNames)
             {
                 var pageName = name; // ラムダキャプチャ用
-                var btn = new Button(() => EditorNavigateTo(pageName)) { text = pageName };
+                var btn = new Button(() => EditorNavigateToWithReset(pageName)) { text = pageName };
                 btn.style.marginLeft = 0;
                 btn.style.marginRight = 0;
                 btn.style.marginTop = 1;
@@ -328,15 +395,15 @@ namespace Lilja.DebugUI.Editor
 
         private void UpdateHeader()
         {
-            if (_headerTitle == null || _backButton == null) return;
+            if (_headerTitle == null || _backButton == null || _backToRootButton == null) return;
 
             _headerTitle.text = string.IsNullOrEmpty(_borrowedPageName)
                 ? "ページを選択してください"
                 : _borrowedPageName;
 
-            _backButton.style.display = _editorHistory.Count > 0
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
+            var hasHistory = _editorHistory.Count > 0;
+            _backButton.style.visibility = hasHistory ? Visibility.Visible : Visibility.Hidden;
+            _backToRootButton.style.visibility = hasHistory ? Visibility.Visible : Visibility.Hidden;
         }
     }
 }
