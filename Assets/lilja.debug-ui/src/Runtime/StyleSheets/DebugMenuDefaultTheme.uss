@@ -60,7 +60,7 @@
     --size-window-width: 50%;
     --size-window-max-width: 50%;
     --size-page-padding: 24px;
-    --size-page-padding-top: 12px;
+    --size-page-padding-top: 0px;
     --size-page-padding-bottom: 12px;
 
     /* --- 7. Scrollbar --- */
