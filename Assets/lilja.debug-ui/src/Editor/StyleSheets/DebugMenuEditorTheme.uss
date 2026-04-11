@@ -34,12 +34,12 @@
     --color-surface-header: var(--unity-colors-toolbar-background);
     --color-on-surface-header: var(--unity-colors-default-text-color);
 
-    /* プライマリ（ハイライト） */
-    --color-primary: var(--unity-colors-highlight-background);
-    --color-on-primary: var(--unity-colors-highlight-text-color);
-    --color-primary-border: var(--unity-colors-highlight-background);
-    --color-primary-hover: var(--unity-colors-button-background-hover);
-    --color-primary-active: var(--unity-colors-button-background-pressed);
+    /* プライマリ（緑: 実行・適用系アクション） */
+    --color-primary: #388e3c;
+    --color-on-primary: #ffffff;
+    --color-primary-border: #1b5e20;
+    --color-primary-hover: #43a047;
+    --color-primary-active: #2e7d32;
 
     /* セカンダリ（通常ボタン） */
     --color-secondary: var(--unity-colors-button-background);
@@ -52,7 +52,7 @@
     --color-danger: #c0392b;
     --color-on-danger: #ffffff;
     --color-danger-border: #922b21;
-    --color-danger-hover: #a93226;
+    --color-danger-hover: #e74c3c;
     --color-danger-active: #922b21;
 
     /* 入力フィールド */
@@ -92,6 +92,8 @@
     margin-top: 0;
     margin-bottom: 1px;
     padding: 0 6px;
+    --hover-color: var(--color-nav-hover);
+    --active-color: var(--color-nav-active);
 }
 
 /* ランタイム側の :hover に !important が付いているため同じく !important で上書き */
@@ -109,5 +111,70 @@
 .editor-debug-window .c-nav-button:focus {
     border-width: 1px;
     border-color: var(--unity-colors-highlight-background);
+}
+
+/* ── ボタン: --hover-color / --active-color 定義 ────────────────────────────────
+   DefaultTheme.uss がエディタで読み込まれないため、
+   ButtonInteractionHelper と CSS :hover の両方に色を供給する。              */
+
+/* Secondary: Unity 標準ボタンの全状態 */
+.editor-debug-window .c-button--secondary {
+    --hover-color: var(--color-secondary-hover);
+    --active-color: var(--color-secondary-active);
+}
+
+/* Primary: 緑 */
+.editor-debug-window .c-button--primary {
+    --hover-color: var(--color-primary-hover);
+    --active-color: var(--color-primary-active);
+}
+
+/* Danger: 赤（hover = 明るく、active = 暗く）*/
+.editor-debug-window .c-button--danger {
+    --hover-color: var(--color-danger-hover);
+    --active-color: var(--color-danger-active);
+}
+
+/* ── ボタン: フォーカスアウトライン ─────────────────────────────────────────
+   特異度 0,3,0 で各ボタン種別の border-color（0,2,0）を上書きする。
+   border-width は c-button で既に 1px 設定済み。                          */
+.editor-debug-window .c-button:focus {
+    border-color: var(--unity-colors-highlight-background);
+}
+
+/* ── DebugPage スクロールバー: Unity エディタ標準外観にリセット ─────────────────
+   DebugMenu.uss の .c-scroll-view セレクタ（特異度 0,2,1）より高い
+   .editor-debug-window .c-scroll-view セレクタ（特異度 0,3,1）で上書きする。  */
+
+/* RepeatButton（上下矢印）
+   - 通常時: ウィンドウ背景と同化
+   - ホバー時: 若干明るく
+   - アウトラインなし
+   - Unity デフォルト（~13px）の 0.9 倍程度に縮小 */
+.editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
+.editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    background-color: var(--unity-colors-window-background);
+    border-radius: 0;
+    border-width: 0;
+    height: 12px;
+    --hover-color: var(--unity-colors-button-background-hover);
+    --active-color: var(--unity-colors-button-background-pressed);
+}
+
+/* Slider トラック（背景）: ウィンドウ背景と同化、ホバーでも変化させない */
+.editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-tracker {
+    background-color: var(--unity-colors-window-background);
+    border-radius: 0;
+    border-width: 0;
+    --hover-color: var(--unity-colors-window-background);
+}
+
+/* Slider ドラッガー（サム）: Unity 標準ボタン色、角丸 6px */
+.editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-dragger {
+    background-color: var(--unity-colors-button-background);
+    border-radius: 6px;
+    border-width: 0;
+    --hover-color: var(--unity-colors-button-background-hover);
+    --active-color: var(--unity-colors-button-background);
 }
 

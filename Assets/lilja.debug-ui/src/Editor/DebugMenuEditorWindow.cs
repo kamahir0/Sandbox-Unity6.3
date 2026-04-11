@@ -163,6 +163,7 @@ namespace Lilja.DebugUI.Editor
             // アニメーションなし・即表示
             _rightPane.Add(page);
             page.style.left = new StyleLength(0f);
+            SuppressScrollbarFocus(page);
 
             // ランタイムが奪い返したことを DetachFromPanelEvent で検知
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
@@ -187,6 +188,7 @@ namespace Lilja.DebugUI.Editor
 
             _rightPane.Add(page);
             page.style.left = new StyleLength(0f);
+            SuppressScrollbarFocus(page);
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
             page.OnShown();
             UpdateHeader();
@@ -310,6 +312,18 @@ namespace Lilja.DebugUI.Editor
                 btn.style.marginBottom = 0;
                 _pageListScrollView.Add(btn);
             }
+        }
+
+        // 垂直スクロールバーのフォーカスビジュアル（青ハイライト）を抑制する。
+        // CSS では Unity 組み込み USS を上書きできないため C# で処理する。
+        private static void SuppressScrollbarFocus(VisualElement root)
+        {
+            root.Query<ScrollView>().ForEach(sv =>
+            {
+                sv.focusable = false;
+                sv.verticalScroller.focusable = false;
+                sv.verticalScroller.slider.focusable = false;
+            });
         }
 
         private void UpdateHeader()

@@ -128,6 +128,13 @@ namespace Lilja.DebugUI
                 element.style.backgroundColor = StyleKeyword.Null;
             });
 
+            element.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                isOver = false;
+                isPressed = false;
+                element.style.backgroundColor = StyleKeyword.Null;
+            });
+
             element.RegisterCallback<PointerDownEvent>(_ =>
             {
                 isPressed = true;
@@ -190,6 +197,13 @@ namespace Lilja.DebugUI
             }
             slider.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
             dragger.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
+
+            dragger.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                isOver = false;
+                isPressed = false;
+                dragger.style.backgroundColor = StyleKeyword.Null;
+            });
         }
 
         // ホバーのみ（トラック背景など、クリック時の色変化が不要な要素用）
@@ -208,6 +222,11 @@ namespace Lilja.DebugUI
             });
 
             element.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                element.style.backgroundColor = StyleKeyword.Null;
+            });
+
+            element.RegisterCallback<DetachFromPanelEvent>(_ =>
             {
                 element.style.backgroundColor = StyleKeyword.Null;
             });
