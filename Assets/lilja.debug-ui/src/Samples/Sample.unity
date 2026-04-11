@@ -128,7 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 455651253}
-  - component: {fileID: 455651252}
   - component: {fileID: 455651254}
   m_Layer: 5
   m_Name: UIDocument
@@ -137,29 +136,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &455651252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 455651251}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
-  m_PanelSettings: {fileID: 11400000, guid: ceea83e0e666d424a869404600e61c7d, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: da49e60145363bd4597fc6617695a657, type: 3}
-  m_SortingOrder: 1
-  m_Position: 0
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
-  m_PivotReferenceSize: 0
-  m_Pivot: 0
-  m_WorldSpaceCollider: {fileID: 0}
 --- !u!4 &455651253
 Transform:
   m_ObjectHideFlags: 0
@@ -187,6 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd96dddf1a77f144894d5de3edd86056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lilja.DebugMenu::MockBuilder
+  _transitionDelay: 5
 --- !u!1 &726214265
 GameObject:
   m_ObjectHideFlags: 0

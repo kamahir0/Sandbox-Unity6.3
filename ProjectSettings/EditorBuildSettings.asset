@@ -20,6 +20,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/ScreenManagementTest/Sample/Scenes/GameOver.unity
     guid: 84784f70eca6e244099b00aee6f12a5e
+  - enabled: 1
+    path: Assets/lilja.debug-ui/src/Samples/Sample.unity
+    guid: 7148d001aa6b8e845b407694d98618c5
+  - enabled: 1
+    path: Assets/lilja.debug-ui/src/Samples/DynamicDemo.unity
+    guid: a0502a031753b3d479a7e8dabbbf2fce
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 5ee5ad0fb1cfdcd4aa7d1003d3f3ff93, type: 2}
   m_UseUCBPForAssetBundles: 0
