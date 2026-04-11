@@ -169,12 +169,13 @@
     --hover-color: var(--unity-colors-window-background);
 }
 
-/* Slider ドラッガー（サム）: Unity 標準ボタン色、角丸 6px */
+/* Slider ドラッガー（サム）: Unity 標準ボタンホバー色、角丸 6px
+   通常時を button-background-hover 相当に引き上げ、ホバー時はさらに +15 明るく */
 .editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-dragger {
-    background-color: var(--unity-colors-button-background);
+    background-color: var(--unity-colors-button-background-hover);
     border-radius: 6px;
     border-width: 0;
-    --hover-color: var(--unity-colors-button-background-hover);
-    --active-color: var(--unity-colors-button-background);
+    --hover-color: #707070;
+    --active-color: #696969;
 }
 
