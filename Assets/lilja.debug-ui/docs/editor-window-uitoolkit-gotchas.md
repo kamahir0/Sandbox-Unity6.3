@@ -173,3 +173,48 @@ element.RegisterCallback<DetachFromPanelEvent>(_ =>
 | `src/Editor/StyleSheets/DebugMenuEditorTheme.uss` | エディタ向け変数定義・直接スタイルオーバーライド |
 | `src/Editor/DebugMenuEditorWindow.cs` | `SuppressScrollbarFocus` メソッド |
 | `src/Runtime/Controls/DebugControlHelpers.cs` | `VisualElementInteractionHelper` の `DetachFromPanelEvent` 追加 |
+
+---
+
+## 6. InputField (BaseField) の外観崩れとレイアウトズレ
+
+### 現象1: 背景色と枠線の同化
+
+エディタウィンドウでは、Runtime 用のスタイルが適用されていても、Unity エディタ組み込みの `BaseField` スタイルが優先される場合がある。特に背景色（`background-color`）や枠線（`border-color`）がエディタウィンドウの背景と同化してしまい、入力欄がどこにあるか判別できなくなる。
+
+### 現象2: ホバー/フォーカス時の左ズレ
+
+Unity エディタ組み込みの USS には、`BaseField:hover` や `:focus` 時に `.unity-base-field__label` や `.unity-base-field__input` の `margin-left` や `padding-left` を変化させるルールが存在する。これにより、マウスを重ねたりクリックしたりすると、ラベルや入力中のテキストが左にガクッと動く現象が発生する。
+
+### 対処
+
+`!important` を活用してエディタ組み込みスタイルを強制的に上書きし、レイアウトを固定する。
+
+#### 色の解決
+`--unity-colors-input-field-background` が期待通りに動作しない場合は、エディタのボタン背景色など、確実に視認可能な変数で代用するのが安全。
+
+#### レイアウトの固定
+`margin` と `padding` を通常時・ホバー時・フォーカス時すべてで `!important` 固定する。
+
+```css
+/* DebugMenuEditorTheme.uss */
+
+.editor-debug-window .c-input .unity-base-field__input {
+    background-color: var(--unity-colors-button-background) !important;
+    border-color: var(--unity-colors-input-field-border) !important;
+    border-width: 1px !important;
+}
+
+.editor-debug-window .c-input:hover .unity-base-field__label,
+.editor-debug-window .c-input:focus .unity-base-field__label {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+.editor-debug-window .c-input:hover .unity-base-field__input,
+.editor-debug-window .c-input:focus .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important; /* ランタイム側の padding と合わせる */
+}
+```
+

@@ -142,6 +142,43 @@
     border-color: var(--unity-colors-highlight-background);
 }
 
+/* ── InputField: エディタ標準外観にリセット ────────────────────────────────────────
+   エディタ組み込み USS は BaseField:hover 時に .unity-base-field__label の
+   margin-left を変化させるため、!important で固定して左ズレを防ぐ。
+   また background-color / border 系を !important で明示し、ウィンドウ背景への
+   同化と枠線の消失を防ぐ。                                                       */
+
+/* ホバー時の左ズレ抑止: エディタ組み込み USS の :hover margin 変化を無効化 */
+.editor-debug-window .c-input:hover .unity-base-field__label,
+.editor-debug-window .c-input:focus .unity-base-field__label {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* 入力欄の背景・枠線を確実に適用。 */
+.editor-debug-window .c-input .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-color: #000000 !important;
+    border-width: 1px !important;
+    border-radius: 3px;
+}
+
+/* ホバー時: テキストや入力欄の位置ズレを防止 + 枠線を白に */
+.editor-debug-window .c-input:hover .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-color: #727272ff !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+}
+
+/* フォーカス（クリック）時: 枠線を青に */
+.editor-debug-window .c-input:focus .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-color: var(--unity-colors-highlight-background) !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+}
+
 /* ── DebugPage スクロールバー: Unity エディタ標準外観にリセット ─────────────────
    DebugMenu.uss の .c-scroll-view セレクタ（特異度 0,2,1）より高い
    .editor-debug-window .c-scroll-view セレクタ（特異度 0,3,1）で上書きする。  */
