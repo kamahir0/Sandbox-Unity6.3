@@ -184,6 +184,7 @@ namespace Lilja.DebugUI.Editor
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
 
             page.OnShown();
+            ScheduleScrollbarFix(page);
             UpdateHeader();
         }
 
@@ -210,6 +211,7 @@ namespace Lilja.DebugUI.Editor
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
 
             page.OnShown();
+            ScheduleScrollbarFix(page);
             UpdateHeader();
         }
 
@@ -232,6 +234,7 @@ namespace Lilja.DebugUI.Editor
             SuppressScrollbarFocus(page);
             page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
             page.OnShown();
+            ScheduleScrollbarFix(page);
             UpdateHeader();
         }
 
@@ -261,6 +264,31 @@ namespace Lilja.DebugUI.Editor
             _borrowedPageName = null;
             _editorHistory.Clear();
             UpdateHeader();
+        }
+
+        /// <summary>
+        /// パネル間移動後、ScrollView の dragger サイズを正しく再計算させる。
+        /// ランタイムパネルで AdjustDragElement() により設定された dragger の
+        /// インラインスタイル height がエディタパネル移動後も残留するため、
+        /// scroller.Adjust(factor) を直接呼び出してサイズを再計算する。
+        /// factor = slider.layout.height / contentContainer.layout.height で、
+        /// いずれも schedule.Execute() 時点（layout パス後）では正しい値が確定している。
+        /// </summary>
+        private void ScheduleScrollbarFix(DebugPage targetPage)
+        {
+            rootVisualElement.schedule.Execute(() =>
+            {
+                if (_borrowedPage != targetPage) return;
+                var sv = targetPage.Q<ScrollView>();
+                if (sv == null) return;
+
+                var scroller = sv.verticalScroller;
+                float contentH = sv.contentContainer.layout.height;
+                if (contentH <= 0f) return;
+
+                float factor = scroller.slider.layout.height / contentH;
+                scroller.Adjust(factor);
+            }).ExecuteLater(16);
         }
 
         // ── UI 構築 ────────────────────────────────────────────────────────
