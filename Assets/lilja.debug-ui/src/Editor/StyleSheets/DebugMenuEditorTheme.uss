@@ -123,6 +123,15 @@
     margin: var(--size-control-margin-half) var(--size-control-margin);
 }
 
+/* ── height: auto が必要なコントロール群 ────────────────────────────────────────────
+   .c-control-size (0,2,0) が height: 22px を設定するため、
+   可変高コントロールは同詳細度 (0,2,0) の後続宣言で height: auto を復元する。 */
+.editor-debug-window .c-foldout,
+.editor-debug-window .c-radio-group,
+.editor-debug-window .c-toggle-group {
+    height: auto;
+}
+
 .editor-debug-window .c-button {
     padding: 4px 12px;
     border-width: 1px;
