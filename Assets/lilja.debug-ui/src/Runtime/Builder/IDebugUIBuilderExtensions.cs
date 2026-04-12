@@ -228,6 +228,5 @@ namespace Lilja.DebugUI
             public void RegisterPage(string pageName, Func<DebugPage> factory)
                 => _inner.RegisterPage(pageName, factory);
         }
-
     }
 }

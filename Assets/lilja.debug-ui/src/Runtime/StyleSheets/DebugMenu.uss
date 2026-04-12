@@ -75,7 +75,11 @@
     background-color: var(--hover-color) !important;
 }
 
-/* ── DebugNavigationButton ───────────────────────────────────────────────── */
+/* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
+   margin: 0 で高さを --size-nav-button-height（= control-height + margin-half × 2）に設定し、
+   他コントロールのスロット高さと一致させる。
+   上下の border がセパレーターとして機能する。
+   連続するナビボタン間は border-top を消して二重線を防ぐ。 */
 .c-nav-button {
     height: var(--size-nav-button-height);
     margin: 0;

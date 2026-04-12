@@ -18,12 +18,11 @@ public class SampleDebugMenu : MonoBehaviour
     {
         if (!DebugMenu.IsInitialized)
         {
-
             DebugMenu.Initialize(new RootPage());
 
             // GetPage<T>() のデモ: 初期化後に外部からページへ動的追加
             var root = DebugMenu.GetPage<RootPage>();
-            root?.AddDebugUI(b => { b.VisualElement(new DebugLabel($"起動時刻: {System.DateTime.Now:HH:mm:ss}")); });
+            root?.AddDebugUI(b => { b.VisualElement(new DebugLabel($"起動時刻: {DateTime.Now:HH:mm:ss}")); });
         }
 
         // 5秒（可変）経過後に DynamicDemo シーンへ遷移

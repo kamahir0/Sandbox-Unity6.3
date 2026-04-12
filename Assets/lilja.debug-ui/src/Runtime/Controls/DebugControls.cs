@@ -66,7 +66,7 @@ namespace Lilja.DebugUI
     {
         public DebugNavigationButton() : this(string.Empty) { }
 
-        public DebugNavigationButton(string text, StyleBackground? leftIcon = null) : base()
+        public DebugNavigationButton(string text, StyleBackground? leftIcon = null)
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.NavigationButton.Root);
@@ -100,7 +100,7 @@ namespace Lilja.DebugUI
     {
         public DebugButton() : this(string.Empty) { }
 
-        public DebugButton(string text) : base()
+        public DebugButton(string text)
         {
             this.text = text;
             AddToClassList(DebugMenuUssClass.ControlSize);
@@ -118,7 +118,7 @@ namespace Lilja.DebugUI
     {
         public DebugSecondaryButton() : this(string.Empty) { }
 
-        public DebugSecondaryButton(string text) : base()
+        public DebugSecondaryButton(string text)
         {
             this.text = text;
             AddToClassList(DebugMenuUssClass.ControlSize);
@@ -136,7 +136,7 @@ namespace Lilja.DebugUI
     {
         public DebugDangerButton() : this(string.Empty) { }
 
-        public DebugDangerButton(string text) : base()
+        public DebugDangerButton(string text)
         {
             this.text = text;
             AddToClassList(DebugMenuUssClass.ControlSize);
@@ -184,7 +184,7 @@ namespace Lilja.DebugUI
     {
         public DebugFoldout() : this(string.Empty) { }
 
-        public DebugFoldout(string label) : base()
+        public DebugFoldout(string label)
         {
             this.name = label;
             text = label;
@@ -310,7 +310,7 @@ namespace Lilja.DebugUI
     [UxmlElement]
     public partial class DebugProgressBar : ProgressBar, IDebugUI
     {
-        public DebugProgressBar() : base()
+        public DebugProgressBar()
         {
             AddToClassList(DebugMenuUssClass.ControlSize);
             AddToClassList(DebugMenuUssClass.Input);
