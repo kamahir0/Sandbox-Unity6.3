@@ -12,11 +12,11 @@
     --color-primary-active:  #1565C0;
 
     /* Secondary */
-    --color-secondary:        #3a3a3a;
+    --color-secondary:        #6b6b6b;
     --color-on-secondary:     #e0e0e0;
     --color-secondary-border: #555555;
-    --color-secondary-hover: #4a4a4a;
-    --color-secondary-active: #333333;
+    --color-secondary-hover: #767676;
+    --color-secondary-active: #595959;
 
     /* Danger */
     --color-danger:        #ef5350;
