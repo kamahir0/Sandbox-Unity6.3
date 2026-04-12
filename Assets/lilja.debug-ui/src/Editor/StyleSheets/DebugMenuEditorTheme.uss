@@ -113,6 +113,23 @@
     border-color: var(--unity-colors-highlight-background);
 }
 
+/* ── ボタン: サイズ・余白を DebugMenu.uss の値で確実に上書き ────────────────────
+   Unity エディタ組み込み USS の .unity-button（特異度 0,1,0）より高い
+   二クラスセレクタ（特異度 0,2,0）でオーバーライドする。                    */
+.editor-debug-window .c-control-size {
+    height: var(--size-control-height);
+    font-size: var(--font-size-standard);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
+}
+
+.editor-debug-window .c-button {
+    padding: 4px 12px;
+    border-width: 1px;
+    border-radius: var(--radius-button);
+    -unity-font-style: bold;
+    background-image: none;
+}
+
 /* ── ボタン: --hover-color / --active-color 定義 ────────────────────────────────
    DefaultTheme.uss がエディタで読み込まれないため、
    ButtonInteractionHelper と CSS :hover の両方に色を供給する。              */

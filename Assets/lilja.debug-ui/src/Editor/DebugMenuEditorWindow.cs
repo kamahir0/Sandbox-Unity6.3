@@ -322,12 +322,14 @@ namespace Lilja.DebugUI.Editor
             header.style.paddingTop = 2;
             header.style.paddingBottom = 2;
             header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f, 0.5f));
+            header.style.borderBottomColor = new StyleColor(new Color(0.5f, 0.5f, 0.5f, 1f));
 
             // 左端：バックボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backButton = new Button(EditorBack) { text = "←" };
             _backButton.style.visibility = Visibility.Hidden;
-            _backButton.style.marginRight = 4;
+            _backButton.AddToClassList("c-control-size");
+            _backButton.AddToClassList("c-button");
+            _backButton.AddToClassList("c-button--secondary");
             header.Add(_backButton);
 
             // 中央：現在のページ名
@@ -339,7 +341,9 @@ namespace Lilja.DebugUI.Editor
             // 右端：バックルートボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backToRootButton = new Button(EditorBackToRoot) { text = "Root" };
             _backToRootButton.style.visibility = Visibility.Hidden;
-            _backToRootButton.style.marginLeft = 4;
+            _backToRootButton.AddToClassList("c-control-size");
+            _backToRootButton.AddToClassList("c-button");
+            _backToRootButton.AddToClassList("c-button--secondary");
             header.Add(_backToRootButton);
 
             _playingView.Add(header);
