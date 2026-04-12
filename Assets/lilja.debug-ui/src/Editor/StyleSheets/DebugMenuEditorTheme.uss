@@ -5,99 +5,135 @@
  */
 
 .editor-debug-window {
-    /* サイズ: Unity エディタ標準に合わせる */
-    --size-control-height: 22px;
-    --size-control-margin: 2px;
-    --size-control-margin-half: 1px;
-    --font-size-standard: 12px;
-    --font-size-title: 12px;
-    --size-nav-button-height: 24px;
-    --size-nav-icon: 16px;
-    --size-page-padding: 4px;
-    --size-page-padding-top: 2px;
-    --size-page-padding-bottom: 2px;
-    --size-label-width: 40%;
-    --size-scrollbar-margin-v: 0px;
-    --size-scrollbar-margin-h: 0px;
-    --size-scrollbar-button-gap: 0px;
-    --size-toggle-checkbox: 14px;
-    --size-foldout-checkbox: 14px;
-    --size-item-gap: 2px;
-
-    /* 角丸: エディタ標準 */
-    --radius-window: 0px;
-    --radius-button: 3px;
-
-    /* 配色: Unity エディタのテーマ変数を参照（ライト/ダーク自動追従） */
-    --color-surface: var(--unity-colors-window-background);
-    --color-on-surface: var(--unity-colors-default-text-color);
-    --color-surface-header: var(--unity-colors-toolbar-background);
-    --color-on-surface-header: var(--unity-colors-default-text-color);
-
-    /* プライマリ（緑: 実行・適用系アクション） */
-    --color-primary: #388e3c;
-    --color-on-primary: #ffffff;
-    --color-primary-border: #1b5e20;
-    --color-primary-hover: #43a047;
-    --color-primary-active: #2e7d32;
-
-    /* セカンダリ（通常ボタン） */
-    --color-secondary: var(--unity-colors-button-background);
-    --color-on-secondary: var(--unity-colors-default-text-color);
-    --color-secondary-border: var(--unity-colors-input-field-border);
-    --color-secondary-hover: var(--unity-colors-button-background-hover);
-    --color-secondary-active: var(--unity-colors-button-background-pressed);
-
-    /* デンジャー（破壊的操作） */
-    --color-danger: #c0392b;
-    --color-on-danger: #ffffff;
-    --color-danger-border: #922b21;
-    --color-danger-hover: #e74c3c;
-    --color-danger-active: #922b21;
-
-    /* 入力フィールド */
-    --color-input: var(--unity-colors-input-field-background);
-    --color-on-input: var(--unity-colors-default-text-color);
-    --color-input-border: var(--unity-colors-input-field-border);
-
-    /* ナビゲーションボタン */
-    --color-nav-button-separator: var(--unity-colors-input-field-border);
-    --color-nav-hover: var(--unity-colors-button-background-hover);
-    --color-nav-active: var(--unity-colors-button-background-pressed);
-    --color-nav-icon: #9E9E9E;
-
-    /* エディタ専用: ナビボタンのパディングをエディタ標準ボタンに合わせる */
+    /* --- 1. Dimensions & Typography --- */
+    --font-size-standard:        12px;
+    --font-size-title:           12px;
+    --size-control-height:       22px;
+    --size-control-margin:       2px;
+    --size-control-margin-half:  1px;
+    --size-foldout-checkbox:     14px;
+    --size-item-gap:             2px;
+    --size-label-width:          40%;
+    --size-nav-button-height:    24px;
     --size-nav-button-padding-h: 6px;
+    --size-nav-icon:             16px;
+    --size-page-padding:         4px;
+    --size-page-padding-bottom:  2px;
+    --size-page-padding-top:     2px;
+    --size-scrollbar-button-gap: 0px;
+    --size-scrollbar-margin-h:   0px;
+    --size-scrollbar-margin-v:   0px;
+    --size-toggle-checkbox:      14px;
 
-    /* ヘッダーボタン */
-    --color-header-button-hover: var(--unity-colors-button-background-hover);
+    /* --- 2. Border Radii --- */
+    --radius-button: 3px;
+    --radius-window: 0px;
+
+    /* --- 3. Base Colors --- */
+    --color-on-surface:        var(--unity-colors-default-text-color);
+    --color-on-surface-header: var(--unity-colors-default-text-color);
+    --color-surface:           var(--unity-colors-window-background);
+    --color-surface-header:    var(--unity-colors-toolbar-background);
+
+    /* --- 4. Action Colors (Buttons) --- */
+    /* Primary (Green) */
+    --color-on-primary:     #ffffff;
+    --color-primary:        #388e3c;
+    --color-primary-active: #2e7d32;
+    --color-primary-border: #1b5e20;
+    --color-primary-hover:  #43a047;
+
+    /* Secondary (Standard) */
+    --color-on-secondary:     var(--unity-colors-default-text-color);
+    --color-secondary:        var(--unity-colors-button-background);
+    --color-secondary-active: var(--unity-colors-button-background-pressed);
+    --color-secondary-border: var(--unity-colors-input-field-border);
+    --color-secondary-hover:  var(--unity-colors-button-background-hover);
+
+    /* Danger (Red) */
+    --color-on-danger:     #ffffff;
+    --color-danger:        #c0392b;
+    --color-danger-active: #922b21;
+    --color-danger-border: #922b21;
+    --color-danger-hover:  #e74c3c;
+
+    /* --- 5. Input & Form Controls --- */
+    --color-input:        var(--unity-colors-input-field-background);
+    --color-input-border: var(--unity-colors-input-field-border);
+    --color-on-input:     var(--unity-colors-default-text-color);
+
+    /* --- 6. Navigation --- */
+    --color-nav-active:           var(--unity-colors-button-background-pressed);
+    --color-nav-button-separator: var(--unity-colors-input-field-border);
+    --color-nav-hover:            var(--unity-colors-button-background-hover);
+    --color-nav-icon:             #9E9E9E;
+
+    /* --- 7. Header Buttons --- */
     --color-header-button-active: var(--unity-colors-button-background-pressed);
+    --color-header-button-hover:  var(--unity-colors-button-background-hover);
 
-    /* スクロールバー */
-    --color-scrollbar-track: var(--unity-colors-scrollbar-background);
-    --color-scrollbar-handle: var(--unity-colors-scrollbar-thumb);
-    --color-scrollbar-handle-border: var(--unity-colors-input-field-border);
-    --color-scrollbar-handle-hover: var(--unity-colors-button-background-hover);
+    /* --- 8. Scrollbar --- */
+    --color-scrollbar-handle:        var(--unity-colors-scrollbar-thumb);
     --color-scrollbar-handle-active: var(--unity-colors-button-background-pressed);
+    --color-scrollbar-handle-border: var(--unity-colors-input-field-border);
+    --color-scrollbar-handle-hover:  var(--unity-colors-button-background-hover);
+    --color-scrollbar-track:         var(--unity-colors-scrollbar-background);
 }
 
-/* ── NavigationButton: Unity エディタ標準ボタン風にリスタイル ────────────────
-   ランタイムの iOS セパレーター風スタイルを上書きし、
-   全周ボーダー・角丸・ボタン背景色の Unity 標準外観にする。        */
+/* ── Common Layout ────────────────────────────────────────────────────────── */
+.editor-debug-window .c-control-size {
+    height: var(--size-control-height);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
+    font-size: var(--font-size-standard);
+}
 
-.editor-debug-window .c-nav-button {
-    background-color: var(--unity-colors-button-background);
-    border-radius: 3px;
+.editor-debug-window .c-foldout,
+.editor-debug-window .c-radio-group,
+.editor-debug-window .c-toggle-group {
+    height: auto;
+}
+
+/* ── Button ───────────────────────────────────────────────────────────────── */
+.editor-debug-window .c-button {
+    padding: 4px 12px;
+    background-image: none;
+    border-radius: var(--radius-button);
     border-width: 1px;
-    border-color: var(--unity-colors-input-field-border);
+    -unity-font-style: bold;
+}
+
+.editor-debug-window .c-button--primary {
+    --hover-color:  var(--color-primary-hover);
+    --active-color: var(--color-primary-active);
+}
+
+.editor-debug-window .c-button--secondary {
+    --hover-color:  var(--color-secondary-hover);
+    --active-color: var(--color-secondary-active);
+}
+
+.editor-debug-window .c-button--danger {
+    --hover-color:  var(--color-danger-hover);
+    --active-color: var(--color-danger-active);
+}
+
+.editor-debug-window .c-button:focus {
+    border-color: var(--unity-colors-highlight-background);
+}
+
+/* ── NavigationButton ─────────────────────────────────────────────────────── */
+.editor-debug-window .c-nav-button {
     margin-top: 0;
     margin-bottom: 1px;
     padding: 0 6px;
-    --hover-color: var(--color-nav-hover);
+    background-color: var(--unity-colors-button-background);
+    border-color: var(--unity-colors-input-field-border);
+    border-radius: 3px;
+    border-width: 1px;
+    --hover-color:  var(--color-nav-hover);
     --active-color: var(--color-nav-active);
 }
 
-/* ランタイム側の :hover に !important が付いているため同じく !important で上書き */
 .editor-debug-window .c-nav-button:hover {
     background-color: var(--unity-colors-button-background-hover) !important;
 }
@@ -106,126 +142,50 @@
     background-color: var(--unity-colors-button-background-pressed) !important;
 }
 
-/* ランタイム USS の border-width:0 によって消えるフォーカスビジュアルを復元。
-   border-width も明示して確実にボーダーを可視化する。
-   フォーカス色は Unity エディタに確実に存在する highlight-background を使用。 */
 .editor-debug-window .c-nav-button:focus {
-    border-width: 1px;
     border-color: var(--unity-colors-highlight-background);
-}
-
-/* ── ボタン: サイズ・余白を DebugMenu.uss の値で確実に上書き ────────────────────
-   Unity エディタ組み込み USS の .unity-button（特異度 0,1,0）より高い
-   二クラスセレクタ（特異度 0,2,0）でオーバーライドする。                    */
-.editor-debug-window .c-control-size {
-    height: var(--size-control-height);
-    font-size: var(--font-size-standard);
-    margin: var(--size-control-margin-half) var(--size-control-margin);
-}
-
-/* ── height: auto が必要なコントロール群 ────────────────────────────────────────────
-   .c-control-size (0,2,0) が height: 22px を設定するため、
-   可変高コントロールは同詳細度 (0,2,0) の後続宣言で height: auto を復元する。 */
-.editor-debug-window .c-foldout,
-.editor-debug-window .c-radio-group,
-.editor-debug-window .c-toggle-group {
-    height: auto;
-}
-
-.editor-debug-window .c-button {
-    padding: 4px 12px;
     border-width: 1px;
-    border-radius: var(--radius-button);
-    -unity-font-style: bold;
-    background-image: none;
 }
 
-/* ── ボタン: --hover-color / --active-color 定義 ────────────────────────────────
-   DefaultTheme.uss がエディタで読み込まれないため、
-   ButtonInteractionHelper と CSS :hover の両方に色を供給する。              */
-
-/* Secondary: Unity 標準ボタンの全状態 */
-.editor-debug-window .c-button--secondary {
-    --hover-color: var(--color-secondary-hover);
-    --active-color: var(--color-secondary-active);
+/* ── InputField ───────────────────────────────────────────────────────────── */
+.editor-debug-window .c-input .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-color: #000000 !important;
+    border-radius: 3px;
+    border-width: 1px !important;
 }
 
-/* Primary: 緑 */
-.editor-debug-window .c-button--primary {
-    --hover-color: var(--color-primary-hover);
-    --active-color: var(--color-primary-active);
-}
-
-/* Danger: 赤（hover = 明るく、active = 暗く）*/
-.editor-debug-window .c-button--danger {
-    --hover-color: var(--color-danger-hover);
-    --active-color: var(--color-danger-active);
-}
-
-/* ── ボタン: フォーカスアウトライン ─────────────────────────────────────────
-   特異度 0,3,0 で各ボタン種別の border-color（0,2,0）を上書きする。
-   border-width は c-button で既に 1px 設定済み。                          */
-.editor-debug-window .c-button:focus {
-    border-color: var(--unity-colors-highlight-background);
-}
-
-/* ── InputField: エディタ標準外観にリセット ────────────────────────────────────────
-   エディタ組み込み USS は BaseField:hover 時に .unity-base-field__label の
-   margin-left を変化させるため、!important で固定して左ズレを防ぐ。
-   また background-color / border 系を !important で明示し、ウィンドウ背景への
-   同化と枠線の消失を防ぐ。                                                       */
-
-/* ホバー時の左ズレ抑止: エディタ組み込み USS の :hover margin 変化を無効化 */
 .editor-debug-window .c-input:hover .unity-base-field__label,
 .editor-debug-window .c-input:focus .unity-base-field__label {
     margin-left: 0 !important;
     padding-left: 0 !important;
 }
 
-/* 入力欄の背景・枠線を確実に適用。 */
-.editor-debug-window .c-input .unity-base-field__input {
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    border-color: #000000 !important;
-    border-width: 1px !important;
-    border-radius: 3px;
-}
-
-/* ホバー時: テキストや入力欄の位置ズレを防止 + 枠線を白に */
 .editor-debug-window .c-input:hover .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
     background-color: rgba(0, 0, 0, 0.3) !important;
     border-color: #727272ff !important;
-    margin: 0 !important;
-    padding: 0 8px !important;
 }
 
-/* フォーカス（クリック）時: 枠線を青に */
 .editor-debug-window .c-input:focus .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
     background-color: rgba(0, 0, 0, 0.3) !important;
     border-color: var(--unity-colors-highlight-background) !important;
-    margin: 0 !important;
-    padding: 0 8px !important;
 }
 
-/* ── DebugPage スクロールバー: Unity エディタ標準外観にリセット ─────────────────
-   DebugMenu.uss の .c-scroll-view セレクタ（特異度 0,2,1）より高い
-   .editor-debug-window .c-scroll-view セレクタ（特異度 0,3,1）で上書きする。  */
-
-/* RepeatButton（上下矢印）
-   - 通常時: ウィンドウ背景と同化
-   - ホバー時: 若干明るく
-   - アウトラインなし
-   - Unity デフォルト（~13px）の 0.9 倍程度に縮小 */
+/* ── Scroller ─────────────────────────────────────────────────────────────── */
 .editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
 .editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    height: 12px;
     background-color: var(--unity-colors-window-background);
     border-radius: 0;
     border-width: 0;
-    height: 12px;
-    --hover-color: var(--unity-colors-button-background-hover);
+    --hover-color:  var(--unity-colors-button-background-hover);
     --active-color: var(--unity-colors-button-background-pressed);
 }
 
-/* Slider トラック（背景）: ウィンドウ背景と同化、ホバーでも変化させない */
 .editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-tracker {
     background-color: var(--unity-colors-window-background);
     border-radius: 0;
@@ -233,13 +193,11 @@
     --hover-color: var(--unity-colors-window-background);
 }
 
-/* Slider ドラッガー（サム）: Unity 標準ボタンホバー色、角丸 6px
-   通常時を button-background-hover 相当に引き上げ、ホバー時はさらに +15 明るく */
 .editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-dragger {
     background-color: var(--unity-colors-button-background-hover);
     border-radius: 6px;
     border-width: 0;
-    --hover-color: #707070;
+    --hover-color:  #707070;
     --active-color: #696969;
 }
 

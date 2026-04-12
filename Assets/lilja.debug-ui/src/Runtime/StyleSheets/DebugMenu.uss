@@ -30,19 +30,19 @@
 /* 共通の寸法設定 (DebugControls.cs の各コントロールが付与するベースクラス)
    垂直マージンは水平の半分（隣接すると合計が水平と同じ --size-control-margin になる）。 */
 .c-control-size {
-    min-height: var(--size-control-height);
     height: auto;
+    min-height: var(--size-control-height);
     font-size: var(--font-size-standard);
     margin: var(--size-control-margin-half) var(--size-control-margin);
 }
 
-/* DebugButton / DebugSecondaryButton */
+/* ── DebugButton ────────────────────────────────────────────────────────── */
 .c-button {
+    padding: 4px 12px;
+    background-image: none;
     border-radius: var(--radius-button);
     border-width: 1px;
     -unity-font-style: bold;
-    padding: 4px 12px;
-    background-image: none;
 }
 
 .c-button--primary {
@@ -75,14 +75,11 @@
     background-color: var(--hover-color) !important;
 }
 
-/* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
-   margin: 0 で高さを --size-nav-button-height（= control-height + margin-half × 2）に設定し、
-   他コントロールのスロット高さと一致させる。
-   上下の border がセパレーターとして機能する。
-   連続するナビボタン間は border-top を消して二重線を防ぐ。 */
+/* ── DebugNavigationButton ───────────────────────────────────────────────── */
 .c-nav-button {
     height: var(--size-nav-button-height);
     margin: 0;
+    padding: 0 16px;
     flex-direction: row;
     align-items: center;
     background-color: var(--color-surface);
@@ -91,22 +88,11 @@
     border-width: 0;
     border-bottom-width: 1px;
     border-color: var(--color-nav-button-separator);
-    padding: 0 16px;
     -unity-text-align: middle-left;
 }
 
 .c-nav-button:hover {
     background-color: var(--hover-color) !important;
-}
-
-.c-nav-button__label {
-    flex-grow: 1;
-    font-size: var(--font-size-standard);
-    color: var(--color-on-surface);
-    -unity-text-align: middle-left;
-    -unity-font-style: normal;
-    margin: 0;
-    padding: 0;
 }
 
 .c-nav-button__left-icon {
@@ -117,40 +103,50 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
+.c-nav-button__label {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-standard);
+    color: var(--color-on-surface);
+    -unity-text-align: middle-left;
+    -unity-font-style: normal;
+}
+
 .c-nav-button__icon {
     width: var(--size-nav-icon);
     height: var(--size-nav-icon);
     flex-shrink: 0;
     background-image: url("../Resources/DebugMenu/debug-menu-navigation.svg");
-    -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-nav-icon);
+    -unity-background-scale-mode: scale-to-fit;
 }
 
-/* DebugLabel */
+/* ── DebugLabel ──────────────────────────────────────────────────────────── */
 .c-label {
     -unity-text-align: middle-left;
 }
 
-/* DebugTextField / DebugIntegerField / DebugFloatField */
+/* ── DebugInputField ─────────────────────────────────────────────────────── */
 .c-input .unity-base-field__label {
     width: var(--size-label-width);
-    -unity-text-align: middle-left;
     margin: 0;
     padding: 0;
+    -unity-text-align: middle-left;
 }
 
 .c-input .unity-base-field__input {
+    padding: 0 8px;
     background-color: var(--color-input);
     color: var(--color-on-input);
     border-color: var(--color-input-border);
     border-radius: 4px;
     border-width: 1px;
-    padding: 0 8px;
     -unity-text-align: middle-left;
     --unity-cursor-color: var(--color-on-input);
 }
 
-/* DebugPage (ScrollView ラッパー) */
+/* ── DebugPage (ScrollView) ──────────────────────────────────────────────── */
 .c-scroll-view {
     flex-grow: 1;
 }
@@ -160,43 +156,39 @@
     padding-bottom: var(--size-page-padding-bottom);
 }
 
-/* DebugPage スクロールバー: 上下左右に余白を持たせる */
+/* スクロールバー: 全体 */
 .c-scroll-view .unity-scroller--vertical {
-    margin-top: var(--size-scrollbar-margin-v);
-    margin-bottom: var(--size-scrollbar-margin-v);
-    margin-left: var(--size-scrollbar-margin-h);
-    margin-right: var(--size-scrollbar-margin-h);
-    padding-top: var(--size-scrollbar-button-gap);
-    padding-bottom: var(--size-scrollbar-button-gap);
+    margin: var(--size-scrollbar-margin-v) var(--size-scrollbar-margin-h);
+    padding: var(--size-scrollbar-button-gap) 0;
 }
 
-/* RepeatButton スタイル */
+/* スクロールバー: ボタン (Low/High) */
 .c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
 .c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
     background-color: var(--color-scrollbar-button);
+    border-color: var(--color-scrollbar-button-border);
     border-radius: var(--radius-scrollbar-button);
     border-width: 1px;
-    border-color: var(--color-scrollbar-button-border);
     -unity-background-image-tint-color: var(--color-on-scrollbar-button);
 }
 
-/* Slider 背景（トラック） */
+/* スクロールバー: トラック (背景) */
 .c-scroll-view .unity-scroller--vertical #unity-tracker {
     background-color: var(--color-scrollbar-track);
+    border-color: var(--color-scrollbar-track-border);
     border-radius: var(--radius-scrollbar-handle);
     border-width: var(--size-scrollbar-bg-border-width);
-    border-color: var(--color-scrollbar-track-border);
 }
 
-/* Slider ノブ */
+/* スクロールバー: ドラッガー (ノブ) */
 .c-scroll-view .unity-scroller--vertical #unity-dragger {
     background-color: var(--color-scrollbar-handle);
+    border-color: var(--color-scrollbar-handle-border);
     border-radius: var(--radius-scrollbar-handle);
     border-width: var(--size-scrollbar-handle-border-width);
-    border-color: var(--color-scrollbar-handle-border);
 }
 
-/* DebugRadioButtonGroup */
+/* ── DebugRadioButtonGroup ───────────────────────────────────────────────── */
 .c-radio-group {
     height: auto;
     align-items: flex-start;
@@ -205,23 +197,21 @@
 .c-radio-group .unity-base-field__label {
     width: var(--size-label-width);
     min-height: var(--size-control-height);
-    -unity-text-align: middle-left;
     margin: 0;
     padding: 0;
+    -unity-text-align: middle-left;
 }
 
-/* 各ラジオボタン行の高さを他のコントロールと共通化する */
 .c-radio-group .unity-radio-button {
     height: var(--size-control-height);
     margin: 0;
 }
 
-/* チェックマークとラベルの間隔を c-toggle-group の --size-item-gap に合わせる */
 .c-radio-group .unity-radio-button__checkmark-background {
     margin-right: var(--size-item-gap);
 }
 
-/* DebugFoldout */
+/* ── DebugFoldout ────────────────────────────────────────────────────────── */
 .c-foldout {
     height: auto;
     margin: 0;
@@ -230,7 +220,7 @@
 .c-foldout > .unity-foldout__toggle {
     height: var(--size-control-height);
     margin: var(--size-control-margin-half) var(--size-control-margin);
-    margin-left: 0; /* チェックマーク分を考慮した微調整 */
+    margin-left: 0;
 }
 
 .c-foldout > .unity-foldout__toggle .unity-toggle__checkmark {
@@ -239,190 +229,154 @@
     -unity-background-image-tint-color: var(--color-on-surface);
 }
 
-/* ============================================================
-   DebugToggleGroup (カスタムコントロール)
-   RadioButtonGroup と同様のレイアウト（ラベル左・選択肢縦並び）で
-   複数選択が可能なカスタムトグルグループ。
-   子要素として DebugToggleGroupItem を配置して使用する。
-   ============================================================ */
-
+/* ── DebugToggleGroup ────────────────────────────────────────────────────── */
 .c-toggle-group {
     height: auto;
     flex-direction: row;
     align-items: flex-start;
 }
 
-/* 左側ラベル: RadioButtonGroup の .unity-base-field__label に相当 */
 .c-toggle-group__label {
     width: var(--size-label-width);
     min-height: var(--size-control-height);
-    -unity-text-align: middle-left;
     flex-shrink: 0;
     margin: 0;
     padding: 0;
     font-size: var(--font-size-standard);
+    -unity-text-align: middle-left;
 }
 
-/* 右側: 選択肢を縦に並べるコンテナ */
 .c-toggle-group__items {
-    flex-direction: column;
     flex-grow: 1;
+    flex-direction: column;
 }
 
-/* ============================================================
-   DebugToggleGroupItem (DebugToggleGroup の各行)
-
-   チェックマークは Unity 標準の Toggle を内部利用。
-   テキストは独立した Label で表示する構造。
-   ============================================================ */
-
-/* 各行のルート: チェックボックスとテキストを横並びに */
 .c-toggle-group-item {
-    flex-direction: row;
-    align-items: center;
     height: var(--size-control-height);
     padding: 0 2px;
+    flex-direction: row;
+    align-items: center;
 }
 
-/* チェックボックス: Unity 標準 Toggle を使用 */
+.c-toggle-group-item--checked {
+    border-radius: 4px;
+}
+
+.c-toggle-group-item:focus .c-toggle-group-item__label {
+    color: #006AA6;
+}
+
 .c-toggle-group-item__checkbox {
-    flex-shrink: 0;
     margin: 0;
     margin-right: var(--size-item-gap);
+    flex-shrink: 0;
 }
 
-/* Toggle 内部の空ラベルを非表示 */
 .c-toggle-group-item__checkbox .unity-base-field__label {
     display: none;
 }
 
-/* Toggle 内部のチェックマークサイズを調整 */
 .c-toggle-group-item__checkbox .unity-toggle__checkmark {
     width: var(--size-toggle-checkbox, 36px);
     height: var(--size-toggle-checkbox, 36px);
 }
 
-/* チェック状態 */
-.c-toggle-group-item--checked {
-    border-radius: 4px;
-}
-
-/* アイテムフォーカス時のラベル色 */
-.c-toggle-group-item:focus .c-toggle-group-item__label {
-    color: #006AA6;
-}
-
-/* テキストラベル */
 .c-toggle-group-item__label {
     flex-grow: 1;
-    -unity-text-align: middle-left;
-    font-size: var(--font-size-standard);
     margin: 0 2px;
+    font-size: var(--font-size-standard);
+    -unity-text-align: middle-left;
 }
 
-/* ============================================================
-   DebugMenuWindow (c-menu-window) : ヘッダー付き共通ウィンドウ
-   ヘッダーとコンテンツエリアを分離する。
-   ============================================================ */
-
+/* ── DebugMenuWindow ─────────────────────────────────────────────────────── */
 .c-menu-window {
+    flex-direction: column;
+    border-color: var(--color-input-border);
     border-radius: var(--radius-window);
     border-width: 1px;
-    border-color: var(--color-input-border);
     border-bottom-width: 3px;
-    flex-direction: column;
 }
 
-/* ヘッダー: テーマ変数で配色を切り替え、上端の角丸を維持 */
+.c-menu-window--default-size {
+    width: var(--size-window-width);
+    max-width: var(--size-window-max-width);
+}
+
 .c-menu-window__header {
-    background-color: var(--color-surface-header);
-    color: var(--color-on-surface-header);
     padding: 8px 16px;
-    border-top-left-radius: var(--radius-window);
-    border-top-right-radius: var(--radius-window);
     flex-direction: row;
     align-items: center;
+    background-color: var(--color-surface-header);
+    color: var(--color-on-surface-header);
+    border-top-left-radius: var(--radius-window);
+    border-top-right-radius: var(--radius-window);
 }
 
-/* バックボタン */
 .c-menu-window__back-button {
     width: 52px;
     height: 52px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    border-width: 0;
     padding: 6px;
+    flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0);
     background-image: none;
+    border-radius: 6px;
+    border-width: 0;
 }
 
 .c-menu-window__back-button:hover {
     background-color: var(--hover-color) !important;
 }
 
-/* バックボタン内のアイコン */
 .c-menu-window__back-button-icon {
     flex-grow: 1;
     background-image: url("../Resources/DebugMenu/debug-menu-back.svg");
-    -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-on-surface-header);
+    -unity-background-scale-mode: scale-to-fit;
 }
 
-/* バックトゥルートボタン（バックボタンと対になる位置でタイトルを視覚的に中央寄せ） */
 .c-menu-window__back-to-root-button {
     width: 52px;
     height: 52px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    border-width: 0;
     padding: 6px;
+    flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0);
     background-image: none;
+    border-radius: 6px;
+    border-width: 0;
 }
 
 .c-menu-window__back-to-root-button:hover {
     background-color: var(--hover-color) !important;
 }
 
-/* バックトゥルートボタン内のアイコン */
 .c-menu-window__back-to-root-button-icon {
     flex-grow: 1;
     background-image: url("../Resources/DebugMenu/debug-menu-home.svg");
-    -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: var(--color-on-surface-header);
+    -unity-background-scale-mode: scale-to-fit;
 }
 
-/* ヘッダータイトルテキスト */
 .c-menu-window__title {
     flex-grow: 1;
     font-size: var(--font-size-title);
-    -unity-font-style: bold;
     color: var(--color-on-surface-header);
     -unity-text-align: middle-center;
+    -unity-font-style: bold;
 }
 
-/* コンテンツエリア */
 .c-menu-window__content {
     padding: var(--size-page-padding);
+    flex-grow: 1;
     flex-direction: column;
-    flex-grow: 1;
 }
 
-/* DebugMenuWindow にデフォルトサイズを付与する Modifier */
-.c-menu-window--default-size {
-    width: var(--size-window-width);
-    max-width: var(--size-window-max-width);
-}
-
-/* ページスタック（スライドナビゲーション用コンテナ）
-   複数の DebugPage を重ねてスライドアニメーションで切り替える */
+/* ── Other Layout Components ─────────────────────────────────────────────── */
 .c-page-stack {
-    flex-grow: 1;
     position: relative;
+    flex-grow: 1;
     overflow: hidden;
 }
 
-/* HorizontalScope: 子要素を横並びにするコンテナ。子の flex-grow は C# 側で自動付与される。 */
 .c-h-scope {
     flex-direction: row;
 }

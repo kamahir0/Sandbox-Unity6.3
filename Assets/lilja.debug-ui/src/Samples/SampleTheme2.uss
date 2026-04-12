@@ -1,50 +1,47 @@
 :root {
-    /* ベースサーフェス: 黒背景 / 白前景 */
-    --color-surface:    #121212;
+    /* --- 1. Base Colors --- */
     --color-on-surface: #FFFFFF;
+    --color-surface:    #121212;
 
-    /* レイアウト定数 (サンプルとして少し大きく設定) */
-    --size-control-height: 80px;
-    --size-nav-button-height: 92px; /* 80 + 6 × 2 */
-    --size-label-width: 40%;
-    --font-size-standard: 30px;
-
-    /* プライマリ（決定など）: オレンジ */
-    --color-primary:        #FF9800;
+    /* --- 2. Action Colors (Buttons) --- */
+    /* Primary (Orange) */
     --color-on-primary:     #000000;
+    --color-primary:        #FF9800;
     --color-primary-border: #F57C00;
 
-    /* セカンダリ（キャンセルなど）: 濃いグレー */
-    --color-secondary:        #444444;
+    /* Secondary (Dark Gray) */
     --color-on-secondary:     #FFFFFF;
+    --color-secondary:        #444444;
     --color-secondary-border: #666666;
 
-    /* デンジャー（削除など）: 深い赤 */
-    --color-danger:        #B71C1C;
+    /* Danger (Deep Red) */
     --color-on-danger:     #FFFFFF;
+    --color-danger:        #B71C1C;
     --color-danger-border: #880E4F;
 
-    /* インプット: 暗い背景 */
+    /* --- 3. Input & Form Controls --- */
     --color-input:        #2A2A2A;
-    --color-on-input:     #FFFFFF;
     --color-input-border: #444444;
+    --color-on-input:     #FFFFFF;
 
-    /* ウィンドウヘッダーサーフェス: 深い紫 */
-    --color-surface-header:    #4A148C;
+    /* --- 4. Window & Page Structure --- */
     --color-on-surface-header: #FFFFFF;
+    --color-surface-header:    #4A148C;
 
-    /* スクロールバーボタン */
-    --color-scrollbar-button:    #333333;
-    --color-on-scrollbar-button: #FFFFFF;
+    /* --- 5. Navigation & Separators --- */
+    --color-nav-button-separator: #444444;
 
-    /* スクロールバートラック */
+    /* --- 6. Scrollbar --- */
+    --color-on-scrollbar-button:    #FFFFFF;
+    --color-scrollbar-button:       #333333;
+    --color-scrollbar-handle:       #555555;
+    --color-scrollbar-handle-border: #888888;
     --color-scrollbar-track:        #2A2A2A;
     --color-scrollbar-track-border: rgba(255, 255, 255, 0);
 
-    /* スクロールバーハンドル */
-    --color-scrollbar-handle:        #555555;
-    --color-scrollbar-handle-border: #888888;
-
-    /* セパレーター */
-    --color-nav-button-separator: #444444;
+    /* --- 7. Dimensions & Layout --- */
+    --font-size-standard:     30px;
+    --size-control-height:    80px;
+    --size-label-width:       40%;
+    --size-nav-button-height: 92px;
 }
