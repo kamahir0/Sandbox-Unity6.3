@@ -66,6 +66,8 @@ public class SampleDebugMenu : MonoBehaviour
                 b.VisualElement(new DebugLabel($"Version: {Application.version}"));
                 b.VisualElement(new DebugLabel($"Platform: {Application.platform}"));
             });
+
+            builder.NavigationButton("All Controls", () => new ControlsDemoPage());
         }
     }
 
@@ -254,6 +256,57 @@ public class SampleDebugMenu : MonoBehaviour
             builder.VisualElement(seField);
             builder.VisualElement(applyBtn);
             builder.NavigationButton("Player", () => new PlayerPage());
+        }
+    }
+
+    // ─── Controls Demo ────────────────────────────────────────────
+
+    public enum SampleEnum
+    {
+        None,
+        Easy,
+        Normal,
+        Hard,
+        Legendary
+    }
+
+    class ControlsDemoPage : DebugPage
+    {
+        public override void Configure(IDebugUIBuilder builder)
+        {
+            builder.VisualElement(new DebugLabel("─── Basic Fields ───"));
+            builder.TextField("Text", "Hello World", v => Debug.Log($"Text: {v}"));
+            builder.IntegerField("Int", 42, v => Debug.Log($"Int: {v}"));
+            builder.LongField("Long", 1234567890L, v => Debug.Log($"Long: {v}"));
+            builder.FloatField("Float", 3.14f, v => Debug.Log($"Float: {v}"));
+            builder.DoubleField("Double", 3.1415926535, v => Debug.Log($"Double: {v}"));
+
+            builder.VisualElement(new DebugLabel("─── Sliders ───"));
+            builder.Slider("Slider", 0.5f, 0f, 1f, v => Debug.Log($"Slider: {v}"));
+            builder.SliderInt("SliderInt", 5, 0, 10, v => Debug.Log($"SliderInt: {v}"));
+            builder.MinMaxSlider("MinMax", new Vector2(0.2f, 0.8f), 0f, 1f, v => Debug.Log($"MinMax: {v}"));
+
+            builder.VisualElement(new DebugLabel("─── Progress ───"));
+            builder.ProgressBar("Loading Assets", 75f);
+
+            builder.VisualElement(new DebugLabel("─── Enum ───"));
+            builder.EnumField("Difficulty", SampleEnum.Normal, v => Debug.Log($"Enum: {v}"));
+
+            builder.VisualElement(new DebugLabel("─── Vector Fields ───"));
+            builder.Vector2Field("Vector2", Vector2.one, v => Debug.Log($"Vector2: {v}"));
+            builder.Vector2IntField("Vector2Int", Vector2Int.one, v => Debug.Log($"Vector2Int: {v}"));
+            builder.Vector3Field("Vector3", Vector3.one, v => Debug.Log($"Vector3: {v}"));
+            builder.Vector3IntField("Vector3Int", Vector3Int.one, v => Debug.Log($"Vector3Int: {v}"));
+            builder.Vector4Field("Vector4", Vector4.one, v => Debug.Log($"Vector4: {v}"));
+
+            builder.VisualElement(new DebugLabel("─── Rect & Bounds ───"));
+            builder.RectField("Rect", new Rect(0, 0, 100, 100), v => Debug.Log($"Rect: {v}"));
+            builder.RectIntField("RectInt", new RectInt(0, 0, 100, 100), v => Debug.Log($"RectInt: {v}"));
+            builder.BoundsField("Bounds", new Bounds(Vector3.zero, Vector3.one), v => Debug.Log($"Bounds: {v}"));
+            builder.BoundsIntField("BoundsInt", new BoundsInt(Vector3Int.zero, Vector3Int.one), v => Debug.Log($"BoundsInt: {v}"));
+
+            builder.VisualElement(new DebugLabel("─── Others ───"));
+            builder.Hash128Field("Hash128", Hash128.Compute("Test"), v => Debug.Log($"Hash128: {v}"));
         }
     }
 }

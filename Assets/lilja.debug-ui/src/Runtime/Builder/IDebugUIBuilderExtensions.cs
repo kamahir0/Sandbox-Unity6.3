@@ -68,6 +68,154 @@ namespace Lilja.DebugUI
             builder.VisualElement(row);
         }
 
+        public static void TextField(this IDebugUIBuilder builder, string label, string value, Action<string> onValueChanged = null)
+        {
+            var field = new DebugTextField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void IntegerField(this IDebugUIBuilder builder, string label, int value, Action<int> onValueChanged = null)
+        {
+            var field = new DebugIntegerField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void LongField(this IDebugUIBuilder builder, string label, long value, Action<long> onValueChanged = null)
+        {
+            var field = new DebugLongField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void FloatField(this IDebugUIBuilder builder, string label, float value, Action<float> onValueChanged = null)
+        {
+            var field = new DebugFloatField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void DoubleField(this IDebugUIBuilder builder, string label, double value, Action<double> onValueChanged = null)
+        {
+            var field = new DebugDoubleField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Slider(this IDebugUIBuilder builder, string label, float value, float start, float end, Action<float> onValueChanged = null)
+        {
+            var field = new DebugSlider(label) { value = value, lowValue = start, highValue = end };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void SliderInt(this IDebugUIBuilder builder, string label, int value, int start, int end, Action<int> onValueChanged = null)
+        {
+            var field = new DebugSliderInt(label) { value = value, lowValue = start, highValue = end };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void MinMaxSlider(this IDebugUIBuilder builder, string label, UnityEngine.Vector2 value, float min, float max, Action<UnityEngine.Vector2> onValueChanged = null)
+        {
+            var field = new DebugMinMaxSlider(label) { value = value, lowLimit = min, highLimit = max };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void ProgressBar(this IDebugUIBuilder builder, string title, float value, float lowValue = 0f, float highValue = 100f)
+        {
+            var field = new DebugProgressBar { title = title, value = value, lowValue = lowValue, highValue = highValue };
+            builder.VisualElement(field);
+        }
+
+        public static void EnumField(this IDebugUIBuilder builder, string label, Enum value, Action<Enum> onValueChanged = null)
+        {
+            var field = new DebugEnumField(label);
+            field.Init(value);
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void EnumField<T>(this IDebugUIBuilder builder, string label, T value, Action<T> onValueChanged = null) where T : Enum
+        {
+            var field = new DebugEnumField(label);
+            field.Init(value);
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged((T)evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Vector2Field(this IDebugUIBuilder builder, string label, UnityEngine.Vector2 value, Action<UnityEngine.Vector2> onValueChanged = null)
+        {
+            var field = new DebugVector2Field(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Vector2IntField(this IDebugUIBuilder builder, string label, UnityEngine.Vector2Int value, Action<UnityEngine.Vector2Int> onValueChanged = null)
+        {
+            var field = new DebugVector2IntField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Vector3Field(this IDebugUIBuilder builder, string label, UnityEngine.Vector3 value, Action<UnityEngine.Vector3> onValueChanged = null)
+        {
+            var field = new DebugVector3Field(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Vector3IntField(this IDebugUIBuilder builder, string label, UnityEngine.Vector3Int value, Action<UnityEngine.Vector3Int> onValueChanged = null)
+        {
+            var field = new DebugVector3IntField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Vector4Field(this IDebugUIBuilder builder, string label, UnityEngine.Vector4 value, Action<UnityEngine.Vector4> onValueChanged = null)
+        {
+            var field = new DebugVector4Field(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void RectField(this IDebugUIBuilder builder, string label, UnityEngine.Rect value, Action<UnityEngine.Rect> onValueChanged = null)
+        {
+            var field = new DebugRectField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void RectIntField(this IDebugUIBuilder builder, string label, UnityEngine.RectInt value, Action<UnityEngine.RectInt> onValueChanged = null)
+        {
+            var field = new DebugRectIntField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void BoundsField(this IDebugUIBuilder builder, string label, UnityEngine.Bounds value, Action<UnityEngine.Bounds> onValueChanged = null)
+        {
+            var field = new DebugBoundsField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void BoundsIntField(this IDebugUIBuilder builder, string label, UnityEngine.BoundsInt value, Action<UnityEngine.BoundsInt> onValueChanged = null)
+        {
+            var field = new DebugBoundsIntField(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
+        public static void Hash128Field(this IDebugUIBuilder builder, string label, UnityEngine.Hash128 value, Action<UnityEngine.Hash128> onValueChanged = null)
+        {
+            var field = new DebugHash128Field(label) { value = value };
+            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
+            builder.VisualElement(field);
+        }
+
         private sealed class HorizontalScopeBuilder : IDebugUIBuilder
         {
             private readonly IDebugUIBuilder _inner;

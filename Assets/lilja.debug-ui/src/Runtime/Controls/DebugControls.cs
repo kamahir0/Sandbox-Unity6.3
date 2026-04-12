@@ -258,4 +258,257 @@ namespace Lilja.DebugUI
             AddToClassList(DebugMenuUssClass.Input);
         }
     }
+
+    /// <summary>
+    /// デバッグメニュー用のスライダー
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugSlider : Slider, IDebugUI
+    {
+        public DebugSlider() : this(string.Empty) { }
+
+        public DebugSlider(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の整数スライダー
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugSliderInt : SliderInt, IDebugUI
+    {
+        public DebugSliderInt() : this(string.Empty) { }
+
+        public DebugSliderInt(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の最小最大スライダー
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugMinMaxSlider : MinMaxSlider, IDebugUI
+    {
+        public DebugMinMaxSlider() : this(string.Empty) { }
+
+        public DebugMinMaxSlider(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用のプログレスバー
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugProgressBar : ProgressBar, IDebugUI
+    {
+        public DebugProgressBar() : base()
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の列挙型フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugEnumField : EnumField, IDebugUI
+    {
+        public DebugEnumField() : this(string.Empty) { }
+
+        public DebugEnumField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用のロング整数フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugLongField : LongField, IDebugUI
+    {
+        public DebugLongField() : this(string.Empty) { }
+
+        public DebugLongField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の倍精度浮動小数点フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugDoubleField : DoubleField, IDebugUI
+    {
+        public DebugDoubleField() : this(string.Empty) { }
+
+        public DebugDoubleField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Hash128 フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugHash128Field : Hash128Field, IDebugUI
+    {
+        public DebugHash128Field() : this(string.Empty) { }
+
+        public DebugHash128Field(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Vector2 フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugVector2Field : Vector2Field, IDebugUI
+    {
+        public DebugVector2Field() : this(string.Empty) { }
+
+        public DebugVector2Field(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Vector2Int フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugVector2IntField : Vector2IntField, IDebugUI
+    {
+        public DebugVector2IntField() : this(string.Empty) { }
+
+        public DebugVector2IntField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Vector3 フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugVector3Field : Vector3Field, IDebugUI
+    {
+        public DebugVector3Field() : this(string.Empty) { }
+
+        public DebugVector3Field(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Vector3Int フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugVector3IntField : Vector3IntField, IDebugUI
+    {
+        public DebugVector3IntField() : this(string.Empty) { }
+
+        public DebugVector3IntField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Vector4 フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugVector4Field : Vector4Field, IDebugUI
+    {
+        public DebugVector4Field() : this(string.Empty) { }
+
+        public DebugVector4Field(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Rect フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugRectField : RectField, IDebugUI
+    {
+        public DebugRectField() : this(string.Empty) { }
+
+        public DebugRectField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の RectInt フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugRectIntField : RectIntField, IDebugUI
+    {
+        public DebugRectIntField() : this(string.Empty) { }
+
+        public DebugRectIntField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の Bounds フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugBoundsField : BoundsField, IDebugUI
+    {
+        public DebugBoundsField() : this(string.Empty) { }
+
+        public DebugBoundsField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
+
+    /// <summary>
+    /// デバッグメニュー用の BoundsInt フィールド
+    /// </summary>
+    [UxmlElement]
+    public partial class DebugBoundsIntField : BoundsIntField, IDebugUI
+    {
+        public DebugBoundsIntField() : this(string.Empty) { }
+
+        public DebugBoundsIntField(string label) : base(label)
+        {
+            AddToClassList(DebugMenuUssClass.ControlSize);
+            AddToClassList(DebugMenuUssClass.Input);
+        }
+    }
 }

@@ -30,7 +30,8 @@
 /* 共通の寸法設定 (DebugControls.cs の各コントロールが付与するベースクラス)
    垂直マージンは水平の半分（隣接すると合計が水平と同じ --size-control-margin になる）。 */
 .c-control-size {
-    height: var(--size-control-height);
+    min-height: var(--size-control-height);
+    height: auto;
     font-size: var(--font-size-standard);
     margin: var(--size-control-margin-half) var(--size-control-margin);
 }
