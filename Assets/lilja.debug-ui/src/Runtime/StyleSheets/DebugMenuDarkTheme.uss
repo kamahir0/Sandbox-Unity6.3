@@ -29,6 +29,7 @@
     --color-nav-button-separator: #444444;
     --color-nav-hover:       #2d2d2d;
     --color-nav-active:      #222222;
+    --color-nav-icon:        #FFFFFF;
 
     /* --- 4. Input & Form Controls --- */
     --color-input:        #2c2c2c;
@@ -42,14 +43,15 @@
     --color-header-button-active: #2a2a2a;
 
     /* --- 6. Scrollbar --- */
-    --color-scrollbar-button:     #3a3a3a;
+    --color-scrollbar-button:     #272727;
     --color-on-scrollbar-button:  #e0e0e0;
     --color-scrollbar-button-hover: #4a4a4a;
     --color-scrollbar-button-active: #333333;
-    --color-scrollbar-track:            rgb(50, 50, 50);
-    --color-scrollbar-track-hover:      #484848;
-    --color-scrollbar-handle:           #555555;
-    --color-scrollbar-handle-border:    rgb(90, 90, 90);
-    --color-scrollbar-handle-hover:     #666666;
-    --color-scrollbar-handle-active:    #444444;
+    --color-scrollbar-button-border: rgba(0, 0, 0, 0.3);
+    --color-scrollbar-track:            rgba(0, 0, 0, 0.5);
+    --color-scrollbar-track-hover:      rgba(0, 0, 0, 0.5);
+    --color-scrollbar-handle:           #343434;
+    --color-scrollbar-handle-border:    rgb(0, 0, 0);
+    --color-scrollbar-handle-hover:     #404040;
+    --color-scrollbar-handle-active:    #333333;
 }

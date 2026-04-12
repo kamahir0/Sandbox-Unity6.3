@@ -43,6 +43,7 @@
     --color-nav-button-separator: #CCCCCC;
     --color-nav-hover:       #EEEEEE;
     --color-nav-active:      #D5D5D5;
+    --color-nav-icon:        #b4b4b4;
 
     /* --- 5. Input & Form Controls --- */
     --color-input:        #F0F0F0;
@@ -73,15 +74,16 @@
     --color-on-scrollbar-button:  #000000;
     --color-scrollbar-button-hover: #E8E8E8;
     --color-scrollbar-button-active: #D0D0D0;
-    --color-scrollbar-track:            rgb(223, 223, 223);
+    --color-scrollbar-track:            rgba(154, 154, 154, 0.5);
     --color-scrollbar-track-border:     rgba(0, 0, 0, 0);
-    --color-scrollbar-track-hover:      #C8C8C8;
+    --color-scrollbar-track-hover:      rgba(154, 154, 154, 0.5);
     --size-scrollbar-bg-border-width:   1px;
     --color-scrollbar-handle:           #FFFFFF;
-    --color-scrollbar-handle-border:    rgb(132, 132, 132);
-    --color-scrollbar-handle-hover:     #EEEEEE;
-    --color-scrollbar-handle-active:    #D5D5D5;
+    --color-scrollbar-handle-border:    rgb(185, 185, 185);
+    --color-scrollbar-handle-hover:     #f6f6f6;
+    --color-scrollbar-handle-active:    #EEEEEE;
     --size-scrollbar-handle-border-width: 1px;
+    --color-scrollbar-button-border:    rgba(0, 0, 0, 0);
 }
 
 /* ホバー色・アクティブ色: C# (ICustomStyle) での直接読み取り用。
