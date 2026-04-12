@@ -363,21 +363,6 @@ namespace Lilja.DebugUI
     }
 
     /// <summary>
-    /// デバッグメニュー用の Hash128 フィールド
-    /// </summary>
-    [UxmlElement]
-    public partial class DebugHash128Field : Hash128Field, IDebugUI
-    {
-        public DebugHash128Field() : this(string.Empty) { }
-
-        public DebugHash128Field(string label) : base(label)
-        {
-            AddToClassList(DebugMenuUssClass.ControlSize);
-            AddToClassList(DebugMenuUssClass.Input);
-        }
-    }
-
-    /// <summary>
     /// デバッグメニュー用の Vector2 フィールド
     /// </summary>
     [UxmlElement]

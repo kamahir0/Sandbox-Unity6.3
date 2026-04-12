@@ -306,7 +306,6 @@ public class SampleDebugMenu : MonoBehaviour
             builder.BoundsIntField("BoundsInt", new BoundsInt(Vector3Int.zero, Vector3Int.one), v => Debug.Log($"BoundsInt: {v}"));
 
             builder.VisualElement(new DebugLabel("─── Others ───"));
-            builder.Hash128Field("Hash128", Hash128.Compute("Test"), v => Debug.Log($"Hash128: {v}"));
         }
     }
 }

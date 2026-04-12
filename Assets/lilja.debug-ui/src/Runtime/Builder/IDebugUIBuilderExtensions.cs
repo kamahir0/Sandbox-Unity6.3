@@ -209,13 +209,6 @@ namespace Lilja.DebugUI
             builder.VisualElement(field);
         }
 
-        public static void Hash128Field(this IDebugUIBuilder builder, string label, UnityEngine.Hash128 value, Action<UnityEngine.Hash128> onValueChanged = null)
-        {
-            var field = new DebugHash128Field(label) { value = value };
-            if (onValueChanged != null) field.RegisterValueChangedCallback(evt => onValueChanged(evt.newValue));
-            builder.VisualElement(field);
-        }
-
         private sealed class HorizontalScopeBuilder : IDebugUIBuilder
         {
             private readonly IDebugUIBuilder _inner;
