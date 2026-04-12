@@ -322,7 +322,7 @@ namespace Lilja.DebugUI.Editor
             header.style.paddingTop = 2;
             header.style.paddingBottom = 2;
             header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = new StyleColor(new Color(0.5f, 0.5f, 0.5f, 1f));
+            header.style.borderBottomColor = new StyleColor(new Color(0, 0, 0, 0.3f));
 
             // 左端：バックボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backButton = new Button(EditorBack) { text = "←" };
