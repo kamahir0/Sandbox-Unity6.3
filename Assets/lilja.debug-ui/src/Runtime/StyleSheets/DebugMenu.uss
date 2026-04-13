@@ -150,12 +150,24 @@
     --unity-cursor-color: var(--color-on-input);
 }
 
-/* Vector/Rect/Bounds などの composite field では、外側ラッパーの
-   背景・枠線を透過にし、内側の各成分入力のみを .c-input スタイルで装飾する。 */
-.c-input.unity-composite-field > .unity-base-field__input {
+/* Step-A: 複合フィールドの外側・中間ラッパーを透過に */
+.c-input .unity-composite-field__input,
+.c-input .unity-bounds-field__input,
+.c-input .unity-bounds-int-field__input {
     padding: 0;
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
+}
+
+/* Step-B: 複合フィールド内部の成分フィールド (X/Y/Z 等) のラベル幅を揃える。
+   width: auto のままだと文字幅で入力開始位置がズレるので、min-width で最低幅を
+   確保して揃える。flex-shrink: 0 で横並びの縮小も防ぐ。
+   (固定 width ではなく min-width を使うのは、長いラベルが収まらず消えるのを避けるため) */
+.c-input .unity-composite-field__field > .unity-base-field__label {
+    width: auto;
+    min-width: var(--size-composite-label-min-width);
+    flex-shrink: 0;
+    margin-right: var(--size-composite-label-gap);
 }
 
 /* ── DebugPage (ScrollView) ──────────────────────────────────────────────── */
