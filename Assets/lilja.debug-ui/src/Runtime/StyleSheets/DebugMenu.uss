@@ -150,6 +150,14 @@
     --unity-cursor-color: var(--color-on-input);
 }
 
+/* Vector/Rect/Bounds などの composite field では、外側ラッパーの
+   背景・枠線を透過にし、内側の各成分入力のみを .c-input スタイルで装飾する。 */
+.c-input.unity-composite-field > .unity-base-field__input {
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
 /* ── DebugPage (ScrollView) ──────────────────────────────────────────────── */
 .c-scroll-view {
     flex-grow: 1;
