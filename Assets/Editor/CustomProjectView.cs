@@ -439,10 +439,46 @@ namespace CustomProjectView
     internal class CustomProjectViewItem : TreeViewItem
     {
         public CustomProjectNode Node;
+        public string AssetPath;
+        public bool IsMissing;
+
         public CustomProjectViewItem(int id, int depth, string displayName, CustomProjectNode node)
             : base(id, depth, displayName)
         {
             Node = node;
+
+            // アセットパス解決 & アイコン設定 (旧 CustomExplorer 方式)
+            AssetPath = node.ResolveAssetPath();
+
+            switch (node.Type)
+            {
+                case NodeType.AssetRef:
+                    IsMissing = string.IsNullOrEmpty(AssetPath);
+                    if (IsMissing)
+                    {
+                        this.displayName += " (Missing)";
+                        icon = EditorGUIUtility.IconContent("console.erroricon.sml").image as Texture2D;
+                    }
+                    else
+                    {
+                        icon = AssetDatabase.GetCachedIcon(AssetPath) as Texture2D;
+                    }
+                    break;
+
+                case NodeType.FolderRef:
+                    IsMissing = !string.IsNullOrEmpty(node.LinkedPath)
+                        && !Directory.Exists(Path.GetFullPath(Path.Combine(Application.dataPath, "..", node.LinkedPath)));
+                    icon = (EditorGUIUtility.FindTexture("FolderFavorite Icon")
+                        ?? EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+                    break;
+
+                case NodeType.Group:
+                    IsMissing = false;
+                    icon = (node.IsExpanded
+                        ? EditorGUIUtility.FindTexture("FolderOpened Icon")
+                        : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+                    break;
+            }
         }
     }
 
@@ -474,7 +510,7 @@ namespace CustomProjectView
         {
             _model = model;
             _window = window;
-            showAlternatingRowBackgrounds = true;
+            showAlternatingRowBackgrounds = false;
             showBorder = true;
             rowHeight = EditorGUIUtility.singleLineHeight + 2f;
         }
@@ -562,7 +598,7 @@ namespace CustomProjectView
             return node;
         }
 
-        // --- 行描画 ---
+        // --- 行描画 (旧 CustomExplorer 方式: base.RowGUI + サフィックス + インラインボタン) ---
         protected override void RowGUI(RowGUIArgs args)
         {
             var item = args.item as CustomProjectViewItem;
@@ -577,20 +613,54 @@ namespace CustomProjectView
             var node = item.Node;
             var rowRect = args.rowRect;
 
-            // インラインボタン領域を確保 (右端)
-            float btnAreaWidth = CalcButtonAreaWidth(node);
-            var contentRect = new Rect(rowRect.x, rowRect.y, rowRect.width - btnAreaWidth, rowRect.height);
-            var btnRect = new Rect(rowRect.xMax - btnAreaWidth, rowRect.y, btnAreaWidth, rowRect.height);
+            // Missing 時は赤テキスト (旧 CustomExplorer 方式)
+            Color oldColor = GUI.color;
+            if (item.IsMissing) GUI.color = Color.red;
 
-            // アイコン + ラベル描画
-            DrawNodeRow(args, contentRect, node);
+            // Unity 標準 TreeView 描画 (フォールドアウト三角形 + アイコン + ラベル)
+            base.RowGUI(args);
 
-            // インラインボタン描画
+            GUI.color = oldColor;
+
+            // サフィックス: 親ディレクトリ名をラベル右横にインライン表示 (旧 CustomExplorer 方式)
+            if (Event.current.type == EventType.Repaint)
+            {
+                DrawPathSuffix(args, item, node);
+            }
+
+            // インラインボタン描画 (新 CustomProjectView 方式: hover/選択時)
             if (args.selected || IsHovered(rowRect))
+            {
+                float btnAreaWidth = CalcButtonAreaWidth(node);
+                var btnRect = new Rect(rowRect.xMax - btnAreaWidth, rowRect.y, btnAreaWidth, rowRect.height);
                 DrawInlineButtons(btnRect, node, item.id);
+            }
+        }
 
-            // 診断バッジ
-            DrawDiagnosticBadge(contentRect, node);
+        private void DrawPathSuffix(RowGUIArgs args, CustomProjectViewItem item, CustomProjectNode node)
+        {
+            string parentDir = null;
+
+            if (node.Type == NodeType.FolderRef && !string.IsNullOrEmpty(node.LinkedPath) && !item.IsMissing)
+            {
+                parentDir = Path.GetFileName(Path.GetDirectoryName(node.LinkedPath.TrimEnd('/', '\\')));
+            }
+            else if (node.Type == NodeType.AssetRef && !item.IsMissing && !string.IsNullOrEmpty(item.AssetPath))
+            {
+                parentDir = Path.GetFileName(Path.GetDirectoryName(item.AssetPath));
+            }
+
+            if (string.IsNullOrEmpty(parentDir)) return;
+
+            var labelStyle = new GUIStyle(EditorStyles.label);
+            Vector2 size = labelStyle.CalcSize(new GUIContent(item.displayName));
+            float indent = GetContentIndent(item);
+            float iconWidth = 18f;
+            float xOffset = indent + iconWidth + size.x;
+
+            var suffixRect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.width - xOffset, args.rowRect.height);
+            labelStyle.normal.textColor = args.selected ? new Color(0.8f, 0.8f, 0.8f, 0.8f) : Color.gray;
+            GUI.Label(suffixRect, $" (/{parentDir})", labelStyle);
         }
 
         private bool IsHovered(Rect rect)
@@ -604,82 +674,13 @@ namespace CustomProjectView
             GUI.Label(rect, "まだ項目がありません。\"+ Group\" でグループを追加してください。", style);
         }
 
-        private void DrawNodeRow(RowGUIArgs args, Rect contentRect, CustomProjectNode node)
-        {
-            // インデント
-            float indent = GetContentIndent(args.item);
-            var iconRect = new Rect(contentRect.x + indent, contentRect.y + 1f, contentRect.height - 2f, contentRect.height - 2f);
-            var labelRect = new Rect(iconRect.xMax + 2f, contentRect.y, contentRect.xMax - iconRect.xMax - 2f, contentRect.height);
-
-            // アイコン
-            Texture icon = GetNodeIcon(node);
-            if (icon != null) GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit);
-
-            // ラベル
-            var labelStyle = new GUIStyle(args.selected ? EditorStyles.whiteLabel : EditorStyles.label);
-            GUI.Label(labelRect, node.Label, labelStyle);
-
-            // description (親ディレクトリ名) - 標準 ProjectView 風
-            if (node.Type == NodeType.AssetRef && !string.IsNullOrEmpty(node.Guid))
-            {
-                var assetPath = AssetDatabase.GUIDToAssetPath(node.Guid);
-                if (!string.IsNullOrEmpty(assetPath))
-                {
-                    var parentDir = Path.GetFileName(Path.GetDirectoryName(assetPath));
-                    if (!string.IsNullOrEmpty(parentDir))
-                    {
-                        var descStyle = new GUIStyle(EditorStyles.miniLabel);
-                        descStyle.alignment = TextAnchor.MiddleRight;
-                        descStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
-                        // ラベルの右側に薄く表示
-                        var descRect = new Rect(labelRect.x, labelRect.y, labelRect.width - 4f, labelRect.height);
-                        GUI.Label(descRect, parentDir + "/", descStyle);
-                    }
-                }
-            }
-            else if (node.Type == NodeType.FolderRef && !string.IsNullOrEmpty(node.LinkedPath))
-            {
-                var parentDir = Path.GetFileName(
-                    Path.GetDirectoryName(node.LinkedPath.TrimEnd('/', '\\')));
-                if (!string.IsNullOrEmpty(parentDir))
-                {
-                    var descStyle = new GUIStyle(EditorStyles.miniLabel);
-                    descStyle.alignment = TextAnchor.MiddleRight;
-                    descStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
-                    var descRect = new Rect(labelRect.x, labelRect.y, labelRect.width - 4f, labelRect.height);
-                    GUI.Label(descRect, parentDir + "/", descStyle);
-                }
-            }
-        }
-
-        private Texture GetNodeIcon(CustomProjectNode node)
-        {
-            switch (node.Type)
-            {
-                case NodeType.Group:
-                    return node.IsExpanded
-                        ? EditorGUIUtility.FindTexture("FolderOpened Icon")
-                        : EditorGUIUtility.FindTexture("Folder Icon");
-                case NodeType.FolderRef:
-                    return EditorGUIUtility.FindTexture("FolderFavorite Icon")
-                        ?? EditorGUIUtility.FindTexture("Folder Icon");
-                case NodeType.AssetRef:
-                    var assetPath = AssetDatabase.GUIDToAssetPath(node.Guid);
-                    if (string.IsNullOrEmpty(assetPath))
-                        return EditorGUIUtility.FindTexture("console.warnicon.sml");
-                    return AssetDatabase.GetCachedIcon(assetPath);
-                default:
-                    return null;
-            }
-        }
-
         private float CalcButtonAreaWidth(CustomProjectNode node)
         {
             int count = 0;
             if (node.Type == NodeType.Group)
-                count = 4; // [+Group][+Asset][▲Expand][▼Collapse][×Remove] → 5? 整理
+                count = 4; // [+Group][▶Expand][◀Collapse][×Remove]
             else if (node.Type == NodeType.FolderRef)
-                count = 3; // [▲][▼][×]
+                count = 3; // [▶][◀][×]
             else
                 count = 1; // [×]
             return count * (ButtonW + ButtonSpacing) + 4f;
@@ -747,27 +748,6 @@ namespace CustomProjectView
                     _model.Remove(node);
                     Reload();
                 }
-            }
-        }
-
-        private void DrawDiagnosticBadge(Rect contentRect, CustomProjectNode node)
-        {
-            // Missing 参照チェック
-            bool isMissing = false;
-            bool hasError = false;
-
-            if (node.Type == NodeType.AssetRef && !string.IsNullOrEmpty(node.Guid))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(node.Guid);
-                isMissing = string.IsNullOrEmpty(path);
-            }
-
-            if (isMissing)
-            {
-                var badgeRect = new Rect(contentRect.xMax - 20f, contentRect.y + 2f, 14f, 14f);
-                var style = new GUIStyle(EditorStyles.miniLabel);
-                style.normal.textColor = new Color(1f, 0.8f, 0f);
-                GUI.Label(badgeRect, "?", style);
             }
         }
 
