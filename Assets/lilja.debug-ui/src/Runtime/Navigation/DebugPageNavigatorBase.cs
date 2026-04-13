@@ -9,7 +9,7 @@ namespace Lilja.DebugUI
         protected readonly DebugPageCache _pageCache;
 
         internal DebugPageCache PageCache => _pageCache;
-        internal string RootPageName { get; internal set; }
+        internal string RootPageName { get; set; }
 
         protected DebugPageNavigatorBase(DebugPageCache pageCache)
         {
