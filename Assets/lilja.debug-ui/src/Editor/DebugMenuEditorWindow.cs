@@ -133,6 +133,11 @@ namespace Lilja.DebugUI.Editor
             SetupNavigator();
 
             RefreshPageList();
+
+            // エディタウィンドウを開いた瞬間にルートページを表示し、ランタイム側を即時非表示にする
+            var rootPageName = DebugMenuCore.Shared?.RootPageName;
+            if (!string.IsNullOrEmpty(rootPageName))
+                EditorPresentPage(rootPageName);
         }
 
         // ── ナビゲーター管理 ───────────────────────────────────────────────────
