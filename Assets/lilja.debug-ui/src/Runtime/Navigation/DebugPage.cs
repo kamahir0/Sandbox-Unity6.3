@@ -46,9 +46,9 @@ namespace Lilja.DebugUI
             AddToClassList(UssClassName);
 
             // UIBuilder で表示したときに見えるよう、初期は 0% としておく。
-            // ランタイムでナビゲーションされる際は Animator 側で遷移前の座標(100% / -100%)が再設定されるため問題ない。
+            // ランタイムでナビゲーションされる際は Navigator 側で遷移前の座標(100% / -100%)が再設定されるため問題ない。
             style.position = Position.Absolute;
-            style.left = 0;
+            style.left = new StyleLength(new Length(0, LengthUnit.Percent));
             style.top = 0;
             style.width = new StyleLength(new Length(100, LengthUnit.Percent));
             style.height = new StyleLength(new Length(100, LengthUnit.Percent));

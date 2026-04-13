@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -11,13 +10,13 @@ namespace Lilja.DebugUI
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
-        internal static DebugPageCache CurrentCache => _window?.PageCache;
+        /// <summary>DebugPage.AddDebugUI などから PageCache へのアクセスに使用する。</summary>
+        internal static DebugPageCache CurrentCache => DebugMenuCore.Shared?.PageCache;
 
-        /// <summary>
-        /// Initialize() が呼ばれ、使用可能な状態かどうかを返す。
-        /// </summary>
+        /// <summary>Initialize() が呼ばれ、使用可能な状態かどうかを返す。</summary>
         public static bool IsInitialized => _window != null;
 
+        // ── 初期化 ───────────────────────────────────────────────────────────
 
         public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
         {
@@ -32,6 +31,10 @@ namespace Lilja.DebugUI
 
         public static void Initialize(UIDocument uiDocument, DebugPage rootPage)
         {
+            // Core singleton を先に生成（DebugMenuWindow のコンストラクタが参照するため）
+            DebugMenuCore.Destroy();
+            DebugMenuCore.Create();
+
             var root = uiDocument.rootVisualElement;
             root.Clear();
 
@@ -39,9 +42,16 @@ namespace Lilja.DebugUI
             root.Add(menuRoot);
             _menuRoot = menuRoot;
 
-            var window = new DebugMenuWindow(rootPage);
+            var window = new DebugMenuWindow();
             menuRoot.Add(window);
             _window = window;
+
+            // RuntimeHost を登録して所有権を取得
+            DebugMenuCore.Shared.HostRegistry.RegisterRuntimeHost(window);
+            DebugMenuCore.Shared.HostRegistry.RequestOwnership(HostKind.Runtime);
+
+            // ルートページを初期化（ここで DebugMenuCore.RootPageName も確定する）
+            window.InitRootPage(rootPage);
 
             // 初期状態は即時非表示
             window.SetHidden();
@@ -51,9 +61,14 @@ namespace Lilja.DebugUI
             menuRoot.SetupOutsideTapHandler(() => _window, Hide);
         }
 
+        // ── 表示制御 ─────────────────────────────────────────────────────────
+
         public static void Show()
         {
             if (_window == null || _menuRoot == null) return;
+
+            // エディタが所有権を持っていた場合は奪い取り、ForceResetToRoot を発動する
+            DebugMenuCore.Shared?.HostRegistry.RequestOwnership(HostKind.Runtime);
 
             _menuRoot.pickingMode = PickingMode.Position;
             _window.style.translate = StyleKeyword.None;
@@ -91,77 +106,75 @@ namespace Lilja.DebugUI
         public static void ResetPosition()
         {
             if (_window != null)
-            {
                 _window.ResetPosition();
-            }
             else
-            {
                 DebugMenuPositionController.ClearSavedPosition();
-            }
         }
+
+        // ── ナビゲーション ───────────────────────────────────────────────────
 
         public static void NavigateTo(string pageName)
         {
             if (_window == null) return;
             if (!_window.IsPageRegistered(pageName))
             {
-                Debug.LogError($"[DebugMenuManager] Page '{pageName}' is not registered. Use NavigationButton or RegisterPage to register it first.");
+                Debug.LogError($"[DebugMenu] Page '{pageName}' is not registered.");
                 return;
             }
+            DebugMenuCore.Shared?.HostRegistry.RequestOwnership(HostKind.Runtime);
             _window.Navigate(pageName);
         }
 
         public static void Back()
         {
+            DebugMenuCore.Shared?.HostRegistry.RequestOwnership(HostKind.Runtime);
             _window?.Back();
         }
 
         public static void BackToRoot()
         {
+            DebugMenuCore.Shared?.HostRegistry.RequestOwnership(HostKind.Runtime);
             _window?.BackToRoot();
         }
 
         public static void NavigateToTemp(string pageName, Action<IDebugUIBuilder> configure)
         {
+            DebugMenuCore.Shared?.HostRegistry.RequestOwnership(HostKind.Runtime);
             _window?.NavigateTemp(pageName, configure);
         }
 
+        // ── ページアクセス ───────────────────────────────────────────────────
+
         public static DebugPage GetPage(string pageName)
-        {
-            return _window?.GetPage(pageName);
-        }
+            => _window?.GetPage(pageName);
 
         public static T GetPage<T>() where T : DebugPage
+            => _window?.GetPage(typeof(T).Name) as T;
+
+        // ── エディタウィンドウ用 API (internal) ───────────────────────────────
+
+        /// <summary>
+        /// Show/Hide アニメーションをキャンセルしてウィンドウを即時非表示にする。
+        /// エディタが所有権を奪ったとき（ランタイム表示中だった場合）に呼ぶ。
+        /// </summary>
+        internal static void CancelAndHide()
         {
-            return _window?.GetPage(typeof(T).Name) as T;
+            ++_animVersion;
+            if (_menuRoot != null) _menuRoot.pickingMode = PickingMode.Ignore;
+            _window?.SetHidden();
         }
 
-        // ── エディタウィンドウ用 API ──────────────────────────────────────
+        /// <summary>
+        /// エディタホストを HostRegistry に登録する。
+        /// null を渡すと登録解除する。
+        /// </summary>
+        internal static void RegisterEditorHost(IPageHost host)
+            => DebugMenuCore.Shared?.HostRegistry.RegisterEditorHost(host);
 
         /// <summary>
-        /// 登録済みページ名の一覧を返す。PlayMode 外・未初期化時は null。
+        /// 所有権をリクエストする。エディタが Release する際に呼ぶ。
         /// </summary>
-        public static IReadOnlyList<string> GetRegisteredPageNames()
-            => _window?.GetRegisteredPageNames();
-
-        /// <summary>
-        /// ルートページ名を返す。PlayMode 外・未初期化時は null。
-        /// </summary>
-        public static string GetRootPageName()
-            => _window?.GetRootPageName();
-
-        /// <summary>
-        /// 指定ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
-        /// 未登録・未初期化時は null。
-        /// </summary>
-        public static DebugPage BorrowPage(string pageName)
-            => _window?.BorrowPage(pageName);
-
-        /// <summary>
-        /// 借用したページをランタイムの contentContainer に返却する。
-        /// PlayMode 終了後（_window が null）に呼んでも安全。
-        /// </summary>
-        public static void ReturnPage(DebugPage page)
-            => _window?.ReturnPage(page);
+        internal static void RequestOwnership(HostKind kind)
+            => DebugMenuCore.Shared?.HostRegistry.RequestOwnership(kind);
     }
 }

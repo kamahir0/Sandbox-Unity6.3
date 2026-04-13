@@ -1,14 +1,13 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
 {
     /// <summary>
-    /// デバッグメニューのウィンドウ
+    /// デバッグメニューのウィンドウ。IPageHost としてランタイム側の所有権プロトコルを担う。
     /// </summary>
     [UxmlElement]
-    internal partial class DebugMenuWindow : VisualElement
+    internal partial class DebugMenuWindow : VisualElement, IPageHost
     {
         // UI
         private Label _label;
@@ -17,9 +16,8 @@ namespace Lilja.DebugUI
         private Button _backToRootButton;
         private VisualElement _contentContainer;
 
-        private DebugPageNavigator _navigator;
+        private RuntimePageNavigator _navigator;
         private DebugMenuPositionController _positionController;
-        private readonly HashSet<string> _borrowedPageNames = new();
 
         // クラス
         private const string UssClassName = "c-menu-window";
@@ -44,9 +42,25 @@ namespace Lilja.DebugUI
             set => _label.text = value;
         }
 
+        // ── IPageHost ────────────────────────────────────────────────────────
+
+        public HostKind Kind => HostKind.Runtime;
+
+        /// <summary>ランタイムが所有権を取得: ForceResetToRoot でルート表示を確立する。</summary>
+        public void OnOwnershipGranted() => _navigator?.ForceResetToRoot();
+
         /// <summary>
-        /// コンストラクタ（UXML / デフォルト）
+        /// ランタイムが所有権を失った（エディタが奪った）: アニメーションキャンセル + 全ページ detach。
         /// </summary>
+        public void OnOwnershipRevoked()
+        {
+            DebugMenu.CancelAndHide();
+            _navigator?.Cancel();
+            _navigator?.ReleaseAllPages();
+        }
+
+        // ── コンストラクタ ───────────────────────────────────────────────────
+
         public DebugMenuWindow()
         {
             usageHints = UsageHints.DynamicTransform;
@@ -60,137 +74,100 @@ namespace Lilja.DebugUI
             RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
         }
 
+        // ── 初期化 ───────────────────────────────────────────────────────────
+
         /// <summary>
-        /// コンストラクタ（ランタイム起動用）
+        /// ルートページを初期化する。DebugMenu.Initialize から1回だけ呼ばれる。
         /// </summary>
-        public DebugMenuWindow(DebugPage rootPage) : this()
+        internal void InitRootPage(DebugPage rootPage)
         {
-            _navigator = new DebugPageNavigator(
+            var pageCache = DebugMenuCore.Shared.PageCache;
+            _navigator = new RuntimePageNavigator(
+                pageCache,
                 _contentContainer,
                 this,
                 label => Label = label,
                 SetBackButtonVisibility);
 
+            // RootPageName は RuntimePageNavigator.InitRootPage 内で確定する
             _navigator.InitRootPage(rootPage);
         }
 
-        // ── ナビゲーション公開 API ──────────────────────────────────────
+        // ── ナビゲーション API ────────────────────────────────────────────────
 
-        /// <summary>
-        /// 指定したページへ遷移する
-        /// </summary>
-        internal void Navigate(string pageName)
-            => _navigator?.Navigate(pageName);
+        internal void Navigate(string pageName) => _navigator?.Navigate(pageName);
 
-        /// <summary>
-        /// GenericDebugPage を即席生成して遷移する。事前登録不要。
-        /// </summary>
         internal void NavigateTemp(string pageName, Action<IDebugUIBuilder> configure)
             => _navigator?.NavigateTemp(pageName, configure);
 
-        /// <summary>
-        /// 初期化完了後に動的にページを登録する。既に登録済みなら無視。
-        /// </summary>
         internal void RegisterPage(string pageName, Func<DebugPage> factory)
             => _navigator?.PageCache.Register(pageName, factory);
 
-        /// <summary>
-        /// 指定ページ名がプールに登録済みか返す。
-        /// </summary>
         internal bool IsPageRegistered(string pageName)
             => _navigator?.IsPageRegistered(pageName) ?? false;
 
-        /// <summary>
-        /// キャッシュからページインスタンスを返す。未登録なら null。
-        /// </summary>
         internal DebugPage GetPage(string pageName) => _navigator?.PageCache.Get(pageName);
 
-        /// <summary>
-        /// ページキャッシュへの参照。AddDebugUI 内の NavigationButton サポート用。
-        /// </summary>
-        internal DebugPageCache PageCache => _navigator?.PageCache;
-
-        /// <summary>
-        /// 登録済みページ名の一覧を返す。エディタウィンドウ用。
-        /// </summary>
-        internal IReadOnlyList<string> GetRegisteredPageNames()
-            => _navigator?.PageCache.GetPageNames();
-
-        /// <summary>
-        /// ルートページ名を返す。エディタウィンドウ用。
-        /// </summary>
-        internal string GetRootPageName() => _navigator?.RootPageName;
-
-        /// <summary>
-        /// ページを借用する。エディタが Add() することで contentContainer から自動デタッチされる。
-        /// </summary>
-        internal DebugPage BorrowPage(string pageName)
-        {
-            var page = _navigator?.PageCache.Get(pageName);
-            if (page == null) return null;
-            _borrowedPageNames.Add(pageName);
-            return page;
-        }
-
-        /// <summary>
-        /// ページをランタイムの contentContainer に返却する（OutR 位置）。
-        /// </summary>
-        internal void ReturnPage(DebugPage page)
-        {
-            if (page == null) return;
-            _borrowedPageNames.Remove(page.name);
-            _contentContainer.Add(page);
-            page.style.left = new StyleLength(new Length(100, LengthUnit.Percent));
-        }
-
-        /// <summary> 前のページへ戻る </summary>
         internal void Back() => _navigator?.Back();
 
-        /// <summary> 履歴を全て破棄してルートページへ戻る </summary>
         internal void BackToRoot() => _navigator?.BackToRoot();
 
-        // ── UI 構築 ────────────────────────────────────────────────────
+        // ── View 状態反映 ─────────────────────────────────────────────────────
 
-        /// <summary>
-        /// ヘッダー領域（バックボタン・タイトル・スペーサー）を構築する
-        /// </summary>
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            _positionController = new DebugMenuPositionController(this, _header);
+            _positionController.RestoreOrDefault();
+        }
+
+        internal void ResetPosition() => _positionController?.ResetToDefault();
+
+        internal void SetHidden()
+        {
+            style.translate = new StyleTranslate(new Translate(-5000, -5000));
+            style.opacity = 0f;
+        }
+
+        private void SetBackButtonVisibility(bool visibility)
+        {
+            var v = visibility ? Visibility.Visible : Visibility.Hidden;
+            _backButton.style.visibility = v;
+            _backToRootButton.style.visibility = v;
+        }
+
+        // ── UI 構築 ──────────────────────────────────────────────────────────
+
         private void BuildHeader()
         {
             _header = new VisualElement();
             _header.AddToClassList(HeaderUssClassName);
             hierarchy.Add(_header);
 
-            // バックボタン
             _backButton = new Button();
             _backButton.AddToClassList(BackButtonUssClassName);
             var backButtonIcon = new VisualElement();
             backButtonIcon.AddToClassList(BackButtonIconUssClassName);
             backButtonIcon.pickingMode = PickingMode.Ignore;
             _backButton.Add(backButtonIcon);
-            ButtonInteractionHelper.Register(_backButton);  // clickable 置き換えのため clicked += より先に呼ぶ
+            ButtonInteractionHelper.Register(_backButton);
             _backButton.clicked += Back;
             _header.Add(_backButton);
 
-            // タイトルラベル
             _label = new Label();
             _label.AddToClassList(TitleUssClassName);
             _header.Add(_label);
 
-            // バックトゥルートボタン（バックボタンと対になる位置でタイトルを視覚的に中央寄せ）
             _backToRootButton = new Button();
             _backToRootButton.AddToClassList(BackToRootButtonUssClassName);
             var backToRootButtonIcon = new VisualElement();
             backToRootButtonIcon.AddToClassList(BackToRootButtonIconUssClassName);
             backToRootButtonIcon.pickingMode = PickingMode.Ignore;
             _backToRootButton.Add(backToRootButtonIcon);
-            ButtonInteractionHelper.Register(_backToRootButton);  // clickable 置き換えのため clicked += より先に呼ぶ
+            ButtonInteractionHelper.Register(_backToRootButton);
             _backToRootButton.clicked += BackToRoot;
             _header.Add(_backToRootButton);
         }
 
-        /// <summary>
-        /// コンテンツエリア（ページスタック）を構築する
-        /// </summary>
         private void BuildContent()
         {
             _contentContainer = new VisualElement();
@@ -204,35 +181,6 @@ namespace Lilja.DebugUI
         {
             evt.StopPropagation();
             Navigate(evt.PageName);
-        }
-
-        // ── View 状態反映 ──────────────────────────────────────────────
-
-        private void OnAttachToPanel(AttachToPanelEvent evt)
-        {
-            _positionController = new DebugMenuPositionController(this, _header);
-            _positionController.RestoreOrDefault();
-        }
-
-        /// <summary>
-        /// ウィンドウの位置を初期状態にリセットする
-        /// </summary>
-        internal void ResetPosition() => _positionController?.ResetToDefault();
-
-        /// <summary>
-        /// 非表示状態にする（Manager の Show/Hide アニメーション後に呼ばれる）
-        /// </summary>
-        internal void SetHidden()
-        {
-            style.translate = new StyleTranslate(new Translate(-5000, -5000));
-            style.opacity = 0f;
-        }
-
-        private void SetBackButtonVisibility(bool visiblity)
-        {
-            var v = visiblity ? Visibility.Visible : Visibility.Hidden;
-            _backButton.style.visibility = v;
-            _backToRootButton.style.visibility = v;
         }
     }
 }

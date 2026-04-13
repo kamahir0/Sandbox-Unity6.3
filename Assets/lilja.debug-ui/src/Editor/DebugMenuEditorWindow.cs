@@ -8,8 +8,9 @@ namespace Lilja.DebugUI.Editor
 {
     /// <summary>
     /// ランタイムの DebugMenu とリンクするエディタウィンドウ。
-    /// PlayMode 中に DebugPageCache のページインスタンスを借用して表示する。
+    /// PlayMode 中に EditorPageNavigator を通じて DebugPageCache のページを表示する。
     /// ナビゲーションはエディタ独自の履歴を持ち、ランタイムには影響しない。
+    /// HostRegistry を介した排他所有権モデルにより、ランタイムとの状態不整合を防ぐ。
     /// </summary>
     public sealed class DebugMenuEditorWindow : EditorWindow
     {
@@ -20,14 +21,11 @@ namespace Lilja.DebugUI.Editor
             window.titleContent = new GUIContent("Debug Menu Inspector");
         }
 
-        // ── 借用状態 ──────────────────────────────────────────────────────
+        // ── ナビゲーション ────────────────────────────────────────────────────
 
-        private DebugPage _borrowedPage;
-        private string _borrowedPageName;
-        private string _rootPageName;
-        private readonly Stack<string> _editorHistory = new();
+        private EditorPageNavigator _navigator;
 
-        // ── UI 要素 ────────────────────────────────────────────────────────
+        // ── UI 要素 ────────────────────────────────────────────────────────────
 
         private VisualElement _notPlayingView;
         private VisualElement _playingView;
@@ -37,14 +35,14 @@ namespace Lilja.DebugUI.Editor
         private ScrollView _pageListScrollView;
         private VisualElement _rightPane;
 
-        // ── パス定数 ──────────────────────────────────────────────────────
+        // ── パス定数 ──────────────────────────────────────────────────────────
 
         private const string ThemeUssPath =
             "Assets/lilja.debug-ui/src/Editor/StyleSheets/DebugMenuEditorTheme.uss";
         private const string MenuUssPath =
             "Assets/lilja.debug-ui/src/Runtime/StyleSheets/DebugMenu.uss";
 
-        // ── ライフサイクル ─────────────────────────────────────────────────
+        // ── ライフサイクル ─────────────────────────────────────────────────────
 
         private void OnEnable()
         {
@@ -54,15 +52,13 @@ namespace Lilja.DebugUI.Editor
         private void OnDisable()
         {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            // PlayMode 終了後は _window が null なので ReturnPage は安全に何もしない
-            ReturnCurrentPage();
+            ReleaseNavigator();
         }
 
         private void CreateGUI()
         {
             var root = rootVisualElement;
 
-            // スタイルシートをロード・適用
             var themeUss = AssetDatabase.LoadAssetAtPath<StyleSheet>(ThemeUssPath);
             var menuUss = AssetDatabase.LoadAssetAtPath<StyleSheet>(MenuUssPath);
             if (themeUss != null) root.styleSheets.Add(themeUss);
@@ -75,18 +71,15 @@ namespace Lilja.DebugUI.Editor
             RefreshPlayModeState();
         }
 
-        // ── PlayMode 対応 ──────────────────────────────────────────────────
+        // ── PlayMode 対応 ──────────────────────────────────────────────────────
 
         private void OnPlayModeStateChanged(PlayModeStateChange state)
         {
             switch (state)
             {
                 case PlayModeStateChange.ExitingPlayMode:
-                    // ランタイムが破棄される前に借用をキャンセル
-                    _borrowedPage = null;
-                    _borrowedPageName = null;
-                    _rootPageName = null;
-                    _editorHistory.Clear();
+                    // ランタイムが破棄される前にナビゲーターを解放
+                    ReleaseNavigator();
                     break;
 
                 case PlayModeStateChange.EnteredEditMode:
@@ -94,7 +87,6 @@ namespace Lilja.DebugUI.Editor
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
-                    // Initialize() は任意のタイミングで呼ばれるため、完了を待機する
                     EditorApplication.delayCall += WaitForInitialize;
                     break;
             }
@@ -102,13 +94,11 @@ namespace Lilja.DebugUI.Editor
 
         private void WaitForInitialize()
         {
-            if (!Application.isPlaying)
-                return;
+            if (!Application.isPlaying) return;
 
-            var names = DebugMenu.GetRegisteredPageNames();
-            if (names == null || names.Count == 0)
+            var core = DebugMenuCore.Shared;
+            if (core == null || core.PageCache.GetPageNames().Count == 0)
             {
-                // まだ Initialize されていない → 次フレームに再試行
                 EditorApplication.delayCall += WaitForInitialize;
                 return;
             }
@@ -118,7 +108,8 @@ namespace Lilja.DebugUI.Editor
 
         private void RefreshPlayModeState()
         {
-            if (Application.isPlaying && DebugMenu.GetRegisteredPageNames()?.Count > 0)
+            var core = DebugMenuCore.Shared;
+            if (Application.isPlaying && core != null && core.PageCache.GetPageNames().Count > 0)
                 ShowPlayingView();
             else
                 ShowNotPlayingView();
@@ -137,17 +128,55 @@ namespace Lilja.DebugUI.Editor
             _notPlayingView.style.display = DisplayStyle.None;
             _playingView.style.display = DisplayStyle.Flex;
 
-            // ルートページ名を確定
-            _rootPageName = DebugMenu.GetRootPageName();
+            // EditorPageNavigator を初期化（再入を防ぐため既存を解放してから）
+            ReleaseNavigator();
+            SetupNavigator();
 
             RefreshPageList();
-
-            // 初期状態としてルートページを表示
-            if (!string.IsNullOrEmpty(_rootPageName))
-                EditorNavigateToWithReset(_rootPageName);
         }
 
-        // ── ナビゲーション ─────────────────────────────────────────────────
+        // ── ナビゲーター管理 ───────────────────────────────────────────────────
+
+        private void SetupNavigator()
+        {
+            var core = DebugMenuCore.Shared;
+            if (core == null) return;
+
+            _navigator = new EditorPageNavigator(core.PageCache, _rightPane);
+            _navigator.RootPageName = core.RootPageName;
+
+            _navigator.OnLabelChanged = name =>
+            {
+                if (_headerTitle != null) _headerTitle.text = name;
+                UpdateHeader();
+            };
+            _navigator.OnBackVisibilityChanged = UpdateHeaderButtons;
+            _navigator.OnOwnershipLost = () =>
+            {
+                // ランタイムが所有権を奪ったとき: ヘッダーをリセット
+                if (_headerTitle != null) _headerTitle.text = "ページを選択してください";
+                UpdateHeader();
+            };
+
+            DebugMenu.RegisterEditorHost(_navigator);
+        }
+
+        private void ReleaseNavigator()
+        {
+            if (_navigator == null) return;
+
+            // 所有権をランタイムに返す（ForceResetToRoot が走り、I1–I7 が確立される）
+            DebugMenu.RequestOwnership(HostKind.Runtime);
+            DebugMenu.RegisterEditorHost(null);
+
+            _navigator.Release();
+            _navigator = null;
+
+            if (_headerTitle != null) _headerTitle.text = "ページを選択してください";
+            UpdateHeader();
+        }
+
+        // ── ナビゲーション操作 ──────────────────────────────────────────────────
 
         private void OnNavigateEvent(DebugNavigateEvent evt)
         {
@@ -155,131 +184,68 @@ namespace Lilja.DebugUI.Editor
             EditorNavigateTo(evt.PageName);
         }
 
-        /// <summary>
-        /// ページ内ナビゲーション（NavigationButton など）用。
-        /// 前のページをヒストリーに積んで指定ページへ遷移する。
-        /// </summary>
+        /// <summary>NavigationButton などページ内からの遷移（履歴 push）。</summary>
         private void EditorNavigateTo(string pageName)
         {
-            if (string.IsNullOrEmpty(pageName)) return;
+            if (_navigator == null || string.IsNullOrEmpty(pageName)) return;
 
-            var prevName = _borrowedPageName;
-            ReturnCurrentPage();
-
-            var page = DebugMenu.BorrowPage(pageName);
-            if (page == null) return;
-
-            if (!string.IsNullOrEmpty(prevName) && prevName != pageName)
-                _editorHistory.Push(prevName);
-
-            _borrowedPage = page;
-            _borrowedPageName = pageName;
-
-            // アニメーションなし・即表示
-            _rightPane.Add(page);
-            page.style.left = new StyleLength(0f);
-            SuppressScrollbarFocus(page);
-
-            // ランタイムが奪い返したことを DetachFromPanelEvent で検知
-            page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
-
-            page.OnShown();
-            ScheduleScrollbarFix(page);
-            UpdateHeader();
+            // 所有権を取得（まだ持っていなければ RuntimeHost.OnOwnershipRevoked が走る）
+            DebugMenu.RequestOwnership(HostKind.Editor);
+            _navigator.Navigate(pageName);
+            ScheduleScrollbarFix();
         }
 
-        /// <summary>
-        /// ページ一覧からの選択・バックルートボタン用。
-        /// ヒストリーをリセットして指定ページを最底（ルート位置）として表示する。
-        /// </summary>
-        private void EditorNavigateToWithReset(string pageName)
+        /// <summary>ページ一覧クリック / Back Root: 履歴リセットして最上位として表示。</summary>
+        private void EditorPresentPage(string pageName)
         {
-            if (string.IsNullOrEmpty(pageName)) return;
+            if (_navigator == null || string.IsNullOrEmpty(pageName)) return;
 
-            _editorHistory.Clear();
-            ReturnCurrentPage();
-
-            var page = DebugMenu.BorrowPage(pageName);
-            if (page == null) return;
-
-            _borrowedPage = page;
-            _borrowedPageName = pageName;
-
-            _rightPane.Add(page);
-            page.style.left = new StyleLength(0f);
-            SuppressScrollbarFocus(page);
-            page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
-
-            page.OnShown();
-            ScheduleScrollbarFix(page);
-            UpdateHeader();
+            DebugMenu.RequestOwnership(HostKind.Editor);
+            _navigator.PresentPage(pageName);
+            ScheduleScrollbarFix();
         }
 
         private void EditorBack()
         {
-            if (_editorHistory.Count == 0) return;
-            var prev = _editorHistory.Pop();
-            // 履歴を復元するため Pop 後にナビゲート（Push は EditorNavigateTo 内で行われるが
-            // 戻り方向なので現在のページ名を history に追加しない）
-            ReturnCurrentPage();
+            if (_navigator == null || _navigator.CurrentPageName == null) return;
 
-            var page = DebugMenu.BorrowPage(prev);
-            if (page == null) return;
-
-            _borrowedPage = page;
-            _borrowedPageName = prev;
-
-            _rightPane.Add(page);
-            page.style.left = new StyleLength(0f);
-            SuppressScrollbarFocus(page);
-            page.RegisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
-            page.OnShown();
-            ScheduleScrollbarFix(page);
-            UpdateHeader();
+            // Back は所有権を持ったままで行う（既に Editor owner のはず）
+            _navigator.Back();
+            ScheduleScrollbarFix();
         }
 
-        /// <summary>
-        /// ヒストリーをリセットしてルートページへ戻る（バックルートボタン用）。
-        /// </summary>
         private void EditorBackToRoot()
         {
-            if (string.IsNullOrEmpty(_rootPageName)) return;
-            EditorNavigateToWithReset(_rootPageName);
+            if (_navigator == null) return;
+            _navigator.BackToRoot();
+            ScheduleScrollbarFix();
         }
 
-        private void ReturnCurrentPage()
-        {
-            if (_borrowedPage == null) return;
-            _borrowedPage.UnregisterCallback<DetachFromPanelEvent>(OnBorrowedPageDetached);
-            _borrowedPage.OnHidden();
-            DebugMenu.ReturnPage(_borrowedPage);
-            _borrowedPage = null;
-            _borrowedPageName = null;
-        }
-
-        private void OnBorrowedPageDetached(DetachFromPanelEvent evt)
-        {
-            // ランタイムが NavigateTo でページを奪い返した → エディタ側をリセット
-            _borrowedPage = null;
-            _borrowedPageName = null;
-            _editorHistory.Clear();
-            UpdateHeader();
-        }
+        // ── UI 補助 ────────────────────────────────────────────────────────────
 
         /// <summary>
         /// パネル間移動後、ScrollView の dragger サイズを正しく再計算させる。
-        /// ランタイムパネルで AdjustDragElement() により設定された dragger の
-        /// インラインスタイル height がエディタパネル移動後も残留するため、
-        /// scroller.Adjust(factor) を直接呼び出してサイズを再計算する。
-        /// factor = slider.layout.height / contentContainer.layout.height で、
-        /// いずれも schedule.Execute() 時点（layout パス後）では正しい値が確定している。
         /// </summary>
-        private void ScheduleScrollbarFix(DebugPage targetPage)
+        private void ScheduleScrollbarFix()
         {
+            if (_navigator == null) return;
+            var pageName = _navigator.CurrentPageName;
+            if (string.IsNullOrEmpty(pageName)) return;
+
+            var core = DebugMenuCore.Shared;
+            if (core == null) return;
+
+            var page = core.PageCache.Get(pageName);
+            if (page == null) return;
+
+            SuppressScrollbarFocus(page);
+
             rootVisualElement.schedule.Execute(() =>
             {
-                if (_borrowedPage != targetPage) return;
-                var sv = targetPage.Q<ScrollView>();
+                // ナビゲーターが別ページに移っていたらスキップ
+                if (_navigator == null || _navigator.CurrentPageName != pageName) return;
+
+                var sv = page.Q<ScrollView>();
                 if (sv == null) return;
 
                 var scroller = sv.verticalScroller;
@@ -291,7 +257,39 @@ namespace Lilja.DebugUI.Editor
             }).ExecuteLater(16);
         }
 
-        // ── UI 構築 ────────────────────────────────────────────────────────
+        private static void SuppressScrollbarFocus(VisualElement root)
+        {
+            root.Query<ScrollView>().ForEach(sv =>
+            {
+                sv.focusable = false;
+                sv.verticalScroller.focusable = false;
+                sv.verticalScroller.slider.focusable = false;
+            });
+        }
+
+        private void UpdateHeader()
+        {
+            if (_headerTitle == null) return;
+            var hasPage = _navigator != null && !string.IsNullOrEmpty(_navigator.CurrentPageName);
+            if (!hasPage) _headerTitle.text = "ページを選択してください";
+            UpdateHeaderButtons(_navigator != null && hasPage);
+        }
+
+        private void UpdateHeaderButtons(bool hasHistory)
+        {
+            if (_backButton == null || _backToRootButton == null) return;
+
+            // _navigator の履歴に依存した実際の値を使う
+            bool canGoBack = _navigator != null &&
+                !string.IsNullOrEmpty(_navigator.CurrentPageName) &&
+                hasHistory;
+
+            var v = canGoBack ? Visibility.Visible : Visibility.Hidden;
+            _backButton.style.visibility = v;
+            _backToRootButton.style.visibility = v;
+        }
+
+        // ── UI 構築 ────────────────────────────────────────────────────────────
 
         private void BuildNotPlayingView(VisualElement root)
         {
@@ -313,7 +311,7 @@ namespace Lilja.DebugUI.Editor
             _playingView.style.flexGrow = 1;
             _playingView.style.flexDirection = FlexDirection.Column;
 
-            // ヘッダー（左：バックボタン、中央：ページ名、右：バックルートボタン）
+            // ヘッダー
             var header = new VisualElement();
             header.style.flexDirection = FlexDirection.Row;
             header.style.alignItems = Align.Center;
@@ -324,7 +322,6 @@ namespace Lilja.DebugUI.Editor
             header.style.borderBottomWidth = 1;
             header.style.borderBottomColor = new StyleColor(new Color(0, 0, 0, 0.3f));
 
-            // 左端：バックボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backButton = new Button(EditorBack) { text = "←" };
             _backButton.style.visibility = Visibility.Hidden;
             _backButton.AddToClassList("c-control-size");
@@ -332,13 +329,11 @@ namespace Lilja.DebugUI.Editor
             _backButton.AddToClassList("c-button--secondary");
             header.Add(_backButton);
 
-            // 中央：現在のページ名
             _headerTitle = new Label("ページを選択してください");
             _headerTitle.style.flexGrow = 1;
             _headerTitle.style.unityTextAlign = TextAnchor.MiddleCenter;
             header.Add(_headerTitle);
 
-            // 右端：バックルートボタン（Visibility で制御して常にレイアウト上の高さを確保する）
             _backToRootButton = new Button(EditorBackToRoot) { text = "Root" };
             _backToRootButton.style.visibility = Visibility.Hidden;
             _backToRootButton.AddToClassList("c-control-size");
@@ -348,11 +343,10 @@ namespace Lilja.DebugUI.Editor
 
             _playingView.Add(header);
 
-            // ボディ（左ペイン + 右ペイン）
+            // ボディ（左ペイン: ページ一覧 + 右ペイン: ページ表示）
             var body = new TwoPaneSplitView(0, 160, TwoPaneSplitViewOrientation.Horizontal);
             body.style.flexGrow = 1;
 
-            // 左ペイン: ページ一覧
             var leftContainer = new VisualElement();
             leftContainer.style.flexGrow = 1;
             leftContainer.style.borderRightWidth = 1;
@@ -372,7 +366,6 @@ namespace Lilja.DebugUI.Editor
 
             body.Add(leftContainer);
 
-            // 右ペイン: DebugPage 表示コンテナ
             _rightPane = new VisualElement();
             _rightPane.AddToClassList("c-page-stack");
             _rightPane.style.flexGrow = 1;
@@ -390,52 +383,30 @@ namespace Lilja.DebugUI.Editor
             if (_pageListScrollView == null) return;
             _pageListScrollView.Clear();
 
-            var names = DebugMenu.GetRegisteredPageNames();
-            if (names == null) return;
+            var core = DebugMenuCore.Shared;
+            if (core == null) return;
+
+            var names = core.PageCache.GetPageNames();
+            var rootPageName = core.RootPageName;
 
             // ルートページを先頭に並べ直す
             var orderedNames = new List<string>(names);
-            if (!string.IsNullOrEmpty(_rootPageName))
+            if (!string.IsNullOrEmpty(rootPageName))
             {
-                orderedNames.Remove(_rootPageName);
-                orderedNames.Insert(0, _rootPageName);
+                orderedNames.Remove(rootPageName);
+                orderedNames.Insert(0, rootPageName);
             }
 
             foreach (var name in orderedNames)
             {
-                var pageName = name; // ラムダキャプチャ用
-                var btn = new Button(() => EditorNavigateToWithReset(pageName)) { text = pageName };
+                var pageName = name;
+                var btn = new Button(() => EditorPresentPage(pageName)) { text = pageName };
                 btn.style.marginLeft = 0;
                 btn.style.marginRight = 0;
                 btn.style.marginTop = 1;
                 btn.style.marginBottom = 0;
                 _pageListScrollView.Add(btn);
             }
-        }
-
-        // 垂直スクロールバーのフォーカスビジュアル（青ハイライト）を抑制する。
-        // CSS では Unity 組み込み USS を上書きできないため C# で処理する。
-        private static void SuppressScrollbarFocus(VisualElement root)
-        {
-            root.Query<ScrollView>().ForEach(sv =>
-            {
-                sv.focusable = false;
-                sv.verticalScroller.focusable = false;
-                sv.verticalScroller.slider.focusable = false;
-            });
-        }
-
-        private void UpdateHeader()
-        {
-            if (_headerTitle == null || _backButton == null || _backToRootButton == null) return;
-
-            _headerTitle.text = string.IsNullOrEmpty(_borrowedPageName)
-                ? "ページを選択してください"
-                : _borrowedPageName;
-
-            var hasHistory = _editorHistory.Count > 0;
-            _backButton.style.visibility = hasHistory ? Visibility.Visible : Visibility.Hidden;
-            _backToRootButton.style.visibility = hasHistory ? Visibility.Visible : Visibility.Hidden;
         }
     }
 }
