@@ -19,14 +19,30 @@ namespace Lilja.DebugUI
         /// </summary>
         internal void Register(string pageName, Func<DebugPage> factory)
         {
+            if (string.IsNullOrEmpty(pageName))
+                throw new ArgumentException("[DebugMenu] pageName must not be null or empty.", nameof(pageName));
+            if (factory == null)
+                throw new ArgumentNullException(nameof(factory));
+
             if (Contains(pageName)) return;
 
             // インスタンス生成前にスロットを確保し、Configure() 内の再帰的な Register 呼び出しをガードする
             _cache[pageName] = null;
-            var page = factory();
-            page.name = pageName;
-            PreparePage(page);
-            _cache[pageName] = page;
+            try
+            {
+                var page = factory();
+                if (page == null)
+                    throw new InvalidOperationException($"[DebugMenu] Page factory for '{pageName}' returned null.");
+
+                page.name = pageName;
+                PreparePage(page);
+                _cache[pageName] = page;
+            }
+            catch
+            {
+                _cache.Remove(pageName);
+                throw;
+            }
         }
 
         /// <summary>
@@ -35,6 +51,7 @@ namespace Lilja.DebugUI
         /// </summary>
         internal void PreparePage(DebugPage page)
         {
+            if (page == null) throw new ArgumentNullException(nameof(page));
             page.Configure(new DebugUIBuilder(page, this));
         }
 
@@ -45,6 +62,10 @@ namespace Lilja.DebugUI
         /// </summary>
         internal void RegisterExisting(DebugPage page)
         {
+            if (page == null) throw new ArgumentNullException(nameof(page));
+            if (string.IsNullOrEmpty(page.name))
+                throw new ArgumentException("[DebugMenu] Existing page must have a non-empty name.", nameof(page));
+
             if (Contains(page.name)) return;
             _cache[page.name] = page;
         }
