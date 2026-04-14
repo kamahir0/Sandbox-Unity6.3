@@ -40,9 +40,6 @@
                 <debug:DebugBoundsField label="Bounds" center="0,0,0" size="1,1,1"/>
                 <debug:DebugBoundsIntField label="BoundsInt" center="0,0,0" size="10,10,10"/>
 
-                <debug:DebugLabel text="─── Special Fields ───"/>
-                <debug:DebugHash128Field label="Hash128"/>
-
                 <debug:DebugLabel text="─── Layouts ───"/>
                 <debug:DebugFoldout text="Foldout Section">
                     <debug:DebugLabel text="Inside Foldout"/>

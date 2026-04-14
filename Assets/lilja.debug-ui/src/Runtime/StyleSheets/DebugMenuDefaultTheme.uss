@@ -50,6 +50,11 @@
     --size-foldout-checkbox: 50px;
     --size-item-gap:         8px;
     --size-toggle-checkbox:  30px;
+    /* Vector/Rect/Bounds 等 composite field の成分ラベル (X/Y/Z...) の最小幅と
+       入力フィールドとの間の余白。min-width で揃えることで、縦に並んだとき
+       入力フィールドの開始位置が文字幅に依存せず揃う。 */
+    --size-composite-label-min-width: 28px;
+    --size-composite-label-gap:       10px;
 
     /* --- 6. Window & Page Structure --- */
     --color-header-button-active: #E0E0E0;
