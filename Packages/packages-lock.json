@@ -131,7 +131,7 @@
       "hash": "794679caff96a62f747bb08bff8fe85bb0d0fc92"
     },
     "com.unity.ide.rider": {
-      "version": "3.0.39",
+      "version": "3.0.40",
       "depth": 0,
       "source": "registry",
       "dependencies": {
