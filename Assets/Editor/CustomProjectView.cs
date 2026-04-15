@@ -9,397 +9,782 @@ using UnityEngine;
 
 namespace CustomProjectView
 {
-    // =========================================================================
-    #region Data Model
-    // =========================================================================
-
-    public enum NodeType
+    public enum ProjectNodeKind
     {
-        Group,      // 仮想フォルダ (CustomExplorer: group)
-        AssetRef,   // アセットへの参照 (CustomExplorer: file-ref)
-        FolderRef,  // フォルダへのリンク・自動同期 (CustomExplorer: folder-ref)
+        Group,
+        Folder,
+        Asset,
+    }
+
+    public enum ProjectNodeSource
+    {
+        Manual,
+        FolderRefRoot,
+        FolderRefSynced,
     }
 
     [Serializable]
-    public class CustomProjectNode
+    public sealed class CustomProjectNode
     {
         public string Id;
         public string Label;
-        public NodeType Type;
-        public string Guid;          // AssetRef: Asset GUID
-        public string LinkedPath;    // FolderRef: 実フォルダパス (Assets相対)
-        public bool IsExpanded;
+        public ProjectNodeKind Kind;
+        public ProjectNodeSource Source;
+        public string AssetGuid;
+        public string AssetPath;
+        public bool IsExpanded = true;
         public List<CustomProjectNode> Children = new List<CustomProjectNode>();
 
-        // --- ファクトリ ---
-        public static CustomProjectNode CreateGroup(string label)
-            => new CustomProjectNode { Id = GenerateId(), Label = label, Type = NodeType.Group, IsExpanded = true };
+        public bool IsContainer => Kind != ProjectNodeKind.Asset;
+        public bool IsManualGroup => Kind == ProjectNodeKind.Group && Source == ProjectNodeSource.Manual;
+        public bool IsFolderRefRoot => Kind == ProjectNodeKind.Folder && Source == ProjectNodeSource.FolderRefRoot;
+        public bool IsSynced => Source == ProjectNodeSource.FolderRefSynced;
+        public bool CanAddChildren => IsManualGroup;
+        public bool CanRenameInTree => IsManualGroup;
+        public bool CanRemoveFromList => Source != ProjectNodeSource.FolderRefSynced;
+        public bool CanMoveInTree => Source != ProjectNodeSource.FolderRefSynced;
+        public bool CanDeleteOnDisk => Kind == ProjectNodeKind.Asset && Source == ProjectNodeSource.FolderRefSynced;
+        public bool CanOpenAsset => Kind == ProjectNodeKind.Asset;
+        public bool CanCopyPath => !string.IsNullOrEmpty(ResolveAssetPath());
+        public bool CanRevealInFinder => !string.IsNullOrEmpty(ResolveAssetPath());
 
-        public static CustomProjectNode CreateAssetRef(string guid, string label)
-            => new CustomProjectNode { Id = GenerateId(), Label = label, Type = NodeType.AssetRef, Guid = guid };
-
-        public static CustomProjectNode CreateFolderRef(string assetRelPath)
-            => new CustomProjectNode
-            {
-                Id = GenerateId(),
-                Label = Path.GetFileName(assetRelPath.TrimEnd('/', '\\')),
-                Type = NodeType.FolderRef,
-                LinkedPath = assetRelPath,
-                IsExpanded = false,
-            };
-
-        private static string GenerateId()
-            => System.Guid.NewGuid().ToString("N").Substring(0, 12);
-
-        // --- ヘルパ ---
-        public bool IsGroupLike => Type == NodeType.Group || Type == NodeType.FolderRef;
-
-        /// <summary>実際のファイルシステムパスを返す。なければ null。</summary>
         public string ResolveAssetPath()
         {
-            if (Type == NodeType.AssetRef && !string.IsNullOrEmpty(Guid))
-                return AssetDatabase.GUIDToAssetPath(Guid);
-            if (Type == NodeType.FolderRef && !string.IsNullOrEmpty(LinkedPath))
-                return LinkedPath;
+            if (!string.IsNullOrEmpty(AssetPath))
+                return AssetPath.Replace("\\", "/");
+
+            if (!string.IsNullOrEmpty(AssetGuid))
+                return AssetDatabase.GUIDToAssetPath(AssetGuid);
+
             return null;
+        }
+
+        public static CustomProjectNode CreateManualGroup(string label)
+        {
+            return new CustomProjectNode
+            {
+                Id = $"manual-group:{Guid.NewGuid():N}",
+                Label = string.IsNullOrWhiteSpace(label) ? "New Group" : label.Trim(),
+                Kind = ProjectNodeKind.Group,
+                Source = ProjectNodeSource.Manual,
+                IsExpanded = true,
+            };
+        }
+
+        public static CustomProjectNode CreateManualAssetRef(string guid, string label)
+        {
+            return new CustomProjectNode
+            {
+                Id = $"manual-asset:{Guid.NewGuid():N}",
+                Label = label,
+                Kind = ProjectNodeKind.Asset,
+                Source = ProjectNodeSource.Manual,
+                AssetGuid = guid,
+                IsExpanded = false,
+            };
+        }
+
+        public static CustomProjectNode CreateFolderRefRoot(string assetPath)
+        {
+            var normalized = NormalizeAssetPath(assetPath);
+            return new CustomProjectNode
+            {
+                Id = $"folderref-root:{normalized}",
+                Label = Path.GetFileName(normalized.TrimEnd('/', '\\')),
+                Kind = ProjectNodeKind.Folder,
+                Source = ProjectNodeSource.FolderRefRoot,
+                AssetGuid = AssetDatabase.AssetPathToGUID(normalized),
+                AssetPath = normalized,
+                IsExpanded = false,
+            };
+        }
+
+        public static CustomProjectNode CreateSyncedFolder(string assetPath)
+        {
+            var normalized = NormalizeAssetPath(assetPath);
+            return new CustomProjectNode
+            {
+                Id = $"folderref-sync-folder:{normalized}",
+                Label = Path.GetFileName(normalized.TrimEnd('/', '\\')),
+                Kind = ProjectNodeKind.Folder,
+                Source = ProjectNodeSource.FolderRefSynced,
+                AssetPath = normalized,
+                IsExpanded = false,
+            };
+        }
+
+        public static CustomProjectNode CreateSyncedAsset(string assetPath, string guid)
+        {
+            var normalized = NormalizeAssetPath(assetPath);
+            return new CustomProjectNode
+            {
+                Id = $"folderref-sync-asset:{normalized}",
+                Label = Path.GetFileName(normalized),
+                Kind = ProjectNodeKind.Asset,
+                Source = ProjectNodeSource.FolderRefSynced,
+                AssetGuid = guid,
+                AssetPath = normalized,
+                IsExpanded = false,
+            };
+        }
+
+        public static string NormalizeAssetPath(string path)
+        {
+            return string.IsNullOrEmpty(path) ? string.Empty : path.Replace("\\", "/").TrimEnd('/');
         }
     }
 
     [Serializable]
-    internal class SerializableModel
+    internal sealed class SerializableModel
     {
+        public int Version = 2;
         public List<CustomProjectNode> Roots = new List<CustomProjectNode>();
     }
 
-    #endregion
-
-    // =========================================================================
-    #region Tree Model  (CRUD / 永続化 / ソート / 検索)
-    // =========================================================================
-
-    internal class CustomProjectTreeModel
+    internal sealed class CustomProjectTreeModel
     {
         private const string PrefKeyPrefix = "CustomProjectView_";
         private SerializableModel _model = new SerializableModel();
+
         public List<CustomProjectNode> Roots => _model.Roots;
         public bool IsEmpty => _model.Roots.Count == 0;
 
-        private string PrefKey
-            => PrefKeyPrefix + Application.dataPath.GetHashCode().ToString();
+        private string PrefKey => PrefKeyPrefix + Application.dataPath.GetHashCode();
 
-        // --- 永続化 ---
         public void Load()
         {
-            var json = EditorPrefs.GetString(PrefKey, "");
+            _model = new SerializableModel();
+
+            var json = EditorPrefs.GetString(PrefKey, string.Empty);
             if (!string.IsNullOrEmpty(json))
             {
-                try { _model = JsonUtility.FromJson<SerializableModel>(json); }
-                catch { _model = new SerializableModel(); }
+                try
+                {
+                    _model = JsonUtility.FromJson<SerializableModel>(json) ?? new SerializableModel();
+                }
+                catch
+                {
+                    _model = new SerializableModel();
+                }
             }
+
+            if (_model.Roots == null)
+                _model.Roots = new List<CustomProjectNode>();
+
+            SanitizeTree(_model.Roots);
             SyncAllFolderRefs();
         }
 
         public void Save()
         {
             SortNodes(_model.Roots);
-            var json = JsonUtility.ToJson(_model, false);
+            var snapshot = new SerializableModel
+            {
+                Version = 2,
+                Roots = ClonePersistentNodes(_model.Roots),
+            };
+
+            var json = JsonUtility.ToJson(snapshot, false);
             EditorPrefs.SetString(PrefKey, json);
         }
 
-        // --- CRUD ---
-        public void AddGroup(string label, CustomProjectNode parent = null)
+        public CustomProjectNode AddGroup(string label, CustomProjectNode parent = null)
         {
-            var node = CustomProjectNode.CreateGroup(label);
+            if (!CanAcceptChild(parent))
+                return null;
+
+            var node = CustomProjectNode.CreateManualGroup(label);
             AppendToParent(node, parent);
             Save();
+            return node;
         }
 
-        public void AddAssetRef(string guid, CustomProjectNode parent = null)
+        public CustomProjectNode AddAssetRef(string guid, CustomProjectNode parent = null)
         {
+            if (!CanAcceptChild(parent))
+                return null;
+
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrEmpty(assetPath)) return;
-            var label = Path.GetFileName(assetPath);
-            // 重複チェック
-            if (FindNodeByGuid(guid, _model.Roots) != null) return;
-            var node = CustomProjectNode.CreateAssetRef(guid, label);
+            if (string.IsNullOrEmpty(assetPath) || AssetDatabase.IsValidFolder(assetPath))
+                return null;
+
+            if (HasManualAssetRef(guid))
+                return null;
+
+            var node = CustomProjectNode.CreateManualAssetRef(guid, Path.GetFileName(assetPath));
             AppendToParent(node, parent);
             Save();
+            return node;
         }
 
-        public void AddFolderRef(string assetRelPath, CustomProjectNode parent = null)
+        public CustomProjectNode AddFolderRef(string assetPath, CustomProjectNode parent = null)
         {
-            var node = CustomProjectNode.CreateFolderRef(assetRelPath);
+            if (!CanAcceptChild(parent))
+                return null;
+
+            var normalized = CustomProjectNode.NormalizeAssetPath(assetPath);
+            if (string.IsNullOrEmpty(normalized) || !AssetDatabase.IsValidFolder(normalized))
+                return null;
+
+            if (HasFolderRef(normalized))
+                return null;
+
+            var node = CustomProjectNode.CreateFolderRefRoot(normalized);
             AppendToParent(node, parent);
             SyncFolderRef(node);
             Save();
+            return node;
         }
 
-        public void ConvertToGroup(CustomProjectNode node)
+        public void RenameManualGroup(CustomProjectNode node, string newLabel)
         {
-            if (node.Type != NodeType.FolderRef) return;
-            node.Type = NodeType.Group;
-            node.LinkedPath = null;
-            Save();
-        }
+            if (node == null || !node.CanRenameInTree)
+                return;
 
-        public void Rename(CustomProjectNode node, string newLabel)
-        {
-            node.Label = newLabel;
+            node.Label = string.IsNullOrWhiteSpace(newLabel) ? node.Label : newLabel.Trim();
             Save();
         }
 
         public bool Remove(CustomProjectNode node)
         {
-            var result = RemoveRecursive(_model.Roots, node);
-            if (result) Save();
-            return result;
-        }
+            if (node == null || !node.CanRemoveFromList)
+                return false;
 
-        private bool RemoveRecursive(List<CustomProjectNode> nodes, CustomProjectNode target)
-        {
-            var idx = nodes.FindIndex(n => n.Id == target.Id);
-            if (idx >= 0) { nodes.RemoveAt(idx); return true; }
-            return nodes.Any(n => n.Children != null && RemoveRecursive(n.Children, target));
+            var removed = RemoveRecursive(_model.Roots, node.Id);
+            if (removed)
+                Save();
+            return removed;
         }
 
         public bool MoveNode(CustomProjectNode source, CustomProjectNode targetParent)
         {
-            if (source == targetParent) return false;
-            if (IsDescendant(source, targetParent)) return false;
-            if (IsChildOfFolderRef(source, _model.Roots)) return false;
+            if (source == null || !source.CanMoveInTree)
+                return false;
 
-            if (!RemoveRecursive(_model.Roots, source)) return false;
+            if (!CanAcceptChild(targetParent))
+                return false;
+
+            if (targetParent != null && IsDescendant(source, targetParent))
+                return false;
+
+            if (!RemoveRecursive(_model.Roots, source.Id))
+                return false;
+
             AppendToParent(source, targetParent);
             Save();
             return true;
         }
 
-        private bool IsDescendant(CustomProjectNode ancestor, CustomProjectNode node)
+        public void ConvertFolderRefToSnapshotGroup(CustomProjectNode folderRefRoot)
         {
-            if (node == null) return false;
-            return ancestor.Children != null &&
-                   ancestor.Children.Any(c => c == node || IsDescendant(c, node));
+            if (folderRefRoot == null || !folderRefRoot.IsFolderRefRoot)
+                return;
+
+            var replacement = SnapshotAsManualGroup(folderRefRoot);
+            if (replacement == null)
+                return;
+
+            ReplaceNode(folderRefRoot.Id, replacement, _model.Roots);
+            Save();
         }
 
-        // --- FolderRef 自動同期 ---
         public void SyncAllFolderRefs()
         {
             SyncFolderRefsRecursive(_model.Roots);
         }
 
-        private void SyncFolderRefsRecursive(List<CustomProjectNode> nodes)
-        {
-            foreach (var n in nodes)
-            {
-                if (n.Type == NodeType.FolderRef) SyncFolderRef(n);
-                if (n.Children != null) SyncFolderRefsRecursive(n.Children);
-            }
-        }
-
-        public void SyncFolderRef(CustomProjectNode node)
-        {
-            if (node.Type != NodeType.FolderRef || string.IsNullOrEmpty(node.LinkedPath)) return;
-            var absPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", node.LinkedPath));
-            if (!Directory.Exists(absPath)) { node.Children = new List<CustomProjectNode>(); return; }
-
-            node.Children = new List<CustomProjectNode>();
-            ScanDirectory(absPath, node.LinkedPath, node);
-        }
-
-        private void ScanDirectory(string absPath, string relBase, CustomProjectNode parent)
-        {
-            // フォルダを先に
-            foreach (var dir in Directory.GetDirectories(absPath).OrderBy(d => d))
-            {
-                var name = Path.GetFileName(dir);
-                if (ShouldExclude(name)) continue;
-                var relPath = relBase + "/" + name;
-                var child = CustomProjectNode.CreateGroup(name);
-                child.IsExpanded = false;
-                parent.Children.Add(child);
-                ScanDirectory(dir, relPath, child);
-            }
-            // ファイル
-            foreach (var file in Directory.GetFiles(absPath).OrderBy(f => f))
-            {
-                var name = Path.GetFileName(file);
-                if (ShouldExclude(name)) continue;
-                var relPath = (relBase + "/" + name).Replace("\\", "/");
-                // Assets/... 形式に正規化
-                var assetPath = relPath.StartsWith("Assets/") ? relPath : relPath;
-                var guid = AssetDatabase.AssetPathToGUID(assetPath);
-                if (string.IsNullOrEmpty(guid)) continue;
-                parent.Children.Add(CustomProjectNode.CreateAssetRef(guid, name));
-            }
-        }
-
-        private static bool ShouldExclude(string name)
-        {
-            if (name.EndsWith(".meta")) return true;
-            if (name.StartsWith(".")) return true;
-            if (name.EndsWith("~")) return true;
-            if (name == "Temp" || name == "Library" || name == "obj") return true;
-            return false;
-        }
-
-        // --- インデックス ---
-        public CustomProjectNode FindNodeByGuid(string guid, List<CustomProjectNode> nodes)
-        {
-            foreach (var n in nodes)
-            {
-                if (n.Type == NodeType.AssetRef && n.Guid == guid) return n;
-                if (n.Children != null)
-                {
-                    var found = FindNodeByGuid(guid, n.Children);
-                    if (found != null) return found;
-                }
-            }
-            return null;
-        }
-
-        public CustomProjectNode FindNodeById(string id, List<CustomProjectNode> nodes)
-        {
-            foreach (var n in nodes)
-            {
-                if (n.Id == id) return n;
-                if (n.Children != null)
-                {
-                    var found = FindNodeById(id, n.Children);
-                    if (found != null) return found;
-                }
-            }
-            return null;
-        }
-
-        public CustomProjectNode GetParent(CustomProjectNode target, List<CustomProjectNode> nodes = null)
-        {
-            nodes = nodes ?? _model.Roots;
-            foreach (var n in nodes)
-            {
-                if (n.Children != null && n.Children.Any(c => c.Id == target.Id)) return n;
-                if (n.Children != null)
-                {
-                    var found = GetParent(target, n.Children);
-                    if (found != null) return found;
-                }
-            }
-            return null;
-        }
-
-        public bool IsChildOfFolderRef(CustomProjectNode node, List<CustomProjectNode> roots)
-        {
-            var parent = GetParent(node, roots);
-            while (parent != null)
-            {
-                if (parent.Type == NodeType.FolderRef) return true;
-                parent = GetParent(parent, roots);
-            }
-            return false;
-        }
-
-        // --- ファイル追従 ---
         public void HandleAssetMoved(string oldPath, string newPath)
         {
             var guid = AssetDatabase.AssetPathToGUID(newPath);
-            if (string.IsNullOrEmpty(guid)) return;
-            var node = FindNodeByGuid(guid, _model.Roots);
-            if (node == null) return;
-            if (!IsChildOfFolderRef(node, _model.Roots))
-            {
-                node.Label = Path.GetFileName(newPath);
-            }
+            if (string.IsNullOrEmpty(guid))
+                return;
+
+            HandleAssetMovedRecursive(_model.Roots, guid, newPath);
+            SyncAllFolderRefs();
             Save();
         }
 
         public void HandleAssetDeleted(string deletedPath)
         {
-            // GUID が無効になったノードを削除
-            var toRemove = CollectInvalidAssetRefs(_model.Roots);
-            foreach (var n in toRemove) RemoveRecursive(_model.Roots, n);
-            if (toRemove.Count > 0) Save();
+            var removedAny = RemoveMissingManualAssetRefs(_model.Roots);
+            if (removedAny)
+                Save();
+
+            SyncAllFolderRefs();
         }
 
-        private List<CustomProjectNode> CollectInvalidAssetRefs(List<CustomProjectNode> nodes)
+        public void SetExpanded(CustomProjectNode node, bool expanded)
+        {
+            if (node == null || !node.IsContainer)
+                return;
+
+            node.IsExpanded = expanded;
+        }
+
+        public CustomProjectNode FindNodeById(string id)
+        {
+            return FindNodeByIdRecursive(id, _model.Roots);
+        }
+
+        public CustomProjectNode FindManualAssetRefByGuid(string guid)
+        {
+            return FindManualAssetRefByGuidRecursive(guid, _model.Roots);
+        }
+
+        public CustomProjectNode FindNodeByAssetPath(string assetPath)
+        {
+            var normalized = CustomProjectNode.NormalizeAssetPath(assetPath);
+            if (string.IsNullOrEmpty(normalized))
+                return null;
+
+            return FindNodeByAssetPathRecursive(normalized, _model.Roots);
+        }
+
+        public List<CustomProjectNode> Search(string query)
         {
             var result = new List<CustomProjectNode>();
-            foreach (var n in nodes)
-            {
-                if (n.Type == NodeType.AssetRef && !string.IsNullOrEmpty(n.Guid))
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(n.Guid);
-                    if (string.IsNullOrEmpty(path)) result.Add(n);
-                }
-                if (n.Children != null) result.AddRange(CollectInvalidAssetRefs(n.Children));
-            }
+            SearchRecursive(_model.Roots, query ?? string.Empty, result);
             return result;
         }
 
-        // --- ソート (VSCode CustomExplorer 準拠) ---
-        private void SortNodes(List<CustomProjectNode> nodes)
+        private void SanitizeTree(List<CustomProjectNode> nodes)
         {
-            // グループ優先 → フォルダRef → アセットRef → 名前順
-            nodes.Sort((a, b) =>
+            if (nodes == null)
+                return;
+
+            for (int i = nodes.Count - 1; i >= 0; i--)
             {
-                int pa = GetPriority(a), pb = GetPriority(b);
-                if (pa != pb) return pa - pb;
-                return string.Compare(a.Label, b.Label, StringComparison.OrdinalIgnoreCase);
-            });
-            foreach (var n in nodes)
-                if (n.Children != null && n.Children.Count > 0)
-                    SortNodes(n.Children);
+                var node = nodes[i];
+                if (node == null)
+                {
+                    nodes.RemoveAt(i);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(node.Id))
+                {
+                    node.Id = $"manual-legacy:{Guid.NewGuid():N}";
+                }
+
+                if (string.IsNullOrWhiteSpace(node.Label))
+                {
+                    node.Label = node.Kind == ProjectNodeKind.Asset ? "Missing Asset" : "Group";
+                }
+
+                if (node.Children == null)
+                    node.Children = new List<CustomProjectNode>();
+
+                if (node.Source == ProjectNodeSource.FolderRefSynced)
+                {
+                    nodes.RemoveAt(i);
+                    continue;
+                }
+
+                if (node.IsFolderRefRoot)
+                {
+                    node.AssetPath = CustomProjectNode.NormalizeAssetPath(node.ResolveAssetPath());
+                    node.AssetGuid = string.IsNullOrEmpty(node.AssetGuid) && !string.IsNullOrEmpty(node.AssetPath)
+                        ? AssetDatabase.AssetPathToGUID(node.AssetPath)
+                        : node.AssetGuid;
+                    node.Children.Clear();
+                }
+                else
+                {
+                    SanitizeTree(node.Children);
+                }
+            }
         }
 
-        private int GetPriority(CustomProjectNode n)
+        private List<CustomProjectNode> ClonePersistentNodes(List<CustomProjectNode> nodes)
         {
-            if (n.Type == NodeType.Group) return 0;
-            if (n.Type == NodeType.FolderRef) return 1;
-            return 2;
+            var result = new List<CustomProjectNode>();
+            if (nodes == null)
+                return result;
+
+            foreach (var node in nodes)
+            {
+                var clone = ClonePersistentNode(node);
+                if (clone != null)
+                    result.Add(clone);
+            }
+
+            return result;
+        }
+
+        private CustomProjectNode ClonePersistentNode(CustomProjectNode node)
+        {
+            if (node == null || node.Source == ProjectNodeSource.FolderRefSynced)
+                return null;
+
+            var clone = new CustomProjectNode
+            {
+                Id = node.Id,
+                Label = node.Label,
+                Kind = node.Kind,
+                Source = node.Source,
+                AssetGuid = node.AssetGuid,
+                AssetPath = node.AssetPath,
+                IsExpanded = node.IsExpanded,
+                Children = new List<CustomProjectNode>(),
+            };
+
+            if (node.IsManualGroup)
+            {
+                clone.Children = ClonePersistentNodes(node.Children);
+            }
+
+            return clone;
         }
 
         private void AppendToParent(CustomProjectNode node, CustomProjectNode parent)
         {
-            if (parent != null && parent.IsGroupLike)
-            {
-                if (parent.Children == null) parent.Children = new List<CustomProjectNode>();
-                parent.Children.Add(node);
-                parent.IsExpanded = true;
-            }
-            else
+            if (parent == null)
             {
                 _model.Roots.Add(node);
+                return;
+            }
+
+            if (parent.Children == null)
+                parent.Children = new List<CustomProjectNode>();
+
+            parent.Children.Add(node);
+            parent.IsExpanded = true;
+        }
+
+        private bool CanAcceptChild(CustomProjectNode parent)
+        {
+            return parent == null || parent.CanAddChildren;
+        }
+
+        private bool HasManualAssetRef(string guid)
+        {
+            return FindManualAssetRefByGuid(guid) != null;
+        }
+
+        private bool HasFolderRef(string assetPath)
+        {
+            var normalized = CustomProjectNode.NormalizeAssetPath(assetPath);
+            return EnumerateNodes(_model.Roots).Any(n => n.IsFolderRefRoot && CustomProjectNode.NormalizeAssetPath(n.ResolveAssetPath()) == normalized);
+        }
+
+        private bool RemoveRecursive(List<CustomProjectNode> nodes, string id)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i].Id == id)
+                {
+                    nodes.RemoveAt(i);
+                    return true;
+                }
+
+                if (RemoveRecursive(nodes[i].Children, id))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool ReplaceNode(string oldId, CustomProjectNode replacement, List<CustomProjectNode> nodes)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i].Id == oldId)
+                {
+                    nodes[i] = replacement;
+                    return true;
+                }
+
+                if (ReplaceNode(oldId, replacement, nodes[i].Children))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool IsDescendant(CustomProjectNode ancestor, CustomProjectNode candidate)
+        {
+            if (ancestor == null || candidate == null)
+                return false;
+
+            return ancestor.Children.Any(child => child.Id == candidate.Id || IsDescendant(child, candidate));
+        }
+
+        private void SyncFolderRefsRecursive(List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.IsFolderRefRoot)
+                    SyncFolderRef(node);
+
+                if (node.Children != null && node.Children.Count > 0)
+                    SyncFolderRefsRecursive(node.Children);
             }
         }
 
-        // --- 検索 ---
-        public List<CustomProjectNode> Search(string query, List<CustomProjectNode> nodes = null)
+        public void SyncFolderRef(CustomProjectNode folderRefRoot)
         {
-            nodes = nodes ?? _model.Roots;
-            var result = new List<CustomProjectNode>();
-            foreach (var n in nodes)
+            if (folderRefRoot == null || !folderRefRoot.IsFolderRefRoot)
+                return;
+
+            var folderPath = folderRefRoot.ResolveAssetPath();
+            folderPath = CustomProjectNode.NormalizeAssetPath(folderPath);
+            folderRefRoot.AssetPath = folderPath;
+
+            if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
             {
-                if (n.Label.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-                    result.Add(n);
-                if (n.Children != null)
-                    result.AddRange(Search(query, n.Children));
+                folderRefRoot.Children = new List<CustomProjectNode>();
+                return;
             }
+
+            folderRefRoot.AssetGuid = AssetDatabase.AssetPathToGUID(folderPath);
+            folderRefRoot.Label = Path.GetFileName(folderPath.TrimEnd('/', '\\'));
+            folderRefRoot.Children = BuildSyncedChildren(folderPath);
+        }
+
+        private List<CustomProjectNode> BuildSyncedChildren(string folderPath)
+        {
+            var absPath = ToAbsolutePath(folderPath);
+            var result = new List<CustomProjectNode>();
+
+            if (!Directory.Exists(absPath))
+                return result;
+
+            foreach (var dir in Directory.GetDirectories(absPath).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+            {
+                var name = Path.GetFileName(dir);
+                if (ShouldExclude(name))
+                    continue;
+
+                var childPath = CustomProjectNode.NormalizeAssetPath(Path.Combine(folderPath, name));
+                var folderNode = CustomProjectNode.CreateSyncedFolder(childPath);
+                folderNode.Children = BuildSyncedChildren(childPath);
+                result.Add(folderNode);
+            }
+
+            foreach (var file in Directory.GetFiles(absPath).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+            {
+                var name = Path.GetFileName(file);
+                if (ShouldExclude(name))
+                    continue;
+
+                var childPath = CustomProjectNode.NormalizeAssetPath(Path.Combine(folderPath, name));
+                var guid = AssetDatabase.AssetPathToGUID(childPath);
+                if (string.IsNullOrEmpty(guid))
+                    continue;
+
+                result.Add(CustomProjectNode.CreateSyncedAsset(childPath, guid));
+            }
+
             return result;
         }
 
-        // --- 展開状態の保存 ---
-        public void SetExpanded(CustomProjectNode node, bool expanded)
+        private void HandleAssetMovedRecursive(List<CustomProjectNode> nodes, string guid, string newPath)
         {
-            node.IsExpanded = expanded;
-            Save();
+            foreach (var node in nodes)
+            {
+                if (node.Source == ProjectNodeSource.Manual && node.Kind == ProjectNodeKind.Asset && node.AssetGuid == guid)
+                {
+                    node.Label = Path.GetFileName(newPath);
+                }
+                else if (node.IsFolderRefRoot && node.AssetGuid == guid)
+                {
+                    node.AssetPath = CustomProjectNode.NormalizeAssetPath(newPath);
+                    node.Label = Path.GetFileName(newPath.TrimEnd('/', '\\'));
+                }
+
+                if (node.Children != null && node.Children.Count > 0)
+                    HandleAssetMovedRecursive(node.Children, guid, newPath);
+            }
+        }
+
+        private bool RemoveMissingManualAssetRefs(List<CustomProjectNode> nodes)
+        {
+            bool removedAny = false;
+
+            for (int i = nodes.Count - 1; i >= 0; i--)
+            {
+                var node = nodes[i];
+                if (node.Source == ProjectNodeSource.Manual && node.Kind == ProjectNodeKind.Asset)
+                {
+                    var path = node.ResolveAssetPath();
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        nodes.RemoveAt(i);
+                        removedAny = true;
+                        continue;
+                    }
+                }
+
+                removedAny |= RemoveMissingManualAssetRefs(node.Children);
+            }
+
+            return removedAny;
+        }
+
+        private CustomProjectNode SnapshotAsManualGroup(CustomProjectNode folderRefRoot)
+        {
+            var group = CustomProjectNode.CreateManualGroup(folderRefRoot.Label);
+            group.IsExpanded = folderRefRoot.IsExpanded;
+
+            foreach (var child in folderRefRoot.Children)
+            {
+                var snapshot = SnapshotChildRecursive(child);
+                if (snapshot != null)
+                    group.Children.Add(snapshot);
+            }
+
+            return group;
+        }
+
+        private CustomProjectNode SnapshotChildRecursive(CustomProjectNode node)
+        {
+            if (node == null)
+                return null;
+
+            if (node.Kind == ProjectNodeKind.Asset)
+            {
+                var path = node.ResolveAssetPath();
+                var guid = !string.IsNullOrEmpty(node.AssetGuid)
+                    ? node.AssetGuid
+                    : AssetDatabase.AssetPathToGUID(path);
+
+                if (string.IsNullOrEmpty(guid))
+                    return null;
+
+                return CustomProjectNode.CreateManualAssetRef(guid, node.Label);
+            }
+
+            var group = CustomProjectNode.CreateManualGroup(node.Label);
+            group.IsExpanded = node.IsExpanded;
+            foreach (var child in node.Children)
+            {
+                var snapshot = SnapshotChildRecursive(child);
+                if (snapshot != null)
+                    group.Children.Add(snapshot);
+            }
+
+            return group;
+        }
+
+        private CustomProjectNode FindNodeByIdRecursive(string id, List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Id == id)
+                    return node;
+
+                var found = FindNodeByIdRecursive(id, node.Children);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private CustomProjectNode FindManualAssetRefByGuidRecursive(string guid, List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Source == ProjectNodeSource.Manual && node.Kind == ProjectNodeKind.Asset && node.AssetGuid == guid)
+                    return node;
+
+                var found = FindManualAssetRefByGuidRecursive(guid, node.Children);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private CustomProjectNode FindNodeByAssetPathRecursive(string assetPath, List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                var resolved = CustomProjectNode.NormalizeAssetPath(node.ResolveAssetPath());
+                if (!string.IsNullOrEmpty(resolved) && resolved == assetPath)
+                    return node;
+
+                var found = FindNodeByAssetPathRecursive(assetPath, node.Children);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private void SearchRecursive(List<CustomProjectNode> nodes, string query, List<CustomProjectNode> result)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Label.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                    result.Add(node);
+
+                SearchRecursive(node.Children, query, result);
+            }
+        }
+
+        private IEnumerable<CustomProjectNode> EnumerateNodes(List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                yield return node;
+                foreach (var child in EnumerateNodes(node.Children))
+                    yield return child;
+            }
+        }
+
+        private void SortNodes(List<CustomProjectNode> nodes)
+        {
+            nodes.Sort((a, b) =>
+            {
+                var pa = GetSortPriority(a);
+                var pb = GetSortPriority(b);
+                if (pa != pb)
+                    return pa.CompareTo(pb);
+
+                return string.Compare(a.Label, b.Label, StringComparison.OrdinalIgnoreCase);
+            });
+
+            foreach (var node in nodes)
+            {
+                if (node.Source != ProjectNodeSource.FolderRefSynced && node.Children != null && node.Children.Count > 0)
+                    SortNodes(node.Children);
+            }
+        }
+
+        private int GetSortPriority(CustomProjectNode node)
+        {
+            if (node.IsManualGroup)
+                return 0;
+            if (node.IsFolderRefRoot)
+                return 1;
+            if (node.Kind == ProjectNodeKind.Folder)
+                return 2;
+            return 3;
+        }
+
+        private static bool ShouldExclude(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return true;
+            if (name.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (name.StartsWith(".", StringComparison.Ordinal))
+                return true;
+            if (name.EndsWith("~", StringComparison.Ordinal))
+                return true;
+            if (name == "Temp" || name == "Library" || name == "obj")
+                return true;
+            return false;
+        }
+
+        private static string ToAbsolutePath(string assetPath)
+        {
+            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetPath));
         }
     }
 
-    #endregion
-
-    // =========================================================================
-    #region Asset Postprocessor
-    // =========================================================================
-
-    internal class CustomProjectAssetPostprocessor : AssetPostprocessor
+    internal sealed class CustomProjectAssetPostprocessor : AssetPostprocessor
     {
         static void OnPostprocessAllAssets(
             string[] importedAssets,
@@ -410,586 +795,317 @@ namespace CustomProjectView
             var window = EditorWindow.HasOpenInstances<CustomProjectViewWindow>()
                 ? EditorWindow.GetWindow<CustomProjectViewWindow>(false, null, false)
                 : null;
-            if (window == null) return;
+
+            if (window == null || window.Model == null)
+                return;
 
             bool changed = false;
+
             for (int i = 0; i < movedAssets.Length; i++)
             {
                 window.Model.HandleAssetMoved(movedFromAssetPaths[i], movedAssets[i]);
                 changed = true;
             }
+
             foreach (var deleted in deletedAssets)
             {
                 window.Model.HandleAssetDeleted(deleted);
                 changed = true;
             }
-            // FolderRef の自動同期
-            window.Model.SyncAllFolderRefs();
-            if (changed || importedAssets.Length > 0)
+
+            if (importedAssets.Length > 0)
+            {
+                window.Model.SyncAllFolderRefs();
+                changed = true;
+            }
+
+            if (changed)
                 window.RequestRefresh();
         }
     }
 
-    #endregion
-
-    // =========================================================================
-    #region TreeView Item
-    // =========================================================================
-
-    internal class CustomProjectViewItem : TreeViewItem
+    internal sealed class CustomProjectViewItem : TreeViewItem
     {
         public CustomProjectNode Node;
         public string AssetPath;
         public bool IsMissing;
 
-        public CustomProjectViewItem(int id, int depth, string displayName, CustomProjectNode node)
-            : base(id, depth, displayName)
+        public CustomProjectViewItem(int id, int depth, CustomProjectNode node)
+            : base(id, depth, node?.Label ?? string.Empty)
         {
             Node = node;
+            AssetPath = node?.ResolveAssetPath();
+            IsMissing = false;
+            icon = ResolveIcon(node, AssetPath, ref IsMissing);
 
-            // アセットパス解決 & アイコン設定 (旧 CustomExplorer 方式)
-            AssetPath = node.ResolveAssetPath();
+            if (IsMissing && node != null)
+                displayName = node.Label + " (Missing)";
+        }
 
-            switch (node.Type)
+        private static Texture2D ResolveIcon(CustomProjectNode node, string assetPath, ref bool isMissing)
+        {
+            if (node == null)
+                return null;
+
+            if (node.Kind == ProjectNodeKind.Asset)
             {
-                case NodeType.AssetRef:
-                    IsMissing = string.IsNullOrEmpty(AssetPath);
-                    if (IsMissing)
-                    {
-                        this.displayName += " (Missing)";
-                        icon = EditorGUIUtility.IconContent("console.erroricon.sml").image as Texture2D;
-                    }
-                    else
-                    {
-                        icon = AssetDatabase.GetCachedIcon(AssetPath) as Texture2D;
-                    }
-                    break;
+                if (string.IsNullOrEmpty(assetPath))
+                {
+                    isMissing = true;
+                    return EditorGUIUtility.IconContent("console.erroricon.sml").image as Texture2D;
+                }
 
-                case NodeType.FolderRef:
-                    IsMissing = !string.IsNullOrEmpty(node.LinkedPath)
-                        && !Directory.Exists(Path.GetFullPath(Path.Combine(Application.dataPath, "..", node.LinkedPath)));
-                    icon = (EditorGUIUtility.FindTexture("FolderFavorite Icon")
-                        ?? EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
-                    break;
-
-                case NodeType.Group:
-                    IsMissing = false;
-                    icon = (node.IsExpanded
-                        ? EditorGUIUtility.FindTexture("FolderOpened Icon")
-                        : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
-                    break;
+                return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
             }
+
+            if (node.IsFolderRefRoot)
+            {
+                isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
+                return (EditorGUIUtility.FindTexture("FolderFavorite Icon")
+                        ?? EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+            }
+
+            if (node.Kind == ProjectNodeKind.Folder)
+            {
+                isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
+                return (node.IsExpanded
+                    ? EditorGUIUtility.FindTexture("FolderOpened Icon")
+                    : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+            }
+
+            return (node.IsExpanded
+                ? EditorGUIUtility.FindTexture("FolderOpened Icon")
+                : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
         }
     }
 
-    #endregion
-
-    // =========================================================================
-    #region TreeView
-    // =========================================================================
-
-    internal class CustomProjectTreeView : TreeView
+    internal sealed class CustomProjectTreeView : TreeView
     {
-        private CustomProjectTreeModel _model;
-        private CustomProjectViewWindow _window;
-        private string _searchQuery = "";
+        private readonly CustomProjectTreeModel _model;
+        private readonly CustomProjectViewWindow _window;
 
-        // インライン操作ボタン幅
+        private readonly Dictionary<int, CustomProjectNode> _idToNode = new Dictionary<int, CustomProjectNode>();
+        private string _searchQuery = string.Empty;
+        private int _nextId = 1;
+        private int _selectionSyncFrame = -1;
+        private bool _restoringExpandedState;
+
         private const float ButtonW = 18f;
         private const float ButtonSpacing = 1f;
-
-        // アイテムID ↔ ノード対応
-        private Dictionary<int, CustomProjectNode> _idToNode = new Dictionary<int, CustomProjectNode>();
-        private int _nextId = 1;
-
-        // リネーム中フラグ
-        private int _renamingId = -1;
 
         public CustomProjectTreeView(TreeViewState state, CustomProjectTreeModel model, CustomProjectViewWindow window)
             : base(state)
         {
             _model = model;
             _window = window;
-            showAlternatingRowBackgrounds = false;
             showBorder = true;
+            showAlternatingRowBackgrounds = false;
             rowHeight = EditorGUIUtility.singleLineHeight + 2f;
         }
 
         public void SetSearch(string query)
         {
-            _searchQuery = query;
+            var previousIds = GetSelection()
+                .Select(GetNodeForId)
+                .Where(n => n != null)
+                .Select(n => n.Id)
+                .ToList();
+
+            _searchQuery = query ?? string.Empty;
             Reload();
+
+            if (previousIds.Count == 0)
+                return;
+
+            var restored = previousIds
+                .Select(id => _model.FindNodeById(id))
+                .Where(n => n != null)
+                .Select(GetIdForNode)
+                .Where(id => id >= 0)
+                .ToList();
+
+            if (restored.Count > 0)
+                SetSelection(restored, TreeViewSelectionOptions.RevealAndFrame);
         }
 
-        // --- TreeView 構築 ---
+        public void ClearSelectionAndPing()
+        {
+            SetSelection(new List<int>(), TreeViewSelectionOptions.FireSelectionChanged);
+        }
+
         protected override TreeViewItem BuildRoot()
         {
             _idToNode.Clear();
             _nextId = 1;
+
             var root = new TreeViewItem(-1, -1, "root");
 
             if (string.IsNullOrEmpty(_searchQuery))
             {
-                BuildFromNodes(_model.Roots, root);
+                BuildTree(_model.Roots, root);
             }
             else
             {
-                // 検索モード: フラットリストで表示
-                var hits = _model.Search(_searchQuery);
-                foreach (var n in hits)
-                {
-                    var item = CreateItem(n, 0);
-                    root.AddChild(item);
-                }
+                foreach (var node in _model.Search(_searchQuery))
+                    root.AddChild(CreateItem(node, 0));
             }
 
             if (!root.hasChildren)
-                root.AddChild(new TreeViewItem(0, 0, ""));
+                root.AddChild(new TreeViewItem(0, 0, string.Empty));
 
             SetupDepthsFromParentsAndChildren(root);
 
-            // 展開状態を復元
             if (string.IsNullOrEmpty(_searchQuery))
                 ApplyExpandedState(_model.Roots);
 
             return root;
         }
 
-        private void BuildFromNodes(List<CustomProjectNode> nodes, TreeViewItem parent)
-        {
-            foreach (var node in nodes)
-            {
-                var item = CreateItem(node, parent.depth + 1);
-                parent.AddChild(item);
-                if (node.IsGroupLike && node.Children != null && node.Children.Count > 0)
-                    BuildFromNodes(node.Children, item);
-            }
-        }
-
-        private CustomProjectViewItem CreateItem(CustomProjectNode node, int depth)
-        {
-            int id = _nextId++;
-            _idToNode[id] = node;
-            return new CustomProjectViewItem(id, depth, node.Label, node);
-        }
-
-        private void ApplyExpandedState(List<CustomProjectNode> nodes)
-        {
-            foreach (var n in nodes)
-            {
-                if (!n.IsGroupLike) continue;
-                var item = FindItem(GetIdForNode(n), rootItem);
-                if (item == null) continue;
-                if (n.IsExpanded) SetExpanded(item.id, true);
-                if (n.Children != null) ApplyExpandedState(n.Children);
-            }
-        }
-
-        private int GetIdForNode(CustomProjectNode node)
-        {
-            foreach (var kv in _idToNode)
-                if (kv.Value.Id == node.Id) return kv.Key;
-            return -1;
-        }
-
-        public CustomProjectNode GetNodeForId(int id)
-        {
-            _idToNode.TryGetValue(id, out var node);
-            return node;
-        }
-
-        // --- 行描画 (旧 CustomExplorer 方式: base.RowGUI + サフィックス + インラインボタン) ---
         protected override void RowGUI(RowGUIArgs args)
         {
             var item = args.item as CustomProjectViewItem;
             if (item == null || item.Node == null)
             {
-                // 空表示
                 if (_model.IsEmpty && string.IsNullOrEmpty(_searchQuery))
-                    DrawEmptyLabel(args.rowRect);
+                    GUI.Label(args.rowRect, "まだ項目がありません。\"+ Group\" でグループを追加してください。", EditorStyles.centeredGreyMiniLabel);
                 return;
             }
 
-            var node = item.Node;
-            var rowRect = args.rowRect;
+            var oldColor = GUI.color;
+            if (item.IsMissing)
+                GUI.color = Color.red;
 
-            // Missing 時は赤テキスト (旧 CustomExplorer 方式)
-            Color oldColor = GUI.color;
-            if (item.IsMissing) GUI.color = Color.red;
-
-            // Unity 標準 TreeView 描画 (フォールドアウト三角形 + アイコン + ラベル)
             base.RowGUI(args);
-
             GUI.color = oldColor;
 
-            // サフィックス: 親ディレクトリ名をラベル右横にインライン表示 (旧 CustomExplorer 方式)
             if (Event.current.type == EventType.Repaint)
+                DrawPathSuffix(args, item);
+
+            if (args.selected || args.rowRect.Contains(Event.current.mousePosition))
             {
-                DrawPathSuffix(args, item, node);
-            }
-
-            // インラインボタン描画 (新 CustomProjectView 方式: hover/選択時)
-            if (args.selected || IsHovered(rowRect))
-            {
-                float btnAreaWidth = CalcButtonAreaWidth(node);
-                var btnRect = new Rect(rowRect.xMax - btnAreaWidth, rowRect.y, btnAreaWidth, rowRect.height);
-                DrawInlineButtons(btnRect, node, item.id);
-            }
-        }
-
-        private void DrawPathSuffix(RowGUIArgs args, CustomProjectViewItem item, CustomProjectNode node)
-        {
-            string parentDir = null;
-
-            if (node.Type == NodeType.FolderRef && !string.IsNullOrEmpty(node.LinkedPath) && !item.IsMissing)
-            {
-                parentDir = Path.GetFileName(Path.GetDirectoryName(node.LinkedPath.TrimEnd('/', '\\')));
-            }
-            else if (node.Type == NodeType.AssetRef && !item.IsMissing && !string.IsNullOrEmpty(item.AssetPath))
-            {
-                parentDir = Path.GetFileName(Path.GetDirectoryName(item.AssetPath));
-            }
-
-            if (string.IsNullOrEmpty(parentDir)) return;
-
-            var labelStyle = new GUIStyle(EditorStyles.label);
-            Vector2 size = labelStyle.CalcSize(new GUIContent(item.displayName));
-            float indent = GetContentIndent(item);
-            float iconWidth = 18f;
-            float xOffset = indent + iconWidth + size.x;
-
-            var suffixRect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.width - xOffset, args.rowRect.height);
-            labelStyle.normal.textColor = args.selected ? new Color(0.8f, 0.8f, 0.8f, 0.8f) : Color.gray;
-            GUI.Label(suffixRect, $" (/{parentDir})", labelStyle);
-        }
-
-        private bool IsHovered(Rect rect)
-        {
-            return rect.Contains(Event.current.mousePosition);
-        }
-
-        private void DrawEmptyLabel(Rect rect)
-        {
-            var style = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
-            GUI.Label(rect, "まだ項目がありません。\"+ Group\" でグループを追加してください。", style);
-        }
-
-        private float CalcButtonAreaWidth(CustomProjectNode node)
-        {
-            int count = 0;
-            if (node.Type == NodeType.Group)
-                count = 4; // [+Group][▶Expand][◀Collapse][×Remove]
-            else if (node.Type == NodeType.FolderRef)
-                count = 3; // [▶][◀][×]
-            else
-                count = 1; // [×]
-            return count * (ButtonW + ButtonSpacing) + 4f;
-        }
-
-        private void DrawInlineButtons(Rect rect, CustomProjectNode node, int itemId)
-        {
-            float x = rect.x + 2f;
-            float y = rect.y + (rect.height - ButtonW) / 2f;
-
-            GUIStyle btnStyle = EditorStyles.iconButton;
-
-            if (node.Type == NodeType.Group)
-            {
-                // [+ サブグループ]
-                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("CreateAddNew") ?? EditorGUIUtility.IconContent("Toolbar Plus").image,
-                    "サブグループを追加"), btnStyle))
+                var width = CalcButtonAreaWidth(item.Node);
+                if (width > 0f)
                 {
-                    AddSubGroup(node);
-                }
-                x += ButtonW + ButtonSpacing;
-
-                // [▶ 展開]
-                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), btnStyle))
-                {
-                    ExpandRecursive(itemId, true);
-                }
-                x += ButtonW + ButtonSpacing;
-
-                // [◀ 折りたたむ]
-                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("d_winbtn_win_min") ?? EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), btnStyle))
-                {
-                    ExpandRecursive(itemId, false);
-                }
-                x += ButtonW + ButtonSpacing;
-            }
-            else if (node.Type == NodeType.FolderRef)
-            {
-                // [▶ 展開]
-                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), btnStyle))
-                {
-                    ExpandRecursive(itemId, true);
-                }
-                x += ButtonW + ButtonSpacing;
-
-                // [◀ 折りたたむ]
-                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), btnStyle))
-                {
-                    ExpandRecursive(itemId, false);
-                }
-                x += ButtonW + ButtonSpacing;
-            }
-
-            // [× 削除] — 全種別
-            if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                new GUIContent(EditorGUIUtility.FindTexture("winbtn_win_close") ?? EditorGUIUtility.IconContent("d_winbtn_win_close").image, "取り除く"), btnStyle))
-            {
-                if (EditorUtility.DisplayDialog("確認", $"\"{node.Label}\" をリストから取り除きますか？\n（実ファイルは削除されません）", "取り除く", "キャンセル"))
-                {
-                    _model.Remove(node);
-                    Reload();
+                    var rect = new Rect(args.rowRect.xMax - width, args.rowRect.y, width, args.rowRect.height);
+                    DrawInlineButtons(rect, item.Node, item.id);
                 }
             }
         }
 
-        // --- 展開 / 折りたたみ ---
-        private void ExpandRecursive(int rootItemId, bool expand)
-        {
-            var item = FindItem(rootItemId, rootItem);
-            if (item == null) return;
-            SetExpandedRecursive(item, expand);
-            _window.RequestRefresh();
-        }
-
-        private void SetExpandedRecursive(TreeViewItem item, bool expand)
-        {
-            SetExpanded(item.id, expand);
-            var node = GetNodeForId(item.id);
-            if (node != null) node.IsExpanded = expand;
-            if (item.children != null)
-                foreach (var child in item.children)
-                    SetExpandedRecursive(child, expand);
-        }
-
-        public void ExpandAll(bool expand)
-        {
-            if (rootItem?.children == null) return;
-            foreach (var child in rootItem.children)
-                SetExpandedRecursive(child, expand);
-            _model.Save();
-            Reload();
-        }
-
-        // --- コンテキストメニュー ---
         protected override void ContextClickedItem(int id)
         {
+            var selectedIds = GetSelection();
+            if (selectedIds.Count > 1)
+            {
+                var nodes = selectedIds.Select(GetNodeForId).Where(n => n != null && n.CanRemoveFromList).ToList();
+                if (nodes.Count > 0)
+                    ShowMultiSelectionContextMenu(nodes);
+                return;
+            }
+
             var node = GetNodeForId(id);
-            if (node == null) return;
-            ShowContextMenu(node, id);
+            if (node != null)
+                ShowContextMenu(node, id);
         }
 
-        private void ShowContextMenu(CustomProjectNode node, int itemId)
-        {
-            var menu = new GenericMenu();
-
-            if (node.Type == NodeType.Group)
-            {
-                menu.AddItem(new GUIContent("サブグループを追加"), false, () => AddSubGroup(node));
-                menu.AddItem(new GUIContent("項目を追加..."), false, () => AddAssetToGroup(node));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("グループ名の変更"), false, () =>
-                {
-                    _renamingId = itemId;
-                    BeginRename(FindItem(itemId, rootItem));
-                });
-                menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
-                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
-            }
-            else if (node.Type == NodeType.FolderRef)
-            {
-                menu.AddItem(new GUIContent("グループに変換"), false, () =>
-                {
-                    _model.ConvertToGroup(node);
-                    Reload();
-                });
-                menu.AddItem(new GUIContent("OS で表示"), false, () => RevealInFinder(node));
-                menu.AddItem(new GUIContent("パスのコピー"), false, () => CopyPath(node, false));
-                menu.AddItem(new GUIContent("相対パスのコピー"), false, () => CopyPath(node, true));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
-                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
-            }
-            else if (node.Type == NodeType.AssetRef)
-            {
-                var assetPath = node.ResolveAssetPath();
-                menu.AddItem(new GUIContent("開く"), false, () => OpenAsset(node));
-                menu.AddItem(new GUIContent("OS で表示"), false, () => RevealInFinder(node));
-                menu.AddItem(new GUIContent("パスのコピー"), false, () => CopyPath(node, false));
-                menu.AddItem(new GUIContent("相対パスのコピー"), false, () => CopyPath(node, true));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("取り除く（リストのみ）"), false, () => RemoveWithConfirm(node));
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("Project で選択"), false, () =>
-                {
-                    var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                    if (obj != null)
-                    {
-                        Selection.activeObject = obj;
-                        EditorGUIUtility.PingObject(obj);
-                    }
-                });
-
-                // アセットが存在する場合のみ Create/Delete メニュー
-                if (!string.IsNullOrEmpty(assetPath))
-                {
-                    menu.AddSeparator("");
-                    menu.AddItem(new GUIContent("名前の変更"), false, () =>
-                    {
-                        _renamingId = itemId;
-                        BeginRename(FindItem(itemId, rootItem));
-                    });
-                    menu.AddItem(new GUIContent("削除（実ファイル）"), false, () =>
-                    {
-                        if (EditorUtility.DisplayDialog("確認", $"\"{node.Label}\" を削除しますか？\nこの操作は取り消せません。", "削除", "キャンセル"))
-                        {
-                            AssetDatabase.DeleteAsset(assetPath);
-                        }
-                    });
-                }
-            }
-
-            menu.ShowAsContext();
-        }
-
-        // --- リネーム ---
         protected override bool CanRename(TreeViewItem item)
         {
             var node = GetNodeForId(item.id);
-            return node != null; // 全種別でリネーム可
+            return node != null && node.CanRenameInTree;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
-            _renamingId = -1;
-            if (!args.acceptedRename) return;
-            var node = GetNodeForId(args.itemID);
-            if (node == null) return;
+            if (!args.acceptedRename)
+                return;
 
-            if (node.Type == NodeType.Group)
-            {
-                _model.Rename(node, args.newName);
-                Reload();
-            }
-            else if (node.Type == NodeType.AssetRef)
-            {
-                // 実ファイルのリネーム
-                var assetPath = node.ResolveAssetPath();
-                if (string.IsNullOrEmpty(assetPath)) return;
-                var dir = Path.GetDirectoryName(assetPath);
-                var ext = Path.GetExtension(assetPath);
-                var newName = args.newName.EndsWith(ext) ? args.newName : args.newName + ext;
-                var newPath = Path.Combine(dir, newName).Replace("\\", "/");
-                var err = AssetDatabase.RenameAsset(assetPath, Path.GetFileNameWithoutExtension(newName));
-                if (!string.IsNullOrEmpty(err))
-                    EditorUtility.DisplayDialog("エラー", err, "OK");
-                else
-                    Reload();
-            }
+            var node = GetNodeForId(args.itemID);
+            if (node == null || !node.CanRenameInTree)
+                return;
+
+            _model.RenameManualGroup(node, args.newName);
+            Reload();
         }
 
-        // --- ダブルクリック ---
         protected override void DoubleClickedItem(int id)
         {
             var node = GetNodeForId(id);
-            if (node == null) return;
-            OpenAsset(node);
+            if (node != null)
+                OpenAsset(node);
         }
 
-        // --- 選択変更 → Unity Selection 連動 ---
         protected override void SelectionChanged(IList<int> selectedIds)
         {
-            if (selectedIds.Count == 0) return;
+            if (!_window.AutoSyncSelection || selectedIds == null || selectedIds.Count == 0)
+                return;
+
             var node = GetNodeForId(selectedIds[0]);
-            if (node == null) return;
-            if (node.Type == NodeType.AssetRef && !string.IsNullOrEmpty(node.Guid))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(node.Guid);
-                if (!string.IsNullOrEmpty(path))
-                {
-                    var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                    if (obj != null) Selection.activeObject = obj;
-                }
-            }
+            var assetPath = node?.ResolveAssetPath();
+            if (string.IsNullOrEmpty(assetPath))
+                return;
+
+            var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
+            if (obj == null)
+                return;
+
+            _selectionSyncFrame = Time.frameCount;
+            Selection.activeObject = obj;
         }
 
-        // --- 展開状態変更の保存 ---
         protected override void ExpandedStateChanged()
         {
-            // 展開状態を全ノードに反映
-            SyncExpandedStateToModel(_model.Roots);
+            if (_restoringExpandedState)
+                return;
+
+            SyncExpandedState(_model.Roots);
             _model.Save();
         }
 
-        private void SyncExpandedStateToModel(List<CustomProjectNode> nodes)
-        {
-            foreach (var n in nodes)
-            {
-                if (!n.IsGroupLike) continue;
-                var id = GetIdForNode(n);
-                if (id >= 0) n.IsExpanded = IsExpanded(id);
-                if (n.Children != null) SyncExpandedStateToModel(n.Children);
-            }
-        }
+        protected override bool CanMultiSelect(TreeViewItem item) => true;
 
-        // --- D&D ---
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
-            foreach (var id in args.draggedItemIDs)
-            {
-                var node = GetNodeForId(id);
-                if (node != null && _model.IsChildOfFolderRef(node, _model.Roots))
-                    return false; // FolderRef 配下は移動不可
-            }
-            return true;
+            return args.draggedItemIDs
+                .Select(GetNodeForId)
+                .Where(n => n != null)
+                .All(n => n.CanMoveInTree);
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
             DragAndDrop.PrepareStartDrag();
+
             var nodes = args.draggedItemIDs
-                .Select(id => GetNodeForId(id))
+                .Select(GetNodeForId)
                 .Where(n => n != null)
                 .ToList();
 
             DragAndDrop.SetGenericData("CustomProjectViewNodes", nodes);
 
-            // Unity の Asset D&D にも対応
-            var unityObjects = nodes
-                .Where(n => n.Type == NodeType.AssetRef && !string.IsNullOrEmpty(n.Guid))
-                .Select(n => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(AssetDatabase.GUIDToAssetPath(n.Guid)))
+            var objects = nodes
+                .Select(n => n.ResolveAssetPath())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .Select(p => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(p))
                 .Where(o => o != null)
                 .ToArray();
-            if (unityObjects.Length > 0)
-                DragAndDrop.objectReferences = unityObjects;
+
+            if (objects.Length > 0)
+                DragAndDrop.objectReferences = objects;
 
             DragAndDrop.StartDrag("CustomProjectView");
         }
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
-            // 内部 D&D
+            var targetParent = (args.parentItem as CustomProjectViewItem)?.Node;
+            if (targetParent != null && !targetParent.CanAddChildren)
+                return DragAndDropVisualMode.Rejected;
+
             var internalNodes = DragAndDrop.GetGenericData("CustomProjectViewNodes") as List<CustomProjectNode>;
             if (internalNodes != null)
             {
                 if (args.performDrop)
                 {
-                    CustomProjectNode targetParent = null;
-                    if (args.parentItem is CustomProjectViewItem parentViewItem)
-                        targetParent = parentViewItem.Node;
-
                     foreach (var source in internalNodes)
                         _model.MoveNode(source, targetParent);
                     Reload();
@@ -997,146 +1113,549 @@ namespace CustomProjectView
                 return DragAndDropVisualMode.Move;
             }
 
-            // 外部（Unity ProjectWindow）からの D&D
-            if (DragAndDrop.objectReferences != null && DragAndDrop.objectReferences.Length > 0)
+            if (DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0)
+                return DragAndDropVisualMode.None;
+
+            if (args.performDrop)
             {
-                // FolderRef / FolderRef 配下へのドロップ禁止
-                if (args.parentItem is CustomProjectViewItem pItem &&
-                    (pItem.Node.Type == NodeType.FolderRef || _model.IsChildOfFolderRef(pItem.Node, _model.Roots)))
-                    return DragAndDropVisualMode.Rejected;
-
-                if (args.performDrop)
-                {
-                    CustomProjectNode targetParent = null;
-                    if (args.parentItem is CustomProjectViewItem parentViewItem)
-                        targetParent = parentViewItem.Node;
-
-                    foreach (var obj in DragAndDrop.objectReferences)
-                    {
-                        var path = AssetDatabase.GetAssetPath(obj);
-                        if (string.IsNullOrEmpty(path)) continue;
-
-                        if (AssetDatabase.IsValidFolder(path))
-                            _model.AddFolderRef(path, targetParent);
-                        else
-                            _model.AddAssetRef(AssetDatabase.AssetPathToGUID(path), targetParent);
-                    }
-                    Reload();
-                }
-                return DragAndDropVisualMode.Copy;
+                foreach (var obj in DragAndDrop.objectReferences)
+                    AddObjectReference(obj, targetParent);
+                Reload();
             }
 
-            return DragAndDropVisualMode.None;
+            return DragAndDropVisualMode.Copy;
         }
 
-        // --- アクション ヘルパ ---
+        protected override void KeyEvent()
+        {
+            if (Event.current.type != EventType.KeyDown)
+                return;
+
+            if (Event.current.keyCode != KeyCode.Delete && Event.current.keyCode != KeyCode.Backspace)
+                return;
+
+            var nodes = GetSelection()
+                .Select(GetNodeForId)
+                .Where(n => n != null && n.CanRemoveFromList)
+                .ToList();
+
+            if (nodes.Count == 0)
+                return;
+
+            Event.current.Use();
+
+            if (nodes.Count == 1)
+                RemoveWithConfirm(nodes[0]);
+            else
+                RemoveMultipleWithConfirm(nodes);
+        }
+
+        public void ExpandAll(bool expand)
+        {
+            if (rootItem?.children == null)
+                return;
+
+            foreach (var child in rootItem.children)
+                SetExpandedRecursive(child, expand);
+
+            _model.Save();
+            Reload();
+        }
+
+        public void SyncSelectionFromUnity()
+        {
+            if (Mathf.Abs(Time.frameCount - _selectionSyncFrame) <= 1)
+                return;
+
+            var obj = Selection.activeObject;
+            if (obj == null)
+                return;
+
+            var assetPath = AssetDatabase.GetAssetPath(obj);
+            if (string.IsNullOrEmpty(assetPath))
+                return;
+
+            var best = _model.FindNodeByAssetPath(assetPath);
+            if (best == null)
+            {
+                var guid = AssetDatabase.AssetPathToGUID(assetPath);
+                best = _model.FindManualAssetRefByGuid(guid);
+            }
+
+            if (best == null)
+                return;
+
+            var id = GetIdForNode(best);
+            if (id >= 0)
+                SetSelection(new[] { id }, TreeViewSelectionOptions.RevealAndFrame);
+        }
+
+        private void BuildTree(List<CustomProjectNode> nodes, TreeViewItem parent)
+        {
+            foreach (var node in nodes)
+            {
+                var item = CreateItem(node, parent.depth + 1);
+                parent.AddChild(item);
+                if (node.IsContainer && node.Children != null && node.Children.Count > 0)
+                    BuildTree(node.Children, item);
+            }
+        }
+
+        private CustomProjectViewItem CreateItem(CustomProjectNode node, int depth)
+        {
+            var id = _nextId++;
+            _idToNode[id] = node;
+            return new CustomProjectViewItem(id, depth, node);
+        }
+
+        private void ApplyExpandedState(List<CustomProjectNode> nodes)
+        {
+            if (nodes == null || nodes.Count == 0)
+                return;
+
+            _restoringExpandedState = true;
+            try
+            {
+                ApplyExpandedStateRecursive(nodes);
+            }
+            finally
+            {
+                _restoringExpandedState = false;
+            }
+        }
+
+        private void ApplyExpandedStateRecursive(List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.IsContainer)
+                {
+                    var id = GetIdForNode(node);
+                    if (id >= 0 && node.IsExpanded)
+                        SetExpanded(id, true);
+                }
+
+                if (node.Children != null && node.Children.Count > 0)
+                    ApplyExpandedStateRecursive(node.Children);
+            }
+        }
+
+        private int GetIdForNode(CustomProjectNode node)
+        {
+            foreach (var kv in _idToNode)
+            {
+                if (kv.Value.Id == node.Id)
+                    return kv.Key;
+            }
+            return -1;
+        }
+
+        private CustomProjectNode GetNodeForId(int id)
+        {
+            _idToNode.TryGetValue(id, out var node);
+            return node;
+        }
+
+        private void DrawPathSuffix(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var node = item.Node;
+            if (node == null)
+                return;
+
+            string parentDir = null;
+            var assetPath = item.AssetPath;
+            if (!string.IsNullOrEmpty(assetPath) && (node.Source == ProjectNodeSource.Manual || node.IsFolderRefRoot))
+            {
+                var dir = Path.GetDirectoryName(assetPath)?.Replace("\\", "/");
+                if (!string.IsNullOrEmpty(dir))
+                    parentDir = Path.GetFileName(dir.TrimEnd('/'));
+            }
+
+            if (string.IsNullOrEmpty(parentDir))
+                return;
+
+            var labelStyle = new GUIStyle(EditorStyles.label);
+            var size = labelStyle.CalcSize(new GUIContent(item.displayName));
+            var indent = GetContentIndent(item);
+            var iconWidth = 18f;
+            var xOffset = indent + iconWidth + size.x;
+            var rect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.width - xOffset, args.rowRect.height);
+            labelStyle.normal.textColor = args.selected ? new Color(0.8f, 0.8f, 0.8f, 0.8f) : Color.gray;
+            GUI.Label(rect, $" (/{parentDir})", labelStyle);
+        }
+
+        private float CalcButtonAreaWidth(CustomProjectNode node)
+        {
+            var count = 0;
+
+            if (node.IsManualGroup)
+                count = 4;
+            else if (node.IsFolderRefRoot || (node.Kind == ProjectNodeKind.Folder && node.IsSynced))
+                count = 2 + (node.CanRemoveFromList ? 1 : 0);
+            else if (node.CanRemoveFromList)
+                count = 1;
+
+            if (count == 0)
+                return 0f;
+
+            return count * (ButtonW + ButtonSpacing) + 4f;
+        }
+
+        private void DrawInlineButtons(Rect rect, CustomProjectNode node, int itemId)
+        {
+            float x = rect.x + 2f;
+            float y = rect.y + (rect.height - ButtonW) * 0.5f;
+            var style = EditorStyles.iconButton;
+
+            if (node.IsManualGroup)
+            {
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.FindTexture("CreateAddNew") ?? EditorGUIUtility.IconContent("Toolbar Plus").image, "サブグループを追加"), style))
+                {
+                    AddSubGroup(node);
+                }
+                x += ButtonW + ButtonSpacing;
+
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), style))
+                {
+                    ExpandRecursive(itemId, true);
+                }
+                x += ButtonW + ButtonSpacing;
+
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.FindTexture("d_winbtn_win_min") ?? EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), style))
+                {
+                    ExpandRecursive(itemId, false);
+                }
+                x += ButtonW + ButtonSpacing;
+            }
+            else if (node.IsFolderRefRoot || (node.Kind == ProjectNodeKind.Folder && node.IsSynced))
+            {
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), style))
+                {
+                    ExpandRecursive(itemId, true);
+                }
+                x += ButtonW + ButtonSpacing;
+
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.FindTexture("d_winbtn_win_min") ?? EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), style))
+                {
+                    ExpandRecursive(itemId, false);
+                }
+                x += ButtonW + ButtonSpacing;
+            }
+
+            if (node.CanRemoveFromList)
+            {
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(EditorGUIUtility.FindTexture("winbtn_win_close") ?? EditorGUIUtility.IconContent("d_winbtn_win_close").image, "取り除く"), style))
+                {
+                    RemoveWithConfirm(node);
+                }
+            }
+        }
+
+        private void ShowMultiSelectionContextMenu(List<CustomProjectNode> nodes)
+        {
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent($"選択した {nodes.Count} 項目を取り除く"), false, () => RemoveMultipleWithConfirm(nodes));
+            menu.ShowAsContext();
+        }
+
+        private void ShowContextMenu(CustomProjectNode node, int itemId)
+        {
+            var menu = new GenericMenu();
+
+            if (node.IsManualGroup)
+            {
+                menu.AddItem(new GUIContent("サブグループを追加"), false, () => AddSubGroup(node));
+                menu.AddItem(new GUIContent("項目を追加..."), false, () => AddAssetToGroup(node));
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("グループ名を変更"), false, () => BeginRename(FindItem(itemId, rootItem)));
+                menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
+                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
+                menu.ShowAsContext();
+                return;
+            }
+
+            if (node.IsFolderRefRoot)
+            {
+                AddPathActions(menu, node);
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("グループに変換"), false, () =>
+                {
+                    _model.ConvertFolderRefToSnapshotGroup(node);
+                    Reload();
+                });
+                menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
+                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
+                menu.ShowAsContext();
+                return;
+            }
+
+            if (node.Kind == ProjectNodeKind.Folder && node.IsSynced)
+            {
+                AddPathActions(menu, node);
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
+                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
+                menu.ShowAsContext();
+                return;
+            }
+
+            if (node.Kind == ProjectNodeKind.Asset)
+            {
+                menu.AddItem(new GUIContent("開く"), false, () => OpenAsset(node));
+                AddPathActions(menu, node);
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("Project で選択"), false, () => SelectInProject(node));
+
+                if (node.CanDeleteOnDisk)
+                {
+                    menu.AddSeparator(string.Empty);
+                    menu.AddItem(new GUIContent("削除"), false, () => DeleteAssetOnDisk(node));
+                }
+
+                if (node.CanRemoveFromList)
+                {
+                    menu.AddSeparator(string.Empty);
+                    menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
+                }
+
+                menu.ShowAsContext();
+            }
+        }
+
+        private void AddPathActions(GenericMenu menu, CustomProjectNode node)
+        {
+            if (node.CanRevealInFinder)
+                menu.AddItem(new GUIContent("OS で表示"), false, () => RevealInFinder(node));
+            else
+                menu.AddDisabledItem(new GUIContent("OS で表示"));
+
+            if (node.CanCopyPath)
+            {
+                menu.AddItem(new GUIContent("パスのコピー"), false, () => CopyPath(node, false));
+                menu.AddItem(new GUIContent("相対パスのコピー"), false, () => CopyPath(node, true));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("パスのコピー"));
+                menu.AddDisabledItem(new GUIContent("相対パスのコピー"));
+            }
+        }
+
+        private void ExpandRecursive(int rootItemId, bool expand)
+        {
+            var item = FindItem(rootItemId, rootItem);
+            if (item == null)
+                return;
+
+            SetExpandedRecursive(item, expand);
+            _model.Save();
+            _window.RequestRefresh();
+        }
+
+        private void SetExpandedRecursive(TreeViewItem item, bool expand)
+        {
+            SetExpanded(item.id, expand);
+            var node = GetNodeForId(item.id);
+            if (node != null && node.IsContainer)
+                node.IsExpanded = expand;
+
+            if (item.children == null)
+                return;
+
+            foreach (var child in item.children)
+                SetExpandedRecursive(child, expand);
+        }
+
+        private void SyncExpandedState(List<CustomProjectNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.IsContainer)
+                {
+                    var id = GetIdForNode(node);
+                    if (id >= 0)
+                        node.IsExpanded = IsExpanded(id);
+                }
+
+                SyncExpandedState(node.Children);
+            }
+        }
+
         private void AddSubGroup(CustomProjectNode parent)
         {
-            _model.AddGroup("New Group", parent);
+            parent.IsExpanded = true;
+            var parentId = GetIdForNode(parent);
+            if (parentId >= 0)
+                SetExpanded(parentId, true);
+
+            var newNode = _model.AddGroup("New Group", parent);
             Reload();
-            // 新規グループを即リネームモードに
-            var newNode = parent.Children?.LastOrDefault();
-            if (newNode != null)
+
+            if (newNode == null)
+                return;
+
+            var id = GetIdForNode(newNode);
+            if (id >= 0)
             {
-                int id = GetIdForNode(newNode);
-                if (id >= 0)
-                {
-                    SetSelection(new[] { id });
-                    BeginRename(FindItem(id, rootItem));
-                }
+                SetSelection(new[] { id });
+                BeginRename(FindItem(id, rootItem));
             }
         }
 
         private void AddAssetToGroup(CustomProjectNode parent)
         {
-            var path = EditorUtility.OpenFilePanel("項目を追加", "Assets", "");
-            if (string.IsNullOrEmpty(path)) return;
-            // 絶対パス → アセットパスに変換
-            var dataPath = Application.dataPath;
-            if (path.StartsWith(dataPath))
-                path = "Assets" + path.Substring(dataPath.Length);
+            var path = EditorUtility.OpenFilePanel("項目を追加", "Assets", string.Empty);
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            if (path.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase))
+                path = "Assets" + path.Substring(Application.dataPath.Length);
+
             var guid = AssetDatabase.AssetPathToGUID(path);
             if (string.IsNullOrEmpty(guid))
             {
                 EditorUtility.DisplayDialog("エラー", "Assets フォルダ外のファイルは追加できません。", "OK");
                 return;
             }
+
             _model.AddAssetRef(guid, parent);
             Reload();
         }
 
+        private void AddObjectReference(UnityEngine.Object obj, CustomProjectNode parent)
+        {
+            if (obj == null)
+                return;
+
+            var path = AssetDatabase.GetAssetPath(obj);
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            if (AssetDatabase.IsValidFolder(path))
+                _model.AddFolderRef(path, parent);
+            else
+                _model.AddAssetRef(AssetDatabase.AssetPathToGUID(path), parent);
+        }
+
         private void RemoveWithConfirm(CustomProjectNode node)
         {
-            if (EditorUtility.DisplayDialog("確認",
-                $"\"{node.Label}\" をリストから取り除きますか？\n（実ファイルは削除されません）",
-                "取り除く", "キャンセル"))
+            if (!node.CanRemoveFromList)
+                return;
+
+            if (!EditorUtility.DisplayDialog("確認", $"\"{node.Label}\" をリストから取り除きますか？\n（実ファイルは削除されません）", "取り除く", "キャンセル"))
+                return;
+
+            _model.Remove(node);
+            Reload();
+        }
+
+        private void RemoveMultipleWithConfirm(List<CustomProjectNode> nodes)
+        {
+            if (nodes == null || nodes.Count == 0)
+                return;
+
+            var bullets = string.Join("\n", nodes.Take(5).Select(n => $"  • {n.Label}"));
+            if (nodes.Count > 5)
+                bullets += $"\n  … 他 {nodes.Count - 5} 件";
+
+            if (!EditorUtility.DisplayDialog("確認",
+                $"{nodes.Count} 件の項目をリストから取り除きますか？\n（実ファイルは削除されません）\n\n{bullets}",
+                "取り除く",
+                "キャンセル"))
             {
-                _model.Remove(node);
-                Reload();
+                return;
             }
+
+            foreach (var node in nodes)
+                _model.Remove(node);
+            Reload();
         }
 
         private void OpenAsset(CustomProjectNode node)
         {
-            if (node.Type == NodeType.AssetRef && !string.IsNullOrEmpty(node.Guid))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(node.Guid);
-                var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                if (obj != null) AssetDatabase.OpenAsset(obj);
-            }
+            if (!node.CanOpenAsset)
+                return;
+
+            var path = node.ResolveAssetPath();
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+            if (obj != null)
+                AssetDatabase.OpenAsset(obj);
+        }
+
+        private void SelectInProject(CustomProjectNode node)
+        {
+            var path = node.ResolveAssetPath();
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+            if (obj == null)
+                return;
+
+            Selection.activeObject = obj;
+            EditorGUIUtility.PingObject(obj);
         }
 
         private void RevealInFinder(CustomProjectNode node)
         {
             var path = node.ResolveAssetPath();
-            if (string.IsNullOrEmpty(path)) return;
-            var absPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
-            EditorUtility.RevealInFinder(absPath);
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            var abs = Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
+            EditorUtility.RevealInFinder(abs);
         }
 
         private void CopyPath(CustomProjectNode node, bool relative)
         {
             var path = node.ResolveAssetPath();
-            if (string.IsNullOrEmpty(path)) return;
-            if (!relative)
-                path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
-            GUIUtility.systemCopyBuffer = path;
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            GUIUtility.systemCopyBuffer = relative
+                ? path
+                : Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
         }
 
-        private void AddSubGroup(CustomProjectNode parent, bool dummy) { } // overload guard
-
-        // Unity Selection → ツリー自動選択
-        public void SyncSelectionFromUnity()
+        private void DeleteAssetOnDisk(CustomProjectNode node)
         {
-            var obj = Selection.activeObject;
-            if (obj == null) return;
-            var assetPath = AssetDatabase.GetAssetPath(obj);
-            if (string.IsNullOrEmpty(assetPath)) return;
-            var guid = AssetDatabase.AssetPathToGUID(assetPath);
-            var node = _model.FindNodeByGuid(guid, _model.Roots);
-            if (node == null) return;
-            var id = GetIdForNode(node);
-            if (id < 0) return;
-            SetSelection(new[] { id }, TreeViewSelectionOptions.RevealAndFrame);
+            var path = node.ResolveAssetPath();
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            if (!EditorUtility.DisplayDialog("確認", $"\"{node.Label}\" を削除しますか？\nこの操作は取り消せません。", "削除", "キャンセル"))
+                return;
+
+            AssetDatabase.DeleteAsset(path);
         }
     }
 
-    #endregion
-
-    // =========================================================================
-    #region EditorWindow
-    // =========================================================================
-
-    public class CustomProjectViewWindow : EditorWindow
+    public sealed class CustomProjectViewWindow : EditorWindow
     {
         [SerializeField] private TreeViewState _treeViewState;
-        [SerializeField] private string _searchQuery = "";
+        [SerializeField] private string _searchQuery = string.Empty;
+        [SerializeField] private bool _autoSyncSelection;
 
         private CustomProjectTreeView _treeView;
         private SearchField _searchField;
-        private bool _needsRefresh = false;
+        private bool _needsRefresh;
+        private Rect _treeViewRect;
 
         internal CustomProjectTreeModel Model { get; private set; }
+        internal bool AutoSyncSelection => _autoSyncSelection;
 
         [MenuItem("Window/Custom Project View")]
         public static void Open()
@@ -1154,12 +1673,13 @@ namespace CustomProjectView
             Model = new CustomProjectTreeModel();
             Model.Load();
 
+            _searchField = _searchField ?? new SearchField();
             _treeView = new CustomProjectTreeView(_treeViewState, Model, this);
+            _searchField.downOrUpArrowKeyPressed -= _treeView.SetFocusAndEnsureSelectedItem;
+            _searchField.downOrUpArrowKeyPressed += _treeView.SetFocusAndEnsureSelectedItem;
             _treeView.Reload();
 
-            _searchField = new SearchField();
-            _searchField.downOrUpArrowKeyPressed += _treeView.SetFocusAndEnsureSelectedItem;
-
+            Selection.selectionChanged -= OnSelectionChanged;
             Selection.selectionChanged += OnSelectionChanged;
         }
 
@@ -1170,8 +1690,7 @@ namespace CustomProjectView
 
         private void OnSelectionChanged()
         {
-            if (_treeView != null)
-                _treeView.SyncSelectionFromUnity();
+            _treeView?.SyncSelectionFromUnity();
             Repaint();
         }
 
@@ -1186,162 +1705,178 @@ namespace CustomProjectView
             if (_needsRefresh)
             {
                 _needsRefresh = false;
-                _treeView.Reload();
+                _treeView?.Reload();
             }
 
             DrawToolbar();
             DrawSearchBar();
             DrawTreeView();
+
+            if (Event.current.type == EventType.MouseDown
+                && _treeViewRect.width > 0
+                && !_treeViewRect.Contains(Event.current.mousePosition))
+            {
+                _treeView?.ClearSelectionAndPing();
+                Event.current.Use();
+                Repaint();
+            }
         }
 
-        // ツールバー (タイトル・グローバルボタン)
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // ワークスペース名
-            var workspaceName = !string.IsNullOrEmpty(Application.productName)
-                ? Application.productName
-                : "Custom Project";
+            var workspaceName = string.IsNullOrEmpty(Application.productName) ? "Custom Project" : Application.productName;
             GUILayout.Label(workspaceName, EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
-
             GUILayout.FlexibleSpace();
 
-            // [+ Group] ルートにグループを追加
-            if (GUILayout.Button(new GUIContent("+ Group", "グループをルートに追加"),
-                EditorStyles.toolbarButton, GUILayout.Width(60)))
-            {
-                AddRootGroup();
-            }
+            var syncIcon = EditorGUIUtility.FindTexture("d_Linked")
+                ?? EditorGUIUtility.FindTexture("Linked")
+                ?? EditorGUIUtility.IconContent("d_SceneViewOrtho").image as Texture2D;
+            _autoSyncSelection = GUILayout.Toggle(_autoSyncSelection,
+                new GUIContent(syncIcon, "選択時に Project ビューと同期"),
+                EditorStyles.toolbarButton,
+                GUILayout.Width(24));
 
-            // [項目を追加]
+            if (GUILayout.Button(new GUIContent("+ Group", "グループをルートに追加"), EditorStyles.toolbarButton, GUILayout.Width(60)))
+                AddRootGroup();
+
             if (GUILayout.Button(new GUIContent(
                 EditorGUIUtility.FindTexture("d_Toolbar Plus") ?? EditorGUIUtility.FindTexture("Toolbar Plus"),
                 "項目を追加"),
-                EditorStyles.toolbarButton, GUILayout.Width(24)))
+                EditorStyles.toolbarButton,
+                GUILayout.Width(24)))
             {
-                AddAssetToRoot();
+                AddAssetOrFolderToRoot();
             }
 
-            // [すべて展開]
             if (GUILayout.Button(new GUIContent(
                 EditorGUIUtility.FindTexture("UnityEditor.SceneHierarchyWindow") ?? EditorGUIUtility.FindTexture("d_SceneViewOrtho"),
                 "すべて展開"),
-                EditorStyles.toolbarButton, GUILayout.Width(24)))
+                EditorStyles.toolbarButton,
+                GUILayout.Width(24)))
             {
-                _treeView.ExpandAll(true);
+                _treeView?.ExpandAll(true);
             }
 
-            // [すべて折りたたむ]
             if (GUILayout.Button(new GUIContent(
                 EditorGUIUtility.FindTexture("d_winbtn_win_min"),
                 "すべて折りたたむ"),
-                EditorStyles.toolbarButton, GUILayout.Width(24)))
+                EditorStyles.toolbarButton,
+                GUILayout.Width(24)))
             {
-                _treeView.ExpandAll(false);
+                _treeView?.ExpandAll(false);
             }
 
             EditorGUILayout.EndHorizontal();
         }
 
-        // 検索バー
         private void DrawSearchBar()
         {
+            _searchField = _searchField ?? new SearchField();
+
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            var newQuery = _searchField.OnToolbarGUI(_searchQuery);
-            if (newQuery != _searchQuery)
+            try
             {
-                _searchQuery = newQuery;
-                _treeView.SetSearch(_searchQuery);
+                var newQuery = _searchField.OnToolbarGUI(_searchQuery);
+                if (newQuery != _searchQuery)
+                {
+                    _searchQuery = newQuery;
+                    _treeView?.SetSearch(_searchQuery);
+                }
             }
-            EditorGUILayout.EndHorizontal();
+            finally
+            {
+                EditorGUILayout.EndHorizontal();
+            }
         }
 
-        // ツリービュー本体
         private void DrawTreeView()
         {
-            var rect = GUILayoutUtility.GetRect(0, position.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-
-            // D&D受け入れ: ビュー外からのドロップも可能にする
-            HandleExternalDrop(rect);
-
-            _treeView.OnGUI(rect);
+            _treeViewRect = GUILayoutUtility.GetRect(0, position.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            _treeView?.OnGUI(_treeViewRect);
+            HandleExternalDrop(_treeViewRect);
         }
 
-        // ウィンドウ外からの D&D ハンドリング (ツリーの空白エリアへのドロップ)
         private void HandleExternalDrop(Rect rect)
         {
             var evt = Event.current;
-            if (!rect.Contains(evt.mousePosition)) return;
-            if (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform) return;
-
-            if (DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0) return;
+            if (evt.type == EventType.Used)
+                return;
+            if (!rect.Contains(evt.mousePosition))
+                return;
+            if (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform)
+                return;
+            if (DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0)
+                return;
+            if (DragAndDrop.GetGenericData("CustomProjectViewNodes") is List<CustomProjectNode>)
+                return;
 
             DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-
             if (evt.type == EventType.DragPerform)
             {
                 DragAndDrop.AcceptDrag();
                 foreach (var obj in DragAndDrop.objectReferences)
                 {
                     var path = AssetDatabase.GetAssetPath(obj);
-                    if (string.IsNullOrEmpty(path)) continue;
+                    if (string.IsNullOrEmpty(path))
+                        continue;
+
                     if (AssetDatabase.IsValidFolder(path))
                         Model.AddFolderRef(path);
                     else
                         Model.AddAssetRef(AssetDatabase.AssetPathToGUID(path));
                 }
-                _treeView.Reload();
+                _treeView?.Reload();
             }
+
             evt.Use();
         }
 
-        // --- アクション ---
         private void AddRootGroup()
         {
-            // 入力ダイアログ代わりにポップアップを使用
             PopupNameDialog.Show("グループを追加", "グループ名を入力してください", "New Group", name =>
             {
                 Model.AddGroup(name);
-                _treeView.Reload();
+                _treeView?.Reload();
             });
         }
 
-        private void AddAssetToRoot()
+        private void AddAssetOrFolderToRoot()
         {
-            var path = EditorUtility.OpenFilePanel("項目を追加", "Assets", "");
-            if (string.IsNullOrEmpty(path)) return;
-            var dataPath = Application.dataPath;
-            if (path.StartsWith(dataPath))
-                path = "Assets" + path.Substring(dataPath.Length);
-            var guid = AssetDatabase.AssetPathToGUID(path);
-            if (string.IsNullOrEmpty(guid))
-            {
-                EditorUtility.DisplayDialog("エラー", "Assets フォルダ外のファイルは追加できません。", "OK");
+            var path = EditorUtility.OpenFilePanel("項目を追加", "Assets", string.Empty);
+            if (string.IsNullOrEmpty(path))
                 return;
+
+            if (path.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase))
+                path = "Assets" + path.Substring(Application.dataPath.Length);
+
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                Model.AddFolderRef(path);
             }
-            Model.AddAssetRef(guid);
-            _treeView.Reload();
+            else
+            {
+                var guid = AssetDatabase.AssetPathToGUID(path);
+                if (string.IsNullOrEmpty(guid))
+                {
+                    EditorUtility.DisplayDialog("エラー", "Assets フォルダ外のファイルは追加できません。", "OK");
+                    return;
+                }
+                Model.AddAssetRef(guid);
+            }
+
+            _treeView?.Reload();
         }
     }
 
-    #endregion
-
-    // =========================================================================
-    #region Popup Name Dialog
-    // =========================================================================
-
-    /// <summary>
-    /// グループ名入力用の軽量ポップアップウィンドウ。
-    /// EditorInputDialog の代替（依存なし）。
-    /// </summary>
-    internal class PopupNameDialog : EditorWindow
+    internal sealed class PopupNameDialog : EditorWindow
     {
         private string _title;
         private string _message;
         private string _value;
         private Action<string> _onConfirm;
-        private bool _focused = false;
+        private bool _focused;
 
         public static void Show(string title, string message, string defaultValue, Action<string> onConfirm)
         {
@@ -1376,11 +1911,14 @@ namespace CustomProjectView
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("キャンセル", GUILayout.Width(80)))
+            {
                 Close();
+                return;
+            }
 
             GUI.enabled = !string.IsNullOrWhiteSpace(_value);
-            if (GUILayout.Button("追加", GUILayout.Width(80)) ||
-                (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return))
+            if (GUILayout.Button("追加", GUILayout.Width(80))
+                || (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return))
             {
                 _onConfirm?.Invoke(_value.Trim());
                 Close();
@@ -1390,7 +1928,7 @@ namespace CustomProjectView
             EditorGUILayout.EndHorizontal();
         }
     }
-
-    #endregion
 }
 #endif
+
+
