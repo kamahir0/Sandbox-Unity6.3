@@ -67,6 +67,12 @@
     --color-input-editor-border:     var(--unity-colors-input_field-border);
     --color-input-editor-border-hover: var(--unity-colors-input_field-border-hover);
     --color-input-editor-border-focus: var(--unity-colors-input_field-border-focus);
+    --color-enum-editor-background: var(--unity-colors-button-background);
+    --color-enum-editor-background-hover: var(--unity-colors-button-background-hover);
+    --color-enum-editor-background-active: var(--unity-colors-button-background-pressed);
+    --color-enum-editor-border: var(--unity-colors-input_field-border);
+    --color-enum-editor-border-hover: var(--unity-colors-input_field-border-hover);
+    --color-enum-editor-border-focus: var(--unity-colors-highlight-background);
 
     /* --- 6. Navigation --- */
     --color-nav-active:           var(--unity-colors-button-background-pressed);
@@ -670,6 +676,75 @@
     background-image: none !important;
     border-color: rgba(0, 0, 0, 0) !important;
     border-width: 0 !important;
+}
+
+/* ── EnumField ────────────────────────────────────────────────────────────── */
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-enum-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-enum-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-surface) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-enum-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:hover,
+.editor-debug-window .c-input.unity-popup-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-popup-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:hover,
+.editor-debug-window .c-input.unity-base-popup-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-base-popup-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:hover {
+    background-color: var(--color-enum-editor-background-hover) !important;
+    border-color: var(--color-enum-editor-border-hover) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:active,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:active,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:active {
+    background-color: var(--color-enum-editor-background-active) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:focus:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:focus:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:focus:hover {
+    border-color: var(--color-enum-editor-border-focus) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field .unity-base-popup-field__text,
+.editor-debug-window .c-input.unity-popup-field .unity-base-popup-field__text,
+.editor-debug-window .c-input.unity-base-popup-field .unity-base-popup-field__text {
+    color: var(--color-on-surface) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field .unity-base-popup-field__arrow,
+.editor-debug-window .c-input.unity-popup-field .unity-base-popup-field__arrow,
+.editor-debug-window .c-input.unity-base-popup-field .unity-base-popup-field__arrow {
+    -unity-background-image-tint-color: var(--color-on-surface);
 }
 
 /* ── Scroller ─────────────────────────────────────────────────────────────── */
