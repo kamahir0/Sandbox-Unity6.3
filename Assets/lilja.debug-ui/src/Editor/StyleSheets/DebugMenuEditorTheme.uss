@@ -60,12 +60,13 @@
     --color-danger-hover:  #e74c3c;
 
     /* --- 5. Input & Form Controls --- */
-    --color-input:        var(--unity-colors-input-field-background);
-    --color-input-border: var(--unity-colors-input-field-border);
+    --color-input:        var(--unity-colors-input_field-background);
+    --color-input-border: var(--unity-colors-input_field-border);
     --color-on-input:     var(--unity-colors-default-text-color);
-    --color-input-editor-background: var(--unity-colors-button-background);
-    --color-input-editor-border:     var(--unity-colors-input-field-border);
-    --color-input-editor-border-hover: var(--unity-colors-button-background-hover);
+    --color-input-editor-background: var(--unity-colors-input_field-background);
+    --color-input-editor-border:     var(--unity-colors-input_field-border);
+    --color-input-editor-border-hover: var(--unity-colors-input_field-border-hover);
+    --color-input-editor-border-focus: var(--unity-colors-input_field-border-focus);
 
     /* --- 6. Navigation --- */
     --color-nav-active:           var(--unity-colors-button-background-pressed);
@@ -468,8 +469,6 @@
     padding-left: 0 !important;
 }
 
-.editor-debug-window .c-input:hover .unity-base-field__input,
-.editor-debug-window .c-input:focus .unity-base-field__input,
 .editor-debug-window .c-input .unity-base-field__input:hover,
 .editor-debug-window .c-input .unity-base-field__input:focus,
 .editor-debug-window .c-input .unity-base-field__input:focus:hover,
@@ -483,19 +482,17 @@
     background-image: none !important;
 }
 
-.editor-debug-window .c-input:hover .unity-base-field__input,
 .editor-debug-window .c-input .unity-base-field__input:hover,
 .editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:hover,
 .editor-debug-window .c-input .unity-composite-field__field:hover > .unity-base-field__input {
     border-color: var(--color-input-editor-border-hover) !important;
 }
 
-.editor-debug-window .c-input:focus .unity-base-field__input,
 .editor-debug-window .c-input .unity-base-field__input:focus,
 .editor-debug-window .c-input .unity-base-field__input:focus:hover,
 .editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus,
 .editor-debug-window .c-input .unity-composite-field__field:focus > .unity-base-field__input {
-    border-color: var(--unity-colors-highlight-background) !important;
+    border-color: var(--color-input-editor-border-focus) !important;
 }
 
 .editor-debug-window .c-input .unity-base-field__label:hover,
@@ -510,8 +507,6 @@
     padding-left: 0 !important;
 }
 
-.editor-debug-window .c-input:hover #unity-text-input,
-.editor-debug-window .c-input:focus #unity-text-input,
 .editor-debug-window .c-input #unity-text-input:hover,
 .editor-debug-window .c-input #unity-text-input:focus,
 .editor-debug-window .c-input #unity-text-input:focus:hover,
@@ -534,41 +529,27 @@
 .editor-debug-window .c-input #unity-text-input:focus:hover,
 .editor-debug-window .c-input .unity-composite-field__field #unity-text-input:focus,
 .editor-debug-window .c-input .unity-composite-field__field #unity-text-input:focus:hover {
-    border-color: var(--unity-colors-highlight-background) !important;
+    border-color: var(--color-input-editor-border-focus) !important;
 }
 
-.editor-debug-window .c-input:hover .unity-base-text-field__input,
-.editor-debug-window .c-input:focus .unity-base-text-field__input,
 .editor-debug-window .c-input .unity-base-text-field__input:hover,
 .editor-debug-window .c-input .unity-base-text-field__input:focus,
 .editor-debug-window .c-input .unity-base-text-field__input:focus:hover,
-.editor-debug-window .c-input:hover .unity-base-text-field__input--single-line,
-.editor-debug-window .c-input:focus .unity-base-text-field__input--single-line,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:hover,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:focus,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:focus:hover,
-.editor-debug-window .c-input:hover .unity-text-field__input,
-.editor-debug-window .c-input:focus .unity-text-field__input,
 .editor-debug-window .c-input .unity-text-field__input:hover,
 .editor-debug-window .c-input .unity-text-field__input:focus,
 .editor-debug-window .c-input .unity-text-field__input:focus:hover,
-.editor-debug-window .c-input:hover .unity-integer-field__input,
-.editor-debug-window .c-input:focus .unity-integer-field__input,
 .editor-debug-window .c-input .unity-integer-field__input:hover,
 .editor-debug-window .c-input .unity-integer-field__input:focus,
 .editor-debug-window .c-input .unity-integer-field__input:focus:hover,
-.editor-debug-window .c-input:hover .unity-float-field__input,
-.editor-debug-window .c-input:focus .unity-float-field__input,
 .editor-debug-window .c-input .unity-float-field__input:hover,
 .editor-debug-window .c-input .unity-float-field__input:focus,
 .editor-debug-window .c-input .unity-float-field__input:focus:hover,
-.editor-debug-window .c-input:hover .unity-long-field__input,
-.editor-debug-window .c-input:focus .unity-long-field__input,
 .editor-debug-window .c-input .unity-long-field__input:hover,
 .editor-debug-window .c-input .unity-long-field__input:focus,
 .editor-debug-window .c-input .unity-long-field__input:focus:hover,
-.editor-debug-window .c-input:hover .unity-double-field__input,
-.editor-debug-window .c-input:focus .unity-double-field__input,
 .editor-debug-window .c-input .unity-double-field__input:hover,
 .editor-debug-window .c-input .unity-double-field__input:focus,
 .editor-debug-window .c-input .unity-double-field__input:focus:hover {
@@ -581,45 +562,31 @@
     border-width: 1px !important;
 }
 
-.editor-debug-window .c-input:hover .unity-base-text-field__input,
 .editor-debug-window .c-input .unity-base-text-field__input:hover,
-.editor-debug-window .c-input:hover .unity-base-text-field__input--single-line,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:hover,
-.editor-debug-window .c-input:hover .unity-text-field__input,
 .editor-debug-window .c-input .unity-text-field__input:hover,
-.editor-debug-window .c-input:hover .unity-integer-field__input,
 .editor-debug-window .c-input .unity-integer-field__input:hover,
-.editor-debug-window .c-input:hover .unity-float-field__input,
 .editor-debug-window .c-input .unity-float-field__input:hover,
-.editor-debug-window .c-input:hover .unity-long-field__input,
 .editor-debug-window .c-input .unity-long-field__input:hover,
-.editor-debug-window .c-input:hover .unity-double-field__input,
 .editor-debug-window .c-input .unity-double-field__input:hover {
     border-color: var(--color-input-editor-border-hover) !important;
 }
 
-.editor-debug-window .c-input:focus .unity-base-text-field__input,
 .editor-debug-window .c-input .unity-base-text-field__input:focus,
 .editor-debug-window .c-input .unity-base-text-field__input:focus:hover,
-.editor-debug-window .c-input:focus .unity-base-text-field__input--single-line,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:focus,
 .editor-debug-window .c-input .unity-base-text-field__input--single-line:focus:hover,
-.editor-debug-window .c-input:focus .unity-text-field__input,
 .editor-debug-window .c-input .unity-text-field__input:focus,
 .editor-debug-window .c-input .unity-text-field__input:focus:hover,
-.editor-debug-window .c-input:focus .unity-integer-field__input,
 .editor-debug-window .c-input .unity-integer-field__input:focus,
 .editor-debug-window .c-input .unity-integer-field__input:focus:hover,
-.editor-debug-window .c-input:focus .unity-float-field__input,
 .editor-debug-window .c-input .unity-float-field__input:focus,
 .editor-debug-window .c-input .unity-float-field__input:focus:hover,
-.editor-debug-window .c-input:focus .unity-long-field__input,
 .editor-debug-window .c-input .unity-long-field__input:focus,
 .editor-debug-window .c-input .unity-long-field__input:focus:hover,
-.editor-debug-window .c-input:focus .unity-double-field__input,
 .editor-debug-window .c-input .unity-double-field__input:focus,
 .editor-debug-window .c-input .unity-double-field__input:focus:hover {
-    border-color: var(--unity-colors-highlight-background) !important;
+    border-color: var(--color-input-editor-border-focus) !important;
 }
 
 /* 実際に文字を入力する箱だけを最後に明示上書きする。
@@ -673,7 +640,7 @@
 .editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus:hover,
 .editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input:focus,
 .editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input:focus:hover {
-    border-color: var(--unity-colors-highlight-background) !important;
+    border-color: var(--color-input-editor-border-focus) !important;
 }
 
 /* Bounds 系は hover 時も行ラッパーに箱を描かず、実入力欄だけに見た目を残す。 */
