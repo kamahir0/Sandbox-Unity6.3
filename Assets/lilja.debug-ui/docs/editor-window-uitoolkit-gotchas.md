@@ -279,3 +279,103 @@ EditorWindow 側だけ固定高さにしているとここで差異が出る。
 - Rect / Bounds 系だけ必要なぶんだけ縦に伸びる
 
 という期待どおりの挙動になる。
+
+---
+
+## 8. Input の「箱」を描くべき要素と Bounds の hover 罠
+
+### 現象
+
+EditorWindow 側で input の背景色・枠線を直そうとして
+`.unity-base-field__input` や `>.unity-base-field__input` に
+`background-color` / `border` を付けると、
+
+- `TextField` / `IntegerField` では効いたように見える
+- `Vector` 系では成分入力欄に対して効いたり効かなかったりする
+- `Bounds` / `BoundsInt` では **入力欄だけでなく `Center` / `Extents` や
+  `Position` / `Size` の行全体に箱が出る**
+
+という不安定な状態になりやすい。
+
+さらに `Bounds` 系では hover 状態が少なくとも以下の 3 段階ある。
+
+1. `Bounds` 全体への hover
+2. `Center` 行への hover
+3. `Extents` 行への hover
+
+このため、一部の hover セレクタだけ透明化しても
+「hover している側だけ正しい / していない側だけ壊れる」という症状が起こる。
+
+### 原因
+
+UIToolkit の `BaseField` / `CompositeField` では、
+見た目上の「入力ボックス」と DOM 上の `.unity-base-field__input` が
+一致しないことがある。
+
+特に EditorWindow 上で問題になったのは以下。
+
+- `.unity-base-field__input` は **入力欄そのものではなくラッパー** の場合がある
+- 実際に文字が入る箱は `#unity-text-input` にぶら下がっている
+- `Bounds` / `BoundsInt` は multi-line 構造のため、`Center` / `Extents` の
+  行ラッパーにも hover が波及する
+
+つまり、
+
+- `margin` / `padding` のリセットはラッパーに当ててもよい
+- しかし **背景色と枠線は「実際の入力欄」にだけ付けるべき**
+
+という切り分けが必要。
+
+### 対処
+
+#### 1. 箱の見た目は `#unity-text-input` に描く
+
+```css
+.editor-debug-window .c-input #unity-text-input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-width: 1px !important;
+}
+```
+
+hover / focus も同じく `#unity-text-input` 側で完結させる。
+
+#### 2. `Bounds` の行ラッパーは通常時だけでなく hover / focus 時も透明維持する
+
+`Bounds` 全体への hover が入った時点で `Center` / `Extents` 両方の行ラッパーに
+影響するため、個別行だけでなく **親 `Bounds` hover から各行ラッパーへ届く透明化**
+も必要。
+
+```css
+.editor-debug-window .c-input.unity-bounds-field:hover .unity-bounds-field__center-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:hover .unity-bounds-field__extents-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover .unity-bounds-int-field__position-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover .unity-bounds-int-field__size-field > .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+```
+
+ポイントは、
+
+- 行そのものに箱を描かない
+- 実入力欄だけに箱を描く
+- hover 中も行ラッパーを透明に保つ
+
+の 3 つ。
+
+### 再発防止チェックリスト
+
+- `background-color` / `border` を付ける前に、そのセレクタが **ラッパー** なのか
+  **実入力欄** なのか確認する
+- `margin` / `padding` と `background` / `border` は、同じ要素に当てるとは限らない
+- `Bounds` / `BoundsInt` は hover 状態を「全体」「各行」で分けて考える
+- `hover` で一部だけ壊れる場合は、親 hover が sibling 行に波及していないか疑う
+
+### 実装場所
+
+- `src/Editor/StyleSheets/DebugMenuEditorTheme.uss`
+  - `#unity-text-input` への背景色・枠線付与
+  - `Bounds` / `BoundsInt` ラッパー hover 時の透明維持
