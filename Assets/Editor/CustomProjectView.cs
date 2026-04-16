@@ -45,6 +45,7 @@ namespace CustomProjectView
         public bool CanMoveInTree => Source != ProjectNodeSource.FolderRefSynced;
         public bool CanDeleteOnDisk => Kind == ProjectNodeKind.Asset && Source == ProjectNodeSource.FolderRefSynced;
         public bool CanOpenAsset => Kind == ProjectNodeKind.Asset;
+        public bool CanSelectInProject => !string.IsNullOrEmpty(ResolveAssetPath());
         public bool CanCopyPath => !string.IsNullOrEmpty(ResolveAssetPath());
         public bool CanRevealInFinder => !string.IsNullOrEmpty(ResolveAssetPath());
 
@@ -1933,11 +1934,15 @@ namespace CustomProjectView
             var count = 0;
 
             if (node.IsManualGroup)
-                count = 4;
+                count += 4;
             else if (node.IsFolderRefRoot || (node.Kind == ProjectNodeKind.Folder && node.IsSynced))
-                count = 2 + (node.CanRemoveFromList ? 1 : 0);
-            else if (node.CanRemoveFromList)
-                count = 1;
+                count += 2;
+
+            if (node.CanSelectInProject)
+                count += 1;
+
+            if (node.CanRemoveFromList)
+                count += 1;
 
             if (count == 0)
                 return 0f;
@@ -1991,6 +1996,16 @@ namespace CustomProjectView
                 x += ButtonW + ButtonSpacing;
             }
 
+            if (node.CanSelectInProject)
+            {
+                if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
+                    new GUIContent(CustomProjectViewIcons.Project, "Project で選択"), style))
+                {
+                    SelectInProject(node);
+                }
+                x += ButtonW + ButtonSpacing;
+            }
+
             if (node.CanRemoveFromList)
             {
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
@@ -2019,9 +2034,6 @@ namespace CustomProjectView
                 menu.AddSeparator(string.Empty);
                 menu.AddItem(new GUIContent("グループ名を変更"), false, () => BeginContextRename(itemId));
                 menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
-                menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
-                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
                 menu.ShowAsContext();
                 return;
             }
@@ -2036,9 +2048,6 @@ namespace CustomProjectView
                     Reload();
                 });
                 menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
-                menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
-                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
                 menu.ShowAsContext();
                 return;
             }
@@ -2046,9 +2055,6 @@ namespace CustomProjectView
             if (node.Kind == ProjectNodeKind.Folder && node.IsSynced)
             {
                 AddPathActions(menu, node);
-                menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
-                menu.AddItem(new GUIContent("再帰的に折りたたむ"), false, () => ExpandRecursive(itemId, false));
                 menu.ShowAsContext();
                 return;
             }
@@ -2057,8 +2063,6 @@ namespace CustomProjectView
             {
                 menu.AddItem(new GUIContent("開く"), false, () => OpenAsset(node));
                 AddPathActions(menu, node);
-                menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent("Project で選択"), false, () => SelectInProject(node));
 
                 if (node.CanDeleteOnDisk)
                 {
