@@ -141,6 +141,53 @@ namespace CustomProjectView
         public List<CustomProjectNode> Roots = new List<CustomProjectNode>();
     }
 
+    internal static class CustomProjectViewIcons
+    {
+        private const string MissingAssetIconName = "console.erroricon.sml";
+        private const string FolderFavoriteIconName = "FolderFavorite Icon";
+        private const string FolderClosedIconName = "Folder Icon";
+        private const string FolderOpenedIconName = "FolderOpened Icon";
+        private const string AddGroupIconName = "CreateAddNew";
+        private const string ToolbarPlusIconName = "Toolbar Plus";
+        private const string ExpandIconName = "CollabCreate Icon";
+        private const string CollapseIconName = "CollabDeleted Icon";
+        private const string CollapseLegacyIconName = "CollabDeleted Icon";
+        private const string SyncIconName = "d_Linked";
+        private const string SyncLegacyIconName = "Linked";
+        private const string TrashIconName = "TreeEditor.Trash";
+        private const string ProjectIconName = "Project";
+
+        public static Texture2D MissingAsset => GetTexture(MissingAssetIconName);
+        public static Texture2D FolderRefRoot => GetTexture(FolderFavoriteIconName, FolderClosedIconName);
+        public static Texture2D FolderClosed => GetTexture(FolderClosedIconName);
+        public static Texture2D FolderOpened => GetTexture(FolderOpenedIconName, FolderClosedIconName);
+        public static Texture2D AddGroup => GetTexture(AddGroupIconName, ToolbarPlusIconName);
+        public static Texture2D Expand => GetTexture(ExpandIconName);
+        public static Texture2D Collapse => GetTexture(CollapseIconName, CollapseLegacyIconName);
+        public static Texture2D Sync => GetTexture(SyncIconName, SyncLegacyIconName);
+        public static Texture2D Remove => GetTexture(TrashIconName);
+        public static Texture2D Project => GetTexture(ProjectIconName);
+
+        private static Texture2D GetTexture(params string[] iconNameList)
+        {
+            foreach (var iconName in iconNameList)
+            {
+                if (string.IsNullOrEmpty(iconName))
+                    continue;
+
+                var texture = EditorGUIUtility.FindTexture(iconName) as Texture2D;
+                if (texture != null)
+                    return texture;
+
+                var contentImage = EditorGUIUtility.IconContent(iconName).image as Texture2D;
+                if (contentImage != null)
+                    return contentImage;
+            }
+
+            return null;
+        }
+    }
+
     internal sealed class CustomProjectTreeModel
     {
         private const string PrefKeyPrefix = "CustomProjectView_";
@@ -300,17 +347,25 @@ namespace CustomProjectView
                 return;
 
             HandleAssetMovedRecursive(_model.Roots, guid, newPath);
-            SyncAllFolderRefs();
+            SyncFolderRefsForPaths(new[] { oldPath, newPath });
             Save();
         }
 
         public void HandleAssetDeleted(string deletedPath)
         {
             var removedAny = RemoveMissingManualAssetRefs(_model.Roots);
-            if (removedAny)
+            var syncedAny = SyncFolderRefsForPaths(new[] { deletedPath });
+            if (removedAny || syncedAny)
                 Save();
+        }
 
-            SyncAllFolderRefs();
+        public bool HandleAssetsImported(IEnumerable<string> importedPaths)
+        {
+            if (!SyncFolderRefsForPaths(importedPaths))
+                return false;
+
+            Save();
+            return true;
         }
 
         public void SetExpanded(CustomProjectNode node, bool expanded)
@@ -519,6 +574,46 @@ namespace CustomProjectView
                 if (node.Children != null && node.Children.Count > 0)
                     SyncFolderRefsRecursive(node.Children);
             }
+        }
+
+        private bool SyncFolderRefsForPaths(IEnumerable<string> assetPaths)
+        {
+            if (assetPaths == null)
+                return false;
+
+            var normalizedPathList = assetPaths
+                .Where(path => !string.IsNullOrEmpty(path))
+                .Select(CustomProjectNode.NormalizeAssetPath)
+                .Where(path => !string.IsNullOrEmpty(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (normalizedPathList.Count == 0)
+                return false;
+
+            var folderRefRootList = EnumerateNodes(_model.Roots)
+                .Where(node => node.IsFolderRefRoot)
+                .ToList();
+
+            bool syncedAny = false;
+
+            foreach (var folderRefRoot in folderRefRootList)
+            {
+                var folderPath = CustomProjectNode.NormalizeAssetPath(folderRefRoot.ResolveAssetPath());
+                if (string.IsNullOrEmpty(folderPath))
+                    folderPath = CustomProjectNode.NormalizeAssetPath(folderRefRoot.AssetPath);
+
+                if (string.IsNullOrEmpty(folderPath))
+                    continue;
+
+                if (!normalizedPathList.Any(path => IsSameOrChildPath(path, folderPath)))
+                    continue;
+
+                SyncFolderRef(folderRefRoot);
+                syncedAny = true;
+            }
+
+            return syncedAny;
         }
 
         public void SyncFolderRef(CustomProjectNode folderRefRoot)
@@ -778,6 +873,17 @@ namespace CustomProjectView
             return false;
         }
 
+        private static bool IsSameOrChildPath(string path, string rootPath)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(rootPath))
+                return false;
+
+            if (string.Equals(path, rootPath, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return path.StartsWith(rootPath + "/", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string ToAbsolutePath(string assetPath)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetPath));
@@ -815,8 +921,7 @@ namespace CustomProjectView
 
             if (importedAssets.Length > 0)
             {
-                window.Model.SyncAllFolderRefs();
-                changed = true;
+                changed |= window.Model.HandleAssetsImported(importedAssets);
             }
 
             if (changed)
@@ -824,7 +929,7 @@ namespace CustomProjectView
         }
     }
 
-    internal sealed class CustomProjectViewItem : TreeViewItem
+    internal sealed class CustomProjectViewItem : TreeViewItem<int>
     {
         public CustomProjectNode Node;
         public string AssetPath;
@@ -852,7 +957,7 @@ namespace CustomProjectView
                 if (string.IsNullOrEmpty(assetPath))
                 {
                     isMissing = true;
-                    return EditorGUIUtility.IconContent("console.erroricon.sml").image as Texture2D;
+                    return CustomProjectViewIcons.MissingAsset;
                 }
 
                 return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
@@ -861,39 +966,46 @@ namespace CustomProjectView
             if (node.IsFolderRefRoot)
             {
                 isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
-                return (EditorGUIUtility.FindTexture("FolderFavorite Icon")
-                        ?? EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+                return CustomProjectViewIcons.FolderRefRoot;
             }
 
             if (node.Kind == ProjectNodeKind.Folder)
             {
                 isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
-                return (node.IsExpanded
-                    ? EditorGUIUtility.FindTexture("FolderOpened Icon")
-                    : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+                return node.IsExpanded
+                    ? CustomProjectViewIcons.FolderOpened
+                    : CustomProjectViewIcons.FolderClosed;
             }
 
-            return (node.IsExpanded
-                ? EditorGUIUtility.FindTexture("FolderOpened Icon")
-                : EditorGUIUtility.FindTexture("Folder Icon")) as Texture2D;
+            return node.IsExpanded
+                ? CustomProjectViewIcons.FolderOpened
+                : CustomProjectViewIcons.FolderClosed;
         }
     }
 
-    internal sealed class CustomProjectTreeView : TreeView
+    internal sealed class CustomProjectTreeView : TreeView<int>
     {
         private readonly CustomProjectTreeModel _model;
         private readonly CustomProjectViewWindow _window;
 
         private readonly Dictionary<int, CustomProjectNode> _idToNode = new Dictionary<int, CustomProjectNode>();
+        private readonly Dictionary<int, Rect> _idToFoldoutRect = new Dictionary<int, Rect>();
         private string _searchQuery = string.Empty;
         private int _nextId = 1;
         private int _selectionSyncFrame = -1;
+        private int _contextRenameItemId = -1;
+        private int _pendingToggleItemId = -1;
+        private Vector2 _pendingToggleMouseDownPosition;
+        private float _lastVisibleRowBottom;
         private bool _restoringExpandedState;
 
         private const float ButtonW = 18f;
         private const float ButtonSpacing = 1f;
+        private const float ToggleDragThreshold = 4f;
+        private const float IconWidth = 16f;
+        private const float IconTextSpacing = 2f;
 
-        public CustomProjectTreeView(TreeViewState state, CustomProjectTreeModel model, CustomProjectViewWindow window)
+        public CustomProjectTreeView(TreeViewState<int> state, CustomProjectTreeModel model, CustomProjectViewWindow window)
             : base(state)
         {
             _model = model;
@@ -933,12 +1045,43 @@ namespace CustomProjectView
             SetSelection(new List<int>(), TreeViewSelectionOptions.FireSelectionChanged);
         }
 
-        protected override TreeViewItem BuildRoot()
+        public bool HasSelection()
+        {
+            return GetSelection().Count > 0;
+        }
+
+        public void BeginFrame(Rect treeRect)
+        {
+            _lastVisibleRowBottom = treeRect.yMin;
+        }
+
+        public bool TryClearSelectionFromEmptySpace(Rect treeRect)
+        {
+            var evt = Event.current;
+            if (evt == null || evt.type != EventType.MouseDown || evt.button != 0)
+                return false;
+
+            if (!treeRect.Contains(evt.mousePosition))
+                return false;
+
+            if (evt.mousePosition.y <= _lastVisibleRowBottom)
+                return false;
+
+            if (GetSelection().Count == 0)
+                return false;
+
+            ClearSelectionAndPing();
+            evt.Use();
+            return true;
+        }
+
+        protected override TreeViewItem<int> BuildRoot()
         {
             _idToNode.Clear();
+            _idToFoldoutRect.Clear();
             _nextId = 1;
 
-            var root = new TreeViewItem(-1, -1, "root");
+            var root = new TreeViewItem<int>(-1, -1, "root");
 
             if (string.IsNullOrEmpty(_searchQuery))
             {
@@ -951,7 +1094,7 @@ namespace CustomProjectView
             }
 
             if (!root.hasChildren)
-                root.AddChild(new TreeViewItem(0, 0, string.Empty));
+                root.AddChild(new TreeViewItem<int>(0, 0, string.Empty));
 
             SetupDepthsFromParentsAndChildren(root);
 
@@ -975,7 +1118,19 @@ namespace CustomProjectView
             if (item.IsMissing)
                 GUI.color = Color.red;
 
-            base.RowGUI(args);
+            _lastVisibleRowBottom = Mathf.Max(_lastVisibleRowBottom, args.rowRect.yMax);
+            _idToFoldoutRect[item.id] = CreateFoldoutRect(args.rowRect, item);
+            HandlePendingToggleInteraction(args, item);
+            var isRenamingItem = _contextRenameItemId == item.id;
+            if (isRenamingItem)
+            {
+                base.RowGUI(args);
+            }
+            else
+            {
+                DrawRowContent(args, item);
+            }
+
             GUI.color = oldColor;
 
             if (Event.current.type == EventType.Repaint)
@@ -1008,14 +1163,20 @@ namespace CustomProjectView
                 ShowContextMenu(node, id);
         }
 
-        protected override bool CanRename(TreeViewItem item)
+        protected override void SingleClickedItem(int id)
+        {
+        }
+
+        protected override bool CanRename(TreeViewItem<int> item)
         {
             var node = GetNodeForId(item.id);
-            return node != null && node.CanRenameInTree;
+            return node != null && node.CanRenameInTree && item.id == _contextRenameItemId;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
+            _contextRenameItemId = -1;
+
             if (!args.acceptedRename)
                 return;
 
@@ -1029,8 +1190,13 @@ namespace CustomProjectView
 
         protected override void DoubleClickedItem(int id)
         {
+            _pendingToggleItemId = -1;
+
             var node = GetNodeForId(id);
-            if (node != null)
+            if (node == null)
+                return;
+
+            if (node.CanOpenAsset)
                 OpenAsset(node);
         }
 
@@ -1061,7 +1227,7 @@ namespace CustomProjectView
             _model.Save();
         }
 
-        protected override bool CanMultiSelect(TreeViewItem item) => true;
+        protected override bool CanMultiSelect(TreeViewItem<int> item) => true;
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
@@ -1190,7 +1356,7 @@ namespace CustomProjectView
                 SetSelection(new[] { id }, TreeViewSelectionOptions.RevealAndFrame);
         }
 
-        private void BuildTree(List<CustomProjectNode> nodes, TreeViewItem parent)
+        private void BuildTree(List<CustomProjectNode> nodes, TreeViewItem<int> parent)
         {
             foreach (var node in nodes)
             {
@@ -1256,6 +1422,147 @@ namespace CustomProjectView
             return node;
         }
 
+        private void HandlePendingToggleInteraction(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var evt = Event.current;
+            if (evt == null || evt.button != 0)
+                return;
+
+            if (evt.type == EventType.MouseDown)
+            {
+                if (!args.rowRect.Contains(evt.mousePosition))
+                    return;
+
+                if (TryToggleOnFastRepeatClick(args, item))
+                    return;
+
+                if (!CanPreparePendingToggle(args, item))
+                {
+                    _pendingToggleItemId = -1;
+                    return;
+                }
+
+                _pendingToggleItemId = item.id;
+                _pendingToggleMouseDownPosition = evt.mousePosition;
+                return;
+            }
+
+            if (_pendingToggleItemId != item.id)
+                return;
+
+            if (evt.type == EventType.MouseDrag)
+            {
+                if ((evt.mousePosition - _pendingToggleMouseDownPosition).sqrMagnitude > ToggleDragThreshold * ToggleDragThreshold)
+                    _pendingToggleItemId = -1;
+                return;
+            }
+
+            if (evt.type != EventType.MouseUp)
+                return;
+
+            _pendingToggleItemId = -1;
+
+            if (!CanCommitPendingToggle(args, item))
+                return;
+
+            ToggleExpandedState(item.id, item.Node);
+        }
+
+        private bool TryToggleOnFastRepeatClick(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var evt = Event.current;
+            if (evt == null || evt.clickCount < 2)
+                return false;
+
+            if (!CanPreparePendingToggle(args, item))
+                return false;
+
+            _pendingToggleItemId = -1;
+            ToggleExpandedState(item.id, item.Node);
+            return true;
+        }
+
+        private bool CanPreparePendingToggle(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            if (item.Node == null || !item.Node.IsContainer)
+                return false;
+
+            if (!string.IsNullOrEmpty(_searchQuery))
+                return false;
+
+            var evt = Event.current;
+            if (evt == null)
+                return false;
+
+            if (evt.shift || evt.control || evt.command)
+                return false;
+
+            if (!args.selected)
+                return false;
+
+            var selectedIds = GetSelection();
+            if (selectedIds.Count != 1 || selectedIds[0] != item.id)
+                return false;
+
+            if (IsPointerOnFoldout(item.id) || IsPointerOnInlineButtons(args.rowRect, item.Node))
+                return false;
+
+            return true;
+        }
+
+        private bool CanCommitPendingToggle(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            if (item.Node == null || !item.Node.IsContainer)
+                return false;
+
+            if (!args.rowRect.Contains(Event.current.mousePosition))
+                return false;
+
+            if (IsPointerOnFoldout(item.id) || IsPointerOnInlineButtons(args.rowRect, item.Node))
+                return false;
+
+            return true;
+        }
+
+        private Rect CreateFoldoutRect(Rect rowRect, TreeViewItem<int> item)
+        {
+            var foldoutX = rowRect.x + GetFoldoutIndent(item);
+            var contentX = rowRect.x + GetContentIndent(item);
+            var foldoutWidth = Mathf.Max(14f, contentX - foldoutX);
+            return new Rect(foldoutX, rowRect.y, foldoutWidth, rowRect.height);
+        }
+
+        private bool IsPointerOnFoldout(int itemId)
+        {
+            var evt = Event.current;
+            if (evt == null)
+                return false;
+
+            if (!_idToFoldoutRect.TryGetValue(itemId, out var foldoutRect))
+                return false;
+
+            return foldoutRect.Contains(evt.mousePosition);
+        }
+
+        private bool IsPointerOnInlineButtons(Rect rowRect, CustomProjectNode node)
+        {
+            var evt = Event.current;
+            if (evt == null)
+                return false;
+
+            var width = CalcButtonAreaWidth(node);
+            if (width <= 0f)
+                return false;
+
+            var buttonRect = new Rect(rowRect.xMax - width, rowRect.y, width, rowRect.height);
+            return buttonRect.Contains(evt.mousePosition);
+        }
+
+        private void ToggleExpandedState(int itemId, CustomProjectNode node)
+        {
+            SetExpandedState(itemId, node, !IsExpanded(itemId));
+        }
+
         private void DrawPathSuffix(RowGUIArgs args, CustomProjectViewItem item)
         {
             var node = item.Node;
@@ -1275,13 +1582,101 @@ namespace CustomProjectView
                 return;
 
             var labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.alignment = TextAnchor.MiddleLeft;
             var size = labelStyle.CalcSize(new GUIContent(item.displayName));
-            var indent = GetContentIndent(item);
-            var iconWidth = 18f;
-            var xOffset = indent + iconWidth + size.x;
-            var rect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.width - xOffset, args.rowRect.height);
+            var labelRect = GetCenteredLabelRect(args, item);
+            var xOffset = labelRect.x - args.rowRect.x + size.x;
+            var rect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.xMax - (args.rowRect.x + xOffset), args.rowRect.height);
             labelStyle.normal.textColor = args.selected ? new Color(0.8f, 0.8f, 0.8f, 0.8f) : Color.gray;
             GUI.Label(rect, $" (/{parentDir})", labelStyle);
+        }
+
+        private void DrawRowContent(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            DrawFoldout(args, item);
+            DrawIcon(args, item);
+            DrawCenteredLabel(args, item);
+        }
+
+        private void DrawFoldout(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            if (!item.Node.IsContainer)
+                return;
+
+            var foldoutRect = _idToFoldoutRect[item.id];
+            var expanded = IsExpanded(item.id);
+            var newExpanded = EditorGUI.Foldout(foldoutRect, expanded, GUIContent.none, false);
+            if (newExpanded != expanded)
+                SetExpandedState(item.id, item.Node, newExpanded);
+        }
+
+        private void DrawIcon(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            if (item.icon == null)
+                return;
+
+            var iconRect = GetIconRect(args, item);
+            GUI.DrawTexture(iconRect, item.icon, ScaleMode.ScaleToFit, true);
+        }
+
+        private void DrawCenteredLabel(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var labelRect = GetCenteredLabelRect(args, item);
+            if (labelRect.width <= 0f)
+                return;
+
+            var labelStyle = new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                clipping = TextClipping.Clip,
+            };
+
+            if (item.IsMissing)
+            {
+                labelStyle.normal.textColor = args.selected
+                    ? new Color(1f, 0.85f, 0.85f)
+                    : new Color(0.85f, 0.2f, 0.2f);
+            }
+            else if (args.selected)
+            {
+                labelStyle.normal.textColor = Color.white;
+            }
+
+            GUI.Label(labelRect, item.displayName, labelStyle);
+        }
+
+        private Rect GetCenteredLabelRect(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var x = args.rowRect.x + GetContentIndent(item) + IconWidth + IconTextSpacing;
+            var width = args.rowRect.xMax - x - CalcButtonAreaWidth(item.Node) - 6f;
+            if (width <= 0f)
+                return Rect.zero;
+
+            return new Rect(x, args.rowRect.y, width, args.rowRect.height);
+        }
+
+        private Rect GetIconRect(RowGUIArgs args, CustomProjectViewItem item)
+        {
+            var x = args.rowRect.x + GetContentIndent(item);
+            var y = args.rowRect.y + (args.rowRect.height - IconWidth) * 0.5f;
+            return new Rect(x, y, IconWidth, IconWidth);
+        }
+
+        private void SetExpandedState(int itemId, CustomProjectNode node, bool expanded)
+        {
+            _model.SetExpanded(node, expanded);
+
+            _restoringExpandedState = true;
+            try
+            {
+                SetExpanded(itemId, expanded);
+            }
+            finally
+            {
+                _restoringExpandedState = false;
+            }
+
+            _model.Save();
         }
 
         private float CalcButtonAreaWidth(CustomProjectNode node)
@@ -1310,21 +1705,21 @@ namespace CustomProjectView
             if (node.IsManualGroup)
             {
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("CreateAddNew") ?? EditorGUIUtility.IconContent("Toolbar Plus").image, "サブグループを追加"), style))
+                    new GUIContent(CustomProjectViewIcons.AddGroup, "サブグループを追加"), style))
                 {
                     AddSubGroup(node);
                 }
                 x += ButtonW + ButtonSpacing;
 
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), style))
+                    new GUIContent(CustomProjectViewIcons.Expand, "再帰的に展開"), style))
                 {
                     ExpandRecursive(itemId, true);
                 }
                 x += ButtonW + ButtonSpacing;
 
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("d_winbtn_win_min") ?? EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), style))
+                    new GUIContent(CustomProjectViewIcons.Collapse, "再帰的に折りたたむ"), style))
                 {
                     ExpandRecursive(itemId, false);
                 }
@@ -1333,14 +1728,14 @@ namespace CustomProjectView
             else if (node.IsFolderRefRoot || (node.Kind == ProjectNodeKind.Folder && node.IsSynced))
             {
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.IconContent("d_SceneViewOrtho").image, "再帰的に展開"), style))
+                    new GUIContent(CustomProjectViewIcons.Expand, "再帰的に展開"), style))
                 {
                     ExpandRecursive(itemId, true);
                 }
                 x += ButtonW + ButtonSpacing;
 
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("d_winbtn_win_min") ?? EditorGUIUtility.IconContent("d_winbtn_win_min").image, "再帰的に折りたたむ"), style))
+                    new GUIContent(CustomProjectViewIcons.Collapse, "再帰的に折りたたむ"), style))
                 {
                     ExpandRecursive(itemId, false);
                 }
@@ -1350,7 +1745,7 @@ namespace CustomProjectView
             if (node.CanRemoveFromList)
             {
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(EditorGUIUtility.FindTexture("winbtn_win_close") ?? EditorGUIUtility.IconContent("d_winbtn_win_close").image, "取り除く"), style))
+                    new GUIContent(CustomProjectViewIcons.Remove, "取り除く"), style))
                 {
                     RemoveWithConfirm(node);
                 }
@@ -1373,7 +1768,7 @@ namespace CustomProjectView
                 menu.AddItem(new GUIContent("サブグループを追加"), false, () => AddSubGroup(node));
                 menu.AddItem(new GUIContent("項目を追加..."), false, () => AddAssetToGroup(node));
                 menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent("グループ名を変更"), false, () => BeginRename(FindItem(itemId, rootItem)));
+                menu.AddItem(new GUIContent("グループ名を変更"), false, () => BeginContextRename(itemId));
                 menu.AddItem(new GUIContent("取り除く"), false, () => RemoveWithConfirm(node));
                 menu.AddSeparator(string.Empty);
                 menu.AddItem(new GUIContent("再帰的に展開"), false, () => ExpandRecursive(itemId, true));
@@ -1432,6 +1827,21 @@ namespace CustomProjectView
             }
         }
 
+        private void BeginContextRename(int itemId)
+        {
+            var item = FindItem(itemId, rootItem);
+            if (item == null)
+                return;
+
+            var node = GetNodeForId(itemId);
+            if (node == null || !node.CanRenameInTree)
+                return;
+
+            _contextRenameItemId = itemId;
+            SetSelection(new[] { itemId }, TreeViewSelectionOptions.RevealAndFrame);
+            BeginRename(item);
+        }
+
         private void AddPathActions(GenericMenu menu, CustomProjectNode node)
         {
             if (node.CanRevealInFinder)
@@ -1462,7 +1872,7 @@ namespace CustomProjectView
             _window.RequestRefresh();
         }
 
-        private void SetExpandedRecursive(TreeViewItem item, bool expand)
+        private void SetExpandedRecursive(TreeViewItem<int> item, bool expand)
         {
             SetExpanded(item.id, expand);
             var node = GetNodeForId(item.id);
@@ -1506,10 +1916,7 @@ namespace CustomProjectView
 
             var id = GetIdForNode(newNode);
             if (id >= 0)
-            {
                 SetSelection(new[] { id });
-                BeginRename(FindItem(id, rootItem));
-            }
         }
 
         private void AddAssetToGroup(CustomProjectNode parent)
@@ -1645,7 +2052,9 @@ namespace CustomProjectView
 
     public sealed class CustomProjectViewWindow : EditorWindow
     {
-        [SerializeField] private TreeViewState _treeViewState;
+        private static readonly Type SceneHierarchyWindowType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchyWindow");
+
+        [SerializeField] private TreeViewState<int> _treeViewState;
         [SerializeField] private string _searchQuery = string.Empty;
         [SerializeField] private bool _autoSyncSelection;
 
@@ -1661,14 +2070,14 @@ namespace CustomProjectView
         public static void Open()
         {
             var window = GetWindow<CustomProjectViewWindow>();
-            window.titleContent = new GUIContent("Custom Project", EditorGUIUtility.FindTexture("Project") ?? EditorGUIUtility.FindTexture("d_Project"));
+            window.titleContent = new GUIContent("Project Custom", CustomProjectViewIcons.Project);
             window.Show();
         }
 
         private void OnEnable()
         {
             if (_treeViewState == null)
-                _treeViewState = new TreeViewState();
+                _treeViewState = new TreeViewState<int>();
 
             Model = new CustomProjectTreeModel();
             Model.Load();
@@ -1690,6 +2099,16 @@ namespace CustomProjectView
 
         private void OnSelectionChanged()
         {
+            if (ShouldClearSelectionFromHierarchySelection())
+            {
+                _treeView?.ClearSelectionAndPing();
+                Repaint();
+                return;
+            }
+
+            if (!_autoSyncSelection)
+                return;
+
             _treeView?.SyncSelectionFromUnity();
             Repaint();
         }
@@ -1698,6 +2117,36 @@ namespace CustomProjectView
         {
             _needsRefresh = true;
             Repaint();
+        }
+
+        private static bool IsHierarchyWindow(EditorWindow window)
+        {
+            if (window == null)
+                return false;
+
+            if (SceneHierarchyWindowType != null)
+                return SceneHierarchyWindowType.IsInstanceOfType(window);
+
+            return string.Equals(window.GetType().Name, "SceneHierarchyWindow", StringComparison.Ordinal);
+        }
+
+        private bool ShouldClearSelectionFromHierarchySelection()
+        {
+            if (_treeView == null || !_treeView.HasSelection())
+                return false;
+
+            var activeWindow = EditorWindow.focusedWindow ?? EditorWindow.mouseOverWindow;
+            if (!IsHierarchyWindow(activeWindow))
+                return false;
+
+            var selectedObject = Selection.activeObject;
+            if (selectedObject == null)
+                return true;
+
+            if (EditorUtility.IsPersistent(selectedObject))
+                return false;
+
+            return string.IsNullOrEmpty(AssetDatabase.GetAssetPath(selectedObject));
         }
 
         private void OnGUI()
@@ -1726,44 +2175,32 @@ namespace CustomProjectView
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            var workspaceName = string.IsNullOrEmpty(Application.productName) ? "Custom Project" : Application.productName;
-            GUILayout.Label(workspaceName, EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
-            GUILayout.FlexibleSpace();
-
-            var syncIcon = EditorGUIUtility.FindTexture("d_Linked")
-                ?? EditorGUIUtility.FindTexture("Linked")
-                ?? EditorGUIUtility.IconContent("d_SceneViewOrtho").image as Texture2D;
-            _autoSyncSelection = GUILayout.Toggle(_autoSyncSelection,
-                new GUIContent(syncIcon, "選択時に Project ビューと同期"),
-                EditorStyles.toolbarButton,
-                GUILayout.Width(24));
-
-            if (GUILayout.Button(new GUIContent("+ Group", "グループをルートに追加"), EditorStyles.toolbarButton, GUILayout.Width(60)))
+            if (GUILayout.Button(new GUIContent(" Group", CustomProjectViewIcons.AddGroup, "グループをルートに追加"), EditorStyles.toolbarButton, GUILayout.Width(78)))
                 AddRootGroup();
 
-            if (GUILayout.Button(new GUIContent(
-                EditorGUIUtility.FindTexture("d_Toolbar Plus") ?? EditorGUIUtility.FindTexture("Toolbar Plus"),
-                "項目を追加"),
+            GUILayout.FlexibleSpace();
+
+            _autoSyncSelection = GUILayout.Toggle(_autoSyncSelection,
+                new GUIContent(" Sync", CustomProjectViewIcons.Sync, "選択時に Project ビューと同期"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(24)))
-            {
-                AddAssetOrFolderToRoot();
-            }
+                GUILayout.Width(70));
 
             if (GUILayout.Button(new GUIContent(
-                EditorGUIUtility.FindTexture("UnityEditor.SceneHierarchyWindow") ?? EditorGUIUtility.FindTexture("d_SceneViewOrtho"),
+                " Expand",
+                CustomProjectViewIcons.Expand,
                 "すべて展開"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(24)))
+                GUILayout.Width(84)))
             {
                 _treeView?.ExpandAll(true);
             }
 
             if (GUILayout.Button(new GUIContent(
-                EditorGUIUtility.FindTexture("d_winbtn_win_min"),
+                " Collapse",
+                CustomProjectViewIcons.Collapse,
                 "すべて折りたたむ"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(24)))
+                GUILayout.Width(90)))
             {
                 _treeView?.ExpandAll(false);
             }
@@ -1793,9 +2230,15 @@ namespace CustomProjectView
 
         private void DrawTreeView()
         {
-            _treeViewRect = GUILayoutUtility.GetRect(0, position.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            _treeViewRect = GUILayoutUtility.GetRect(
+                GUIContent.none,
+                GUIStyle.none,
+                GUILayout.ExpandWidth(true),
+                GUILayout.ExpandHeight(true));
+            _treeView?.BeginFrame(_treeViewRect);
             _treeView?.OnGUI(_treeViewRect);
             HandleExternalDrop(_treeViewRect);
+            _treeView?.TryClearSelectionFromEmptySpace(_treeViewRect);
         }
 
         private void HandleExternalDrop(Rect rect)
@@ -1842,32 +2285,6 @@ namespace CustomProjectView
             });
         }
 
-        private void AddAssetOrFolderToRoot()
-        {
-            var path = EditorUtility.OpenFilePanel("項目を追加", "Assets", string.Empty);
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            if (path.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase))
-                path = "Assets" + path.Substring(Application.dataPath.Length);
-
-            if (AssetDatabase.IsValidFolder(path))
-            {
-                Model.AddFolderRef(path);
-            }
-            else
-            {
-                var guid = AssetDatabase.AssetPathToGUID(path);
-                if (string.IsNullOrEmpty(guid))
-                {
-                    EditorUtility.DisplayDialog("エラー", "Assets フォルダ外のファイルは追加できません。", "OK");
-                    return;
-                }
-                Model.AddAssetRef(guid);
-            }
-
-            _treeView?.Reload();
-        }
     }
 
     internal sealed class PopupNameDialog : EditorWindow
@@ -1930,5 +2347,4 @@ namespace CustomProjectView
     }
 }
 #endif
-
 
