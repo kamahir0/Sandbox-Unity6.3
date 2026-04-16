@@ -148,43 +148,29 @@ namespace CustomProjectView
         private const string FolderClosedIconName = "Folder Icon";
         private const string FolderOpenedIconName = "FolderOpened Icon";
         private const string AddGroupIconName = "CreateAddNew";
-        private const string ToolbarPlusIconName = "Toolbar Plus";
         private const string ExpandIconName = "CollabCreate Icon";
         private const string CollapseIconName = "CollabDeleted Icon";
-        private const string CollapseLegacyIconName = "CollabDeleted Icon";
         private const string SyncIconName = "d_Linked";
-        private const string SyncLegacyIconName = "Linked";
         private const string TrashIconName = "TreeEditor.Trash";
         private const string ProjectIconName = "Project";
 
         public static Texture2D MissingAsset => GetTexture(MissingAssetIconName);
-        public static Texture2D FolderRefRoot => GetTexture(FolderFavoriteIconName, FolderClosedIconName);
+        public static Texture2D FolderRefRoot => GetTexture(FolderFavoriteIconName);
         public static Texture2D FolderClosed => GetTexture(FolderClosedIconName);
-        public static Texture2D FolderOpened => GetTexture(FolderOpenedIconName, FolderClosedIconName);
-        public static Texture2D AddGroup => GetTexture(AddGroupIconName, ToolbarPlusIconName);
+        public static Texture2D FolderOpened => GetTexture(FolderOpenedIconName);
+        public static Texture2D AddGroup => GetTexture(AddGroupIconName);
         public static Texture2D Expand => GetTexture(ExpandIconName);
-        public static Texture2D Collapse => GetTexture(CollapseIconName, CollapseLegacyIconName);
-        public static Texture2D Sync => GetTexture(SyncIconName, SyncLegacyIconName);
+        public static Texture2D Collapse => GetTexture(CollapseIconName);
+        public static Texture2D Sync => GetTexture(SyncIconName);
         public static Texture2D Remove => GetTexture(TrashIconName);
         public static Texture2D Project => GetTexture(ProjectIconName);
 
-        private static Texture2D GetTexture(params string[] iconNameList)
+        private static Texture2D GetTexture(string iconName)
         {
-            foreach (var iconName in iconNameList)
-            {
-                if (string.IsNullOrEmpty(iconName))
-                    continue;
+            if (string.IsNullOrEmpty(iconName))
+                return null;
 
-                var texture = EditorGUIUtility.FindTexture(iconName) as Texture2D;
-                if (texture != null)
-                    return texture;
-
-                var contentImage = EditorGUIUtility.IconContent(iconName).image as Texture2D;
-                if (contentImage != null)
-                    return contentImage;
-            }
-
-            return null;
+            return EditorGUIUtility.FindTexture(iconName) as Texture2D;
         }
     }
 
@@ -1118,6 +1104,13 @@ namespace CustomProjectView
         private const string DragSourceKey = "CustomProjectViewDragSource";
         private const string DragNodesKey = "CustomProjectViewNodes";
         private static readonly GUIContent SharedMeasureContent = new GUIContent();
+#if UNITY_EDITOR_OSX
+        private const string RevealInOsMenuLabel = "Finder で表示";
+#elif UNITY_EDITOR_WIN
+        private const string RevealInOsMenuLabel = "エクスプローラーで表示";
+#else
+        private const string RevealInOsMenuLabel = "ファイルマネージャーで表示";
+#endif
 
         private readonly CustomProjectTreeModel _model;
         private readonly CustomProjectViewWindow _window;
@@ -2101,9 +2094,9 @@ namespace CustomProjectView
         private void AddPathActions(GenericMenu menu, CustomProjectNode node)
         {
             if (node.CanRevealInFinder)
-                menu.AddItem(new GUIContent("OS で表示"), false, () => RevealInFinder(node));
+                menu.AddItem(new GUIContent(RevealInOsMenuLabel), false, () => RevealInFinder(node));
             else
-                menu.AddDisabledItem(new GUIContent("OS で表示"));
+                menu.AddDisabledItem(new GUIContent(RevealInOsMenuLabel));
 
             if (node.CanCopyPath)
             {
