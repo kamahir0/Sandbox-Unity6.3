@@ -40,10 +40,10 @@ namespace CustomProjectView
         public bool IsFolderRefRoot => Kind == ProjectNodeKind.Folder && Source == ProjectNodeSource.FolderRefRoot;
         public bool IsSynced => Source == ProjectNodeSource.FolderRefSynced;
         public bool CanAddChildren => IsManualGroup;
-        public bool CanRenameInTree => IsManualGroup;
+        public bool CanRenameInTree => IsManualGroup || CanDeleteOnDisk;
         public bool CanRemoveFromList => Source != ProjectNodeSource.FolderRefSynced;
         public bool CanMoveInTree => Source != ProjectNodeSource.FolderRefSynced;
-        public bool CanDeleteOnDisk => Kind == ProjectNodeKind.Asset && Source == ProjectNodeSource.FolderRefSynced;
+        public bool CanDeleteOnDisk => Kind == ProjectNodeKind.Asset && !string.IsNullOrEmpty(ResolveAssetPath());
         public bool CanOpenAsset => Kind == ProjectNodeKind.Asset;
         public bool CanSelectInProject => !string.IsNullOrEmpty(ResolveAssetPath());
         public bool CanCopyPath => !string.IsNullOrEmpty(ResolveAssetPath());
@@ -298,13 +298,22 @@ namespace CustomProjectView
             return node;
         }
 
-        public void RenameManualGroup(CustomProjectNode node, string newLabel)
+        public bool RenameNode(CustomProjectNode node, string newLabel)
         {
             if (node == null || !node.CanRenameInTree)
-                return;
+                return false;
 
-            node.Label = string.IsNullOrWhiteSpace(newLabel) ? node.Label : newLabel.Trim();
-            Save();
+            if (node.IsManualGroup)
+            {
+                node.Label = string.IsNullOrWhiteSpace(newLabel) ? node.Label : newLabel.Trim();
+                Save();
+                return true;
+            }
+
+            if (node.CanDeleteOnDisk)
+                return RenameSyncedAsset(node, newLabel);
+
+            return false;
         }
 
         public bool Remove(CustomProjectNode node)
@@ -575,6 +584,34 @@ namespace CustomProjectView
             }
 
             return false;
+        }
+
+        private bool RenameSyncedAsset(CustomProjectNode node, string newLabel)
+        {
+            var path = node.ResolveAssetPath();
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            var trimmed = string.IsNullOrWhiteSpace(newLabel) ? string.Empty : newLabel.Trim();
+            var renameTarget = Path.GetFileNameWithoutExtension(trimmed);
+            if (string.IsNullOrWhiteSpace(renameTarget))
+                return false;
+
+            var error = AssetDatabase.RenameAsset(path, renameTarget);
+            if (!string.IsNullOrEmpty(error))
+            {
+                EditorUtility.DisplayDialog("名前を変更できません", error, "OK");
+                return false;
+            }
+
+            var renamedPath = CustomProjectNode.NormalizeAssetPath(AssetDatabase.GUIDToAssetPath(node.AssetGuid));
+            if (string.IsNullOrEmpty(renamedPath))
+                renamedPath = CustomProjectNode.NormalizeAssetPath(path);
+
+            node.AssetPath = renamedPath;
+            node.Label = Path.GetFileName(renamedPath);
+            Save();
+            return true;
         }
 
         private bool ReplaceNode(string oldId, CustomProjectNode replacement, List<CustomProjectNode> nodes)
@@ -1428,8 +1465,8 @@ namespace CustomProjectView
             if (node == null || !node.CanRenameInTree)
                 return;
 
-            _model.RenameManualGroup(node, args.newName);
-            Reload();
+            if (_model.RenameNode(node, args.newName))
+                Reload();
         }
 
         protected override void DoubleClickedItem(int id)
@@ -2067,6 +2104,7 @@ namespace CustomProjectView
                 if (node.CanDeleteOnDisk)
                 {
                     menu.AddSeparator(string.Empty);
+                    menu.AddItem(new GUIContent("名前を変更"), false, () => BeginContextRename(itemId));
                     menu.AddItem(new GUIContent("削除"), false, () => DeleteAssetOnDisk(node));
                 }
 
@@ -2103,15 +2141,9 @@ namespace CustomProjectView
                 menu.AddDisabledItem(new GUIContent(RevealInOsMenuLabel));
 
             if (node.CanCopyPath)
-            {
-                menu.AddItem(new GUIContent("パスのコピー"), false, () => CopyPath(node, false));
-                menu.AddItem(new GUIContent("相対パスのコピー"), false, () => CopyPath(node, true));
-            }
+                menu.AddItem(new GUIContent("パスのコピー"), false, () => CopyPath(node));
             else
-            {
                 menu.AddDisabledItem(new GUIContent("パスのコピー"));
-                menu.AddDisabledItem(new GUIContent("相対パスのコピー"));
-            }
         }
 
         private void ExpandRecursive(int rootItemId, bool expand)
@@ -2279,15 +2311,13 @@ namespace CustomProjectView
             EditorUtility.RevealInFinder(abs);
         }
 
-        private void CopyPath(CustomProjectNode node, bool relative)
+        private void CopyPath(CustomProjectNode node)
         {
             var path = node.ResolveAssetPath();
             if (string.IsNullOrEmpty(path))
                 return;
 
-            GUIUtility.systemCopyBuffer = relative
-                ? path
-                : Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
+            GUIUtility.systemCopyBuffer = Path.GetFullPath(Path.Combine(Application.dataPath, "..", path));
         }
 
         private void DeleteAssetOnDisk(CustomProjectNode node)
