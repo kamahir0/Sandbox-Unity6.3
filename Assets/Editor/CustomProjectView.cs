@@ -51,7 +51,7 @@ namespace CustomProjectView
         public string ResolveAssetPath()
         {
             if (!string.IsNullOrEmpty(AssetPath))
-                return AssetPath.Replace("\\", "/");
+                return AssetPath;
 
             if (!string.IsNullOrEmpty(AssetGuid))
                 return AssetDatabase.GUIDToAssetPath(AssetGuid);
@@ -196,6 +196,7 @@ namespace CustomProjectView
         private readonly Dictionary<string, CustomProjectNode> _nodeByAssetPath = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
         private readonly Dictionary<string, CustomProjectNode> _manualAssetRefByGuid = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
         private bool _lookupCacheDirty = true;
+        private bool _saveDeferredQueued;
 
         public List<CustomProjectNode> Roots => _model.Roots;
         public bool IsEmpty => _model.Roots.Count == 0;
@@ -230,6 +231,7 @@ namespace CustomProjectView
 
         public void Save()
         {
+            CancelDeferredSave();
             SortNodes(_model.Roots);
             var snapshot = new SerializableModel
             {
@@ -240,6 +242,25 @@ namespace CustomProjectView
             var json = JsonUtility.ToJson(snapshot, false);
             EditorPrefs.SetString(PrefKey, json);
             RebuildLookupCache();
+        }
+
+        public void SaveDeferred()
+        {
+            if (_saveDeferredQueued)
+                return;
+
+            _saveDeferredQueued = true;
+            EditorApplication.delayCall -= FlushDeferredSave;
+            EditorApplication.delayCall += FlushDeferredSave;
+        }
+
+        public void FlushPendingSave()
+        {
+            if (!_saveDeferredQueued)
+                return;
+
+            CancelDeferredSave();
+            Save();
         }
 
         public CustomProjectNode AddGroup(string label, CustomProjectNode parent = null)
@@ -349,31 +370,40 @@ namespace CustomProjectView
             RebuildLookupCache();
         }
 
-        public void HandleAssetMoved(string oldPath, string newPath)
+        public bool HandleAssetMoved(string oldPath, string newPath, bool save = true)
         {
             var guid = AssetDatabase.AssetPathToGUID(newPath);
             if (string.IsNullOrEmpty(guid))
-                return;
+                return false;
 
-            HandleAssetMovedRecursive(_model.Roots, guid, newPath);
-            SyncFolderRefsForPaths(new[] { oldPath, newPath });
-            Save();
+            var movedAny = HandleAssetMovedRecursive(_model.Roots, guid, newPath);
+            var syncedAny = SyncFolderRefsForPaths(new[] { oldPath, newPath });
+            var changed = movedAny || syncedAny;
+            if (changed && save)
+                Save();
+
+            return changed;
         }
 
-        public void HandleAssetDeleted(string deletedPath)
+        public bool HandleAssetDeleted(string deletedPath, bool save = true)
         {
             var removedAny = RemoveMissingManualAssetRefs(_model.Roots);
             var syncedAny = SyncFolderRefsForPaths(new[] { deletedPath });
-            if (removedAny || syncedAny)
+            var changed = removedAny || syncedAny;
+            if (changed && save)
                 Save();
+
+            return changed;
         }
 
-        public bool HandleAssetsImported(IEnumerable<string> importedPaths)
+        public bool HandleAssetsImported(IEnumerable<string> importedPaths, bool save = true)
         {
-            if (!SyncFolderRefsForPaths(importedPaths))
+            var changed = SyncFolderRefsForPaths(importedPaths);
+            if (!changed)
                 return false;
 
-            Save();
+            if (save)
+                Save();
             return true;
         }
 
@@ -694,23 +724,29 @@ namespace CustomProjectView
             return result;
         }
 
-        private void HandleAssetMovedRecursive(List<CustomProjectNode> nodes, string guid, string newPath)
+        private bool HandleAssetMovedRecursive(List<CustomProjectNode> nodes, string guid, string newPath)
         {
+            bool changed = false;
+
             foreach (var node in nodes)
             {
                 if (node.Source == ProjectNodeSource.Manual && node.Kind == ProjectNodeKind.Asset && node.AssetGuid == guid)
                 {
                     node.Label = Path.GetFileName(newPath);
+                    changed = true;
                 }
                 else if (node.IsFolderRefRoot && node.AssetGuid == guid)
                 {
                     node.AssetPath = CustomProjectNode.NormalizeAssetPath(newPath);
                     node.Label = Path.GetFileName(newPath.TrimEnd('/', '\\'));
+                    changed = true;
                 }
 
                 if (node.Children != null && node.Children.Count > 0)
-                    HandleAssetMovedRecursive(node.Children, guid, newPath);
+                    changed |= HandleAssetMovedRecursive(node.Children, guid, newPath);
             }
+
+            return changed;
         }
 
         private bool RemoveMissingManualAssetRefs(List<CustomProjectNode> nodes)
@@ -800,6 +836,25 @@ namespace CustomProjectView
         private void MarkLookupCacheDirty()
         {
             _lookupCacheDirty = true;
+        }
+
+        private void CancelDeferredSave()
+        {
+            if (!_saveDeferredQueued)
+                return;
+
+            _saveDeferredQueued = false;
+            EditorApplication.delayCall -= FlushDeferredSave;
+        }
+
+        private void FlushDeferredSave()
+        {
+            if (!_saveDeferredQueued)
+                return;
+
+            _saveDeferredQueued = false;
+            EditorApplication.delayCall -= FlushDeferredSave;
+            Save();
         }
 
         private void EnsureLookupCache()
@@ -970,21 +1025,16 @@ namespace CustomProjectView
             bool changed = false;
 
             for (int i = 0; i < movedAssets.Length; i++)
-            {
-                window.Model.HandleAssetMoved(movedFromAssetPaths[i], movedAssets[i]);
-                changed = true;
-            }
+                changed |= window.Model.HandleAssetMoved(movedFromAssetPaths[i], movedAssets[i], save: false);
 
             foreach (var deleted in deletedAssets)
-            {
-                window.Model.HandleAssetDeleted(deleted);
-                changed = true;
-            }
+                changed |= window.Model.HandleAssetDeleted(deleted, save: false);
 
             if (importedAssets.Length > 0)
-            {
-                changed |= window.Model.HandleAssetsImported(importedAssets);
-            }
+                changed |= window.Model.HandleAssetsImported(importedAssets, save: false);
+
+            if (changed)
+                window.Model.Save();
 
             if (changed)
                 window.RequestRefresh();
@@ -995,6 +1045,7 @@ namespace CustomProjectView
     {
         public CustomProjectNode Node;
         public string AssetPath;
+        public string PathSuffix;
         public bool IsMissing;
 
         public CustomProjectViewItem(int id, int depth, CustomProjectNode node)
@@ -1002,6 +1053,7 @@ namespace CustomProjectView
         {
             Node = node;
             AssetPath = node?.ResolveAssetPath();
+            PathSuffix = ResolvePathSuffix(node, AssetPath);
             IsMissing = false;
             icon = ResolveIcon(node, AssetPath, ref IsMissing);
 
@@ -1043,12 +1095,29 @@ namespace CustomProjectView
                 ? CustomProjectViewIcons.FolderOpened
                 : CustomProjectViewIcons.FolderClosed;
         }
+
+        private static string ResolvePathSuffix(CustomProjectNode node, string assetPath)
+        {
+            if (node == null || string.IsNullOrEmpty(assetPath))
+                return null;
+
+            if (node.Source != ProjectNodeSource.Manual && !node.IsFolderRefRoot)
+                return null;
+
+            var dir = Path.GetDirectoryName(assetPath)?.Replace("\\", "/");
+            if (string.IsNullOrEmpty(dir))
+                return null;
+
+            var parentDir = Path.GetFileName(dir.TrimEnd('/'));
+            return string.IsNullOrEmpty(parentDir) ? null : $" (/{parentDir})";
+        }
     }
 
     internal sealed class CustomProjectTreeView : TreeView<int>
     {
         private const string DragSourceKey = "CustomProjectViewDragSource";
         private const string DragNodesKey = "CustomProjectViewNodes";
+        private static readonly GUIContent SharedMeasureContent = new GUIContent();
 
         private readonly CustomProjectTreeModel _model;
         private readonly CustomProjectViewWindow _window;
@@ -1057,6 +1126,12 @@ namespace CustomProjectView
         private readonly Dictionary<string, int> _nodeIdToItemId = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<int, Rect> _idToFoldoutRect = new Dictionary<int, Rect>();
         private readonly Dictionary<int, Rect> _idToRowRect = new Dictionary<int, Rect>();
+        private GUIStyle _labelStyle;
+        private GUIStyle _selectedLabelStyle;
+        private GUIStyle _missingLabelStyle;
+        private GUIStyle _missingSelectedLabelStyle;
+        private GUIStyle _pathSuffixStyle;
+        private GUIStyle _selectedPathSuffixStyle;
         private string _searchQuery = string.Empty;
         private int _nextId = 1;
         private int _selectionSyncFrame = -1;
@@ -1081,6 +1156,43 @@ namespace CustomProjectView
             showBorder = true;
             showAlternatingRowBackgrounds = false;
             rowHeight = EditorGUIUtility.singleLineHeight + 2f;
+        }
+
+        private void EnsureStyles()
+        {
+            if (_labelStyle != null)
+                return;
+
+            _labelStyle = CreateLabelStyle();
+            _selectedLabelStyle = CreateLabelStyle(Color.white);
+            _missingLabelStyle = CreateLabelStyle(new Color(0.85f, 0.2f, 0.2f));
+            _missingSelectedLabelStyle = CreateLabelStyle(new Color(1f, 0.85f, 0.85f));
+            _pathSuffixStyle = CreateLabelStyle(Color.gray);
+            _selectedPathSuffixStyle = CreateLabelStyle(new Color(0.8f, 0.8f, 0.8f, 0.8f));
+        }
+
+        private static GUIStyle CreateLabelStyle()
+        {
+            return new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                clipping = TextClipping.Clip,
+            };
+        }
+
+        private static GUIStyle CreateLabelStyle(Color textColor)
+        {
+            var style = CreateLabelStyle();
+            style.normal.textColor = textColor;
+            return style;
+        }
+
+        private static GUIContent GetMeasureContent(string text)
+        {
+            SharedMeasureContent.text = text;
+            SharedMeasureContent.image = null;
+            SharedMeasureContent.tooltip = null;
+            return SharedMeasureContent;
         }
 
         public void SetSearch(string query)
@@ -1188,6 +1300,8 @@ namespace CustomProjectView
                     GUI.Label(args.rowRect, "まだ項目がありません。\"+ Group\" でグループを追加してください。", EditorStyles.centeredGreyMiniLabel);
                 return;
             }
+
+            EnsureStyles();
 
             var oldColor = GUI.color;
             if (item.IsMissing)
@@ -1364,7 +1478,7 @@ namespace CustomProjectView
                 return;
 
             SyncExpandedState(_model.Roots);
-            _model.Save();
+            _model.SaveDeferred();
         }
 
         protected override bool CanMultiSelect(TreeViewItem<int> item) => true;
@@ -1484,7 +1598,7 @@ namespace CustomProjectView
             foreach (var child in rootItem.children)
                 SetExpandedRecursive(child, expand);
 
-            _model.Save();
+            _model.SaveDeferred();
             Reload();
         }
 
@@ -1732,30 +1846,14 @@ namespace CustomProjectView
 
         private void DrawPathSuffix(RowGUIArgs args, CustomProjectViewItem item)
         {
-            var node = item.Node;
-            if (node == null)
+            if (string.IsNullOrEmpty(item.PathSuffix))
                 return;
 
-            string parentDir = null;
-            var assetPath = item.AssetPath;
-            if (!string.IsNullOrEmpty(assetPath) && (node.Source == ProjectNodeSource.Manual || node.IsFolderRefRoot))
-            {
-                var dir = Path.GetDirectoryName(assetPath)?.Replace("\\", "/");
-                if (!string.IsNullOrEmpty(dir))
-                    parentDir = Path.GetFileName(dir.TrimEnd('/'));
-            }
-
-            if (string.IsNullOrEmpty(parentDir))
-                return;
-
-            var labelStyle = new GUIStyle(EditorStyles.label);
-            labelStyle.alignment = TextAnchor.MiddleLeft;
-            var size = labelStyle.CalcSize(new GUIContent(item.displayName));
+            var size = _labelStyle.CalcSize(GetMeasureContent(item.displayName));
             var labelRect = GetCenteredLabelRect(args, item);
             var xOffset = labelRect.x - args.rowRect.x + size.x;
             var rect = new Rect(args.rowRect.x + xOffset, args.rowRect.y, args.rowRect.xMax - (args.rowRect.x + xOffset), args.rowRect.height);
-            labelStyle.normal.textColor = args.selected ? new Color(0.8f, 0.8f, 0.8f, 0.8f) : Color.gray;
-            GUI.Label(rect, $" (/{parentDir})", labelStyle);
+            GUI.Label(rect, item.PathSuffix, args.selected ? _selectedPathSuffixStyle : _pathSuffixStyle);
         }
 
         private void DrawRowContent(RowGUIArgs args, CustomProjectViewItem item)
@@ -1792,24 +1890,15 @@ namespace CustomProjectView
             if (labelRect.width <= 0f)
                 return;
 
-            var labelStyle = new GUIStyle(EditorStyles.label)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                clipping = TextClipping.Clip,
-            };
+            GUI.Label(labelRect, item.displayName, GetLabelStyle(item.IsMissing, args.selected));
+        }
 
-            if (item.IsMissing)
-            {
-                labelStyle.normal.textColor = args.selected
-                    ? new Color(1f, 0.85f, 0.85f)
-                    : new Color(0.85f, 0.2f, 0.2f);
-            }
-            else if (args.selected)
-            {
-                labelStyle.normal.textColor = Color.white;
-            }
+        private GUIStyle GetLabelStyle(bool isMissing, bool isSelected)
+        {
+            if (isMissing)
+                return isSelected ? _missingSelectedLabelStyle : _missingLabelStyle;
 
-            GUI.Label(labelRect, item.displayName, labelStyle);
+            return isSelected ? _selectedLabelStyle : _labelStyle;
         }
 
         private Rect GetCenteredLabelRect(RowGUIArgs args, CustomProjectViewItem item)
@@ -1843,7 +1932,7 @@ namespace CustomProjectView
                 _restoringExpandedState = false;
             }
 
-            _model.Save();
+            _model.SaveDeferred();
         }
 
         private float CalcButtonAreaWidth(CustomProjectNode node)
@@ -2035,7 +2124,7 @@ namespace CustomProjectView
                 return;
 
             SetExpandedRecursive(item, expand);
-            _model.Save();
+            _model.SaveDeferred();
             _window.RequestRefresh();
         }
 
@@ -2261,6 +2350,7 @@ namespace CustomProjectView
 
         private void OnDisable()
         {
+            Model?.FlushPendingSave();
             Selection.selectionChanged -= OnSelectionChanged;
         }
 
