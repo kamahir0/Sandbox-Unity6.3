@@ -985,6 +985,9 @@ namespace CustomProjectView
 
     internal sealed class CustomProjectTreeView : TreeView<int>
     {
+        private const string DragSourceKey = "CustomProjectViewDragSource";
+        private const string DragNodesKey = "CustomProjectViewNodes";
+
         private readonly CustomProjectTreeModel _model;
         private readonly CustomProjectViewWindow _window;
 
@@ -1231,10 +1234,18 @@ namespace CustomProjectView
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
-            return args.draggedItemIDs
+            var nodes = args.draggedItemIDs
                 .Select(GetNodeForId)
                 .Where(n => n != null)
-                .All(n => n.CanMoveInTree);
+                .ToList();
+
+            if (nodes.Count == 0)
+                return false;
+
+            if (nodes.All(n => n.CanMoveInTree))
+                return true;
+
+            return GetDragObjects(nodes).Length > 0;
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
@@ -1246,14 +1257,12 @@ namespace CustomProjectView
                 .Where(n => n != null)
                 .ToList();
 
-            DragAndDrop.SetGenericData("CustomProjectViewNodes", nodes);
+            DragAndDrop.SetGenericData(DragSourceKey, DragSourceKey);
 
-            var objects = nodes
-                .Select(n => n.ResolveAssetPath())
-                .Where(p => !string.IsNullOrEmpty(p))
-                .Select(p => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(p))
-                .Where(o => o != null)
-                .ToArray();
+            if (nodes.All(n => n.CanMoveInTree))
+                DragAndDrop.SetGenericData(DragNodesKey, nodes);
+
+            var objects = GetDragObjects(nodes);
 
             if (objects.Length > 0)
                 DragAndDrop.objectReferences = objects;
@@ -1267,7 +1276,8 @@ namespace CustomProjectView
             if (targetParent != null && !targetParent.CanAddChildren)
                 return DragAndDropVisualMode.Rejected;
 
-            var internalNodes = DragAndDrop.GetGenericData("CustomProjectViewNodes") as List<CustomProjectNode>;
+            var isCustomProjectDrag = Equals(DragAndDrop.GetGenericData(DragSourceKey), DragSourceKey);
+            var internalNodes = DragAndDrop.GetGenericData(DragNodesKey) as List<CustomProjectNode>;
             if (internalNodes != null)
             {
                 if (args.performDrop)
@@ -1278,6 +1288,9 @@ namespace CustomProjectView
                 }
                 return DragAndDropVisualMode.Move;
             }
+
+            if (isCustomProjectDrag)
+                return DragAndDropVisualMode.Rejected;
 
             if (DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0)
                 return DragAndDropVisualMode.None;
@@ -1290,6 +1303,16 @@ namespace CustomProjectView
             }
 
             return DragAndDropVisualMode.Copy;
+        }
+
+        private UnityEngine.Object[] GetDragObjects(IEnumerable<CustomProjectNode> nodes)
+        {
+            return nodes
+                .Select(n => n.ResolveAssetPath())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .Select(p => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(p))
+                .Where(o => o != null)
+                .ToArray();
         }
 
         protected override void KeyEvent()
@@ -2243,6 +2266,8 @@ namespace CustomProjectView
 
         private void HandleExternalDrop(Rect rect)
         {
+            const string dragSourceKey = "CustomProjectViewDragSource";
+
             var evt = Event.current;
             if (evt.type == EventType.Used)
                 return;
@@ -2252,7 +2277,7 @@ namespace CustomProjectView
                 return;
             if (DragAndDrop.objectReferences == null || DragAndDrop.objectReferences.Length == 0)
                 return;
-            if (DragAndDrop.GetGenericData("CustomProjectViewNodes") is List<CustomProjectNode>)
+            if (Equals(DragAndDrop.GetGenericData(dragSourceKey), dragSourceKey))
                 return;
 
             DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
