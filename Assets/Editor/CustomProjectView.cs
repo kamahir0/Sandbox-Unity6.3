@@ -1178,6 +1178,9 @@ namespace CustomProjectView
         private const float ToggleDragThreshold = 4f;
         private const float IconWidth = 16f;
         private const float IconTextSpacing = 2f;
+        private static readonly Color HoverRowOverlayColor = EditorGUIUtility.isProSkin
+            ? new Color(1f, 1f, 1f, 0.05f)
+            : new Color(0.22f, 0.44f, 0.85f, 0.08f);
 
         public CustomProjectTreeView(TreeViewState<int> state, CustomProjectTreeModel model, CustomProjectViewWindow window)
             : base(state)
@@ -1333,6 +1336,7 @@ namespace CustomProjectView
             }
 
             EnsureStyles();
+            DrawHoverBackground(args);
 
             var oldColor = GUI.color;
             if (item.IsMissing)
@@ -1366,6 +1370,18 @@ namespace CustomProjectView
                     DrawInlineButtons(rect, item.Node, item.id);
                 }
             }
+        }
+
+        private static void DrawHoverBackground(RowGUIArgs args)
+        {
+            var evt = Event.current;
+            if (evt == null || evt.type != EventType.Repaint)
+                return;
+
+            if (args.selected || !args.rowRect.Contains(evt.mousePosition))
+                return;
+
+            EditorGUI.DrawRect(args.rowRect, HoverRowOverlayColor);
         }
 
         protected override void ContextClickedItem(int id)
