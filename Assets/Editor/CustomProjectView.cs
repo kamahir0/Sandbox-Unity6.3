@@ -192,6 +192,10 @@ namespace CustomProjectView
     {
         private const string PrefKeyPrefix = "CustomProjectView_";
         private SerializableModel _model = new SerializableModel();
+        private readonly Dictionary<string, CustomProjectNode> _nodeById = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
+        private readonly Dictionary<string, CustomProjectNode> _nodeByAssetPath = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
+        private readonly Dictionary<string, CustomProjectNode> _manualAssetRefByGuid = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
+        private bool _lookupCacheDirty = true;
 
         public List<CustomProjectNode> Roots => _model.Roots;
         public bool IsEmpty => _model.Roots.Count == 0;
@@ -201,6 +205,7 @@ namespace CustomProjectView
         public void Load()
         {
             _model = new SerializableModel();
+            MarkLookupCacheDirty();
 
             var json = EditorPrefs.GetString(PrefKey, string.Empty);
             if (!string.IsNullOrEmpty(json))
@@ -220,6 +225,7 @@ namespace CustomProjectView
 
             SanitizeTree(_model.Roots);
             SyncAllFolderRefs();
+            RebuildLookupCache();
         }
 
         public void Save()
@@ -233,6 +239,7 @@ namespace CustomProjectView
 
             var json = JsonUtility.ToJson(snapshot, false);
             EditorPrefs.SetString(PrefKey, json);
+            RebuildLookupCache();
         }
 
         public CustomProjectNode AddGroup(string label, CustomProjectNode parent = null)
@@ -337,7 +344,9 @@ namespace CustomProjectView
 
         public void SyncAllFolderRefs()
         {
+            MarkLookupCacheDirty();
             SyncFolderRefsRecursive(_model.Roots);
+            RebuildLookupCache();
         }
 
         public void HandleAssetMoved(string oldPath, string newPath)
@@ -378,12 +387,22 @@ namespace CustomProjectView
 
         public CustomProjectNode FindNodeById(string id)
         {
-            return FindNodeByIdRecursive(id, _model.Roots);
+            if (string.IsNullOrEmpty(id))
+                return null;
+
+            EnsureLookupCache();
+            _nodeById.TryGetValue(id, out var node);
+            return node;
         }
 
         public CustomProjectNode FindManualAssetRefByGuid(string guid)
         {
-            return FindManualAssetRefByGuidRecursive(guid, _model.Roots);
+            if (string.IsNullOrEmpty(guid))
+                return null;
+
+            EnsureLookupCache();
+            _manualAssetRefByGuid.TryGetValue(guid, out var node);
+            return node;
         }
 
         public CustomProjectNode FindNodeByAssetPath(string assetPath)
@@ -392,7 +411,9 @@ namespace CustomProjectView
             if (string.IsNullOrEmpty(normalized))
                 return null;
 
-            return FindNodeByAssetPathRecursive(normalized, _model.Roots);
+            EnsureLookupCache();
+            _nodeByAssetPath.TryGetValue(normalized, out var node);
+            return node;
         }
 
         public List<CustomProjectNode> Search(string query)
@@ -776,6 +797,47 @@ namespace CustomProjectView
             return null;
         }
 
+        private void MarkLookupCacheDirty()
+        {
+            _lookupCacheDirty = true;
+        }
+
+        private void EnsureLookupCache()
+        {
+            if (_lookupCacheDirty)
+                RebuildLookupCache();
+        }
+
+        private void RebuildLookupCache()
+        {
+            _nodeById.Clear();
+            _nodeByAssetPath.Clear();
+            _manualAssetRefByGuid.Clear();
+
+            if (_model.Roots != null)
+            {
+                foreach (var node in EnumerateNodes(_model.Roots))
+                {
+                    if (!string.IsNullOrEmpty(node.Id) && !_nodeById.ContainsKey(node.Id))
+                        _nodeById[node.Id] = node;
+
+                    var assetPath = CustomProjectNode.NormalizeAssetPath(node.ResolveAssetPath());
+                    if (!string.IsNullOrEmpty(assetPath) && !_nodeByAssetPath.ContainsKey(assetPath))
+                        _nodeByAssetPath[assetPath] = node;
+
+                    if (node.Source == ProjectNodeSource.Manual
+                        && node.Kind == ProjectNodeKind.Asset
+                        && !string.IsNullOrEmpty(node.AssetGuid)
+                        && !_manualAssetRefByGuid.ContainsKey(node.AssetGuid))
+                    {
+                        _manualAssetRefByGuid[node.AssetGuid] = node;
+                    }
+                }
+            }
+
+            _lookupCacheDirty = false;
+        }
+
         private CustomProjectNode FindManualAssetRefByGuidRecursive(string guid, List<CustomProjectNode> nodes)
         {
             foreach (var node in nodes)
@@ -992,7 +1054,9 @@ namespace CustomProjectView
         private readonly CustomProjectViewWindow _window;
 
         private readonly Dictionary<int, CustomProjectNode> _idToNode = new Dictionary<int, CustomProjectNode>();
+        private readonly Dictionary<string, int> _nodeIdToItemId = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<int, Rect> _idToFoldoutRect = new Dictionary<int, Rect>();
+        private readonly Dictionary<int, Rect> _idToRowRect = new Dictionary<int, Rect>();
         private string _searchQuery = string.Empty;
         private int _nextId = 1;
         private int _selectionSyncFrame = -1;
@@ -1000,6 +1064,7 @@ namespace CustomProjectView
         private int _pendingToggleItemId = -1;
         private Vector2 _pendingToggleMouseDownPosition;
         private float _lastVisibleRowBottom;
+        private bool _didShowContextMenu;
         private bool _restoringExpandedState;
 
         private const float ButtonW = 18f;
@@ -1058,6 +1123,11 @@ namespace CustomProjectView
             _lastVisibleRowBottom = treeRect.yMin;
         }
 
+        public void BeginContextMenuEvent()
+        {
+            _didShowContextMenu = false;
+        }
+
         public bool TryClearSelectionFromEmptySpace(Rect treeRect)
         {
             var evt = Event.current;
@@ -1081,7 +1151,9 @@ namespace CustomProjectView
         protected override TreeViewItem<int> BuildRoot()
         {
             _idToNode.Clear();
+            _nodeIdToItemId.Clear();
             _idToFoldoutRect.Clear();
+            _idToRowRect.Clear();
             _nextId = 1;
 
             var root = new TreeViewItem<int>(-1, -1, "root");
@@ -1123,6 +1195,7 @@ namespace CustomProjectView
 
             _lastVisibleRowBottom = Mathf.Max(_lastVisibleRowBottom, args.rowRect.yMax);
             _idToFoldoutRect[item.id] = CreateFoldoutRect(args.rowRect, item);
+            _idToRowRect[item.id] = args.rowRect;
             HandlePendingToggleInteraction(args, item);
             var isRenamingItem = _contextRenameItemId == item.id;
             if (isRenamingItem)
@@ -1157,13 +1230,73 @@ namespace CustomProjectView
             {
                 var nodes = selectedIds.Select(GetNodeForId).Where(n => n != null && n.CanRemoveFromList).ToList();
                 if (nodes.Count > 0)
+                {
                     ShowMultiSelectionContextMenu(nodes);
+                    _didShowContextMenu = true;
+                }
                 return;
             }
 
-            var node = GetNodeForId(id);
+            var resolvedId = id;
+            var node = GetNodeForId(resolvedId);
+            if (node == null)
+            {
+                var hitId = GetItemIdAtPoint(Event.current.mousePosition);
+                if (hitId >= 0)
+                {
+                    resolvedId = hitId;
+                    node = GetNodeForId(resolvedId);
+                }
+            }
+
             if (node != null)
-                ShowContextMenu(node, id);
+            {
+                ShowContextMenu(node, resolvedId);
+                _didShowContextMenu = true;
+                return;
+            }
+        }
+
+        public bool TryShowContextMenuAtPointer(Rect treeRect)
+        {
+            var evt = Event.current;
+            if (evt == null || evt.type != EventType.ContextClick)
+                return false;
+
+            if (!treeRect.Contains(evt.mousePosition))
+                return false;
+
+            if (_didShowContextMenu)
+                return false;
+
+            if (GetItemIdAtPoint(evt.mousePosition) >= 0)
+                return false;
+
+            if (evt.mousePosition.y <= _lastVisibleRowBottom)
+                return false;
+
+            ShowEmptySpaceContextMenu();
+            _didShowContextMenu = true;
+            evt.Use();
+            return true;
+        }
+
+        private void ShowEmptySpaceContextMenu()
+        {
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("グループを作成"), false, () => _window.AddRootGroup());
+            menu.ShowAsContext();
+        }
+
+        private int GetItemIdAtPoint(Vector2 point)
+        {
+            foreach (var kv in _idToRowRect)
+            {
+                if (kv.Value.Contains(point))
+                    return kv.Key;
+            }
+
+            return -1;
         }
 
         protected override void SingleClickedItem(int id)
@@ -1211,6 +1344,10 @@ namespace CustomProjectView
             var node = GetNodeForId(selectedIds[0]);
             var assetPath = node?.ResolveAssetPath();
             if (string.IsNullOrEmpty(assetPath))
+                return;
+
+            var currentSelectionPath = CustomProjectNode.NormalizeAssetPath(AssetDatabase.GetAssetPath(Selection.activeObject));
+            if (currentSelectionPath == CustomProjectNode.NormalizeAssetPath(assetPath))
                 return;
 
             var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
@@ -1351,18 +1488,18 @@ namespace CustomProjectView
             Reload();
         }
 
-        public void SyncSelectionFromUnity()
+        public bool SyncSelectionFromUnity()
         {
             if (Mathf.Abs(Time.frameCount - _selectionSyncFrame) <= 1)
-                return;
+                return false;
 
             var obj = Selection.activeObject;
             if (obj == null)
-                return;
+                return false;
 
             var assetPath = AssetDatabase.GetAssetPath(obj);
             if (string.IsNullOrEmpty(assetPath))
-                return;
+                return false;
 
             var best = _model.FindNodeByAssetPath(assetPath);
             if (best == null)
@@ -1372,11 +1509,18 @@ namespace CustomProjectView
             }
 
             if (best == null)
-                return;
+                return false;
 
             var id = GetIdForNode(best);
-            if (id >= 0)
-                SetSelection(new[] { id }, TreeViewSelectionOptions.RevealAndFrame);
+            if (id < 0)
+                return false;
+
+            var selectedIds = GetSelection();
+            if (selectedIds.Count == 1 && selectedIds[0] == id)
+                return false;
+
+            SetSelection(new[] { id }, TreeViewSelectionOptions.RevealAndFrame);
+            return true;
         }
 
         private void BuildTree(List<CustomProjectNode> nodes, TreeViewItem<int> parent)
@@ -1394,6 +1538,8 @@ namespace CustomProjectView
         {
             var id = _nextId++;
             _idToNode[id] = node;
+            if (!string.IsNullOrEmpty(node.Id))
+                _nodeIdToItemId[node.Id] = id;
             return new CustomProjectViewItem(id, depth, node);
         }
 
@@ -1431,12 +1577,10 @@ namespace CustomProjectView
 
         private int GetIdForNode(CustomProjectNode node)
         {
-            foreach (var kv in _idToNode)
-            {
-                if (kv.Value.Id == node.Id)
-                    return kv.Key;
-            }
-            return -1;
+            if (node == null || string.IsNullOrEmpty(node.Id))
+                return -1;
+
+            return _nodeIdToItemId.TryGetValue(node.Id, out var id) ? id : -1;
         }
 
         private CustomProjectNode GetNodeForId(int id)
@@ -2132,8 +2276,8 @@ namespace CustomProjectView
             if (!_autoSyncSelection)
                 return;
 
-            _treeView?.SyncSelectionFromUnity();
-            Repaint();
+            if (_treeView != null && _treeView.SyncSelectionFromUnity())
+                Repaint();
         }
 
         public void RequestRefresh()
@@ -2259,8 +2403,11 @@ namespace CustomProjectView
                 GUILayout.ExpandWidth(true),
                 GUILayout.ExpandHeight(true));
             _treeView?.BeginFrame(_treeViewRect);
+            if (Event.current.type == EventType.ContextClick)
+                _treeView?.BeginContextMenuEvent();
             _treeView?.OnGUI(_treeViewRect);
             HandleExternalDrop(_treeViewRect);
+            _treeView?.TryShowContextMenuAtPointer(_treeViewRect);
             _treeView?.TryClearSelectionFromEmptySpace(_treeViewRect);
         }
 
@@ -2301,7 +2448,7 @@ namespace CustomProjectView
             evt.Use();
         }
 
-        private void AddRootGroup()
+        internal void AddRootGroup()
         {
             PopupNameDialog.Show("グループを追加", "グループ名を入力してください", "New Group", name =>
             {
