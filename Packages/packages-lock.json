@@ -15,7 +15,7 @@
       "url": "https://package.openupm.com"
     },
     "com.kamahir0.lilja.asset-management": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.asset-management/src",
+      "version": "file:../../../lilja/lilja-packages/lilja.asset-management/src",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -23,13 +23,13 @@
       }
     },
     "com.kamahir0.lilja.dev-kit": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.dev-kit/src",
+      "version": "file:../../../lilja/lilja-packages/lilja.dev-kit/src",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.kamahir0.lilja.repository": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.repository/src",
+      "version": "file:../../../lilja/lilja-packages/lilja.repository/src",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -37,7 +37,7 @@
       }
     },
     "com.kamahir0.lilja.screen-management": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.screen-management/src",
+      "version": "file:../../../lilja/lilja-packages/lilja.screen-management/src",
       "depth": 0,
       "source": "local",
       "dependencies": {}
