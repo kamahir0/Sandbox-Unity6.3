@@ -41,11 +41,15 @@ namespace Lilja.DebugUI.Editor
             "Assets/lilja.debug-ui/src/Editor/StyleSheets/DebugMenuEditorTheme.uss";
         private const string MenuUssPath =
             "Assets/lilja.debug-ui/src/Runtime/StyleSheets/DebugMenu.uss";
+        private const float PageListMinWidth = 160f;
+        private const float PageContentMinWidth = 320f;
+        private const float WindowMinHeight = 240f;
 
         // ── ライフサイクル ─────────────────────────────────────────────────────
 
         private void OnEnable()
         {
+            minSize = new Vector2(PageListMinWidth + PageContentMinWidth, WindowMinHeight);
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
@@ -349,11 +353,12 @@ namespace Lilja.DebugUI.Editor
             _playingView.Add(header);
 
             // ボディ（左ペイン: ページ一覧 + 右ペイン: ページ表示）
-            var body = new TwoPaneSplitView(0, 160, TwoPaneSplitViewOrientation.Horizontal);
+            var body = new TwoPaneSplitView(0, PageListMinWidth, TwoPaneSplitViewOrientation.Horizontal);
             body.style.flexGrow = 1;
 
             var leftContainer = new VisualElement();
             leftContainer.style.flexGrow = 1;
+            leftContainer.style.minWidth = PageListMinWidth;
             leftContainer.style.borderRightWidth = 1;
             leftContainer.style.borderRightColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f, 0.5f));
 
@@ -374,6 +379,7 @@ namespace Lilja.DebugUI.Editor
             _rightPane = new VisualElement();
             _rightPane.AddToClassList("c-page-stack");
             _rightPane.style.flexGrow = 1;
+            _rightPane.style.minWidth = PageContentMinWidth;
             _rightPane.style.overflow = Overflow.Hidden;
             _rightPane.style.position = Position.Relative;
             _rightPane.RegisterCallback<DebugNavigateEvent>(OnNavigateEvent);
