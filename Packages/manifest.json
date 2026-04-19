@@ -3,6 +3,7 @@
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.github-glitchenzo.nugetforunity": "4.5.0",
     "com.kamahir0.lilja.asset-management": "file:../../../lilja/lilja-packages/lilja.asset-management/src",
+    "com.kamahir0.lilja.debug-ui": "file:../../../lilja/lilja-packages/lilja.debug-ui/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja/lilja-packages/lilja.dev-kit/src",
     "com.kamahir0.lilja.repository": "file:../../../lilja/lilja-packages/lilja.repository/src",
     "com.kamahir0.lilja.screen-management": "file:../../../lilja/lilja-packages/lilja.screen-management/src",

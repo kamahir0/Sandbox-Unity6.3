@@ -22,6 +22,12 @@
         "com.cysharp.unitask": "2.5.10"
       }
     },
+    "com.kamahir0.lilja.debug-ui": {
+      "version": "file:../../../lilja/lilja-packages/lilja.debug-ui/src",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.kamahir0.lilja.dev-kit": {
       "version": "file:../../../lilja/lilja-packages/lilja.dev-kit/src",
       "depth": 0,
