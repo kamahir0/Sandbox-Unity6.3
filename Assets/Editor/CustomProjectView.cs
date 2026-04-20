@@ -1,13 +1,14 @@
-#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using ZLinq;
 
-namespace CustomProjectView
+namespace F2F.Editor
 {
     public enum ProjectNodeKind
     {
@@ -24,6 +25,7 @@ namespace CustomProjectView
     }
 
     [Serializable]
+    [JsonObject(MemberSerialization.Fields)]
     public sealed class CustomProjectNode
     {
         public string Id;
@@ -33,7 +35,7 @@ namespace CustomProjectView
         public string AssetGuid;
         public string AssetPath;
         public bool IsExpanded = true;
-        public List<CustomProjectNode> Children = new List<CustomProjectNode>();
+        public List<CustomProjectNode> Children = new();
 
         public bool IsContainer => Kind != ProjectNodeKind.Asset;
         public bool IsManualGroup => Kind == ProjectNodeKind.Group && Source == ProjectNodeSource.Manual;
@@ -136,10 +138,11 @@ namespace CustomProjectView
     }
 
     [Serializable]
+    [JsonObject(MemberSerialization.Fields)]
     internal sealed class SerializableModel
     {
         public int Version = 2;
-        public List<CustomProjectNode> Roots = new List<CustomProjectNode>();
+        public List<CustomProjectNode> Roots = new();
     }
 
     internal static class CustomProjectViewIcons
@@ -152,8 +155,9 @@ namespace CustomProjectView
         private const string ExpandIconName = "CollabCreate Icon";
         private const string CollapseIconName = "CollabDeleted Icon";
         private const string SyncIconName = "d_Linked";
-        private const string TrashIconName = "TreeEditor.Trash";
-        private const string ProjectIconName = "Project";
+        private const string TrashIconName = "d_TreeEditor.Trash";
+        private const string ProjectIconName = "FolderFavorite Icon";
+        private const string PingIconName = "d_Selectable Icon";
 
         public static Texture2D MissingAsset => GetTexture(MissingAssetIconName);
         public static Texture2D FolderRefRoot => GetTexture(FolderFavoriteIconName);
@@ -165,23 +169,24 @@ namespace CustomProjectView
         public static Texture2D Sync => GetTexture(SyncIconName);
         public static Texture2D Remove => GetTexture(TrashIconName);
         public static Texture2D Project => GetTexture(ProjectIconName);
+        public static Texture2D Ping => GetTexture(PingIconName);
 
         private static Texture2D GetTexture(string iconName)
         {
             if (string.IsNullOrEmpty(iconName))
                 return null;
 
-            return EditorGUIUtility.FindTexture(iconName) as Texture2D;
+            return EditorGUIUtility.IconContent(iconName)?.image as Texture2D;
         }
     }
 
     internal sealed class CustomProjectTreeModel
     {
         private const string PrefKeyPrefix = "CustomProjectView_";
-        private SerializableModel _model = new SerializableModel();
-        private readonly Dictionary<string, CustomProjectNode> _nodeById = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
-        private readonly Dictionary<string, CustomProjectNode> _nodeByAssetPath = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
-        private readonly Dictionary<string, CustomProjectNode> _manualAssetRefByGuid = new Dictionary<string, CustomProjectNode>(StringComparer.Ordinal);
+        private SerializableModel _model = new();
+        private readonly Dictionary<string, CustomProjectNode> _nodeById = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, CustomProjectNode> _nodeByAssetPath = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, CustomProjectNode> _manualAssetRefByGuid = new(StringComparer.Ordinal);
         private bool _lookupCacheDirty = true;
         private bool _saveDeferredQueued;
 
@@ -200,7 +205,7 @@ namespace CustomProjectView
             {
                 try
                 {
-                    _model = JsonUtility.FromJson<SerializableModel>(json) ?? new SerializableModel();
+                    _model = JsonConvert.DeserializeObject<SerializableModel>(json) ?? new SerializableModel();
                 }
                 catch
                 {
@@ -208,8 +213,7 @@ namespace CustomProjectView
                 }
             }
 
-            if (_model.Roots == null)
-                _model.Roots = new List<CustomProjectNode>();
+            _model.Roots ??= new List<CustomProjectNode>();
 
             SanitizeTree(_model.Roots);
             SyncAllFolderRefs();
@@ -226,7 +230,7 @@ namespace CustomProjectView
                 Roots = ClonePersistentNodes(_model.Roots),
             };
 
-            var json = JsonUtility.ToJson(snapshot, false);
+            var json = JsonConvert.SerializeObject(snapshot, Formatting.None);
             EditorPrefs.SetString(PrefKey, json);
             RebuildLookupCache();
         }
@@ -454,7 +458,7 @@ namespace CustomProjectView
             if (nodes == null)
                 return;
 
-            for (int i = nodes.Count - 1; i >= 0; i--)
+            for (var i = nodes.Count - 1; i >= 0; i--)
             {
                 var node = nodes[i];
                 if (node == null)
@@ -473,8 +477,7 @@ namespace CustomProjectView
                     node.Label = node.Kind == ProjectNodeKind.Asset ? "Missing Asset" : "Group";
                 }
 
-                if (node.Children == null)
-                    node.Children = new List<CustomProjectNode>();
+                node.Children ??= new List<CustomProjectNode>();
 
                 if (node.Source == ProjectNodeSource.FolderRefSynced)
                 {
@@ -546,8 +549,7 @@ namespace CustomProjectView
                 return;
             }
 
-            if (parent.Children == null)
-                parent.Children = new List<CustomProjectNode>();
+            parent.Children ??= new List<CustomProjectNode>();
 
             parent.Children.Add(node);
             parent.IsExpanded = true;
@@ -566,12 +568,14 @@ namespace CustomProjectView
         private bool HasFolderRef(string assetPath)
         {
             var normalized = CustomProjectNode.NormalizeAssetPath(assetPath);
-            return EnumerateNodes(_model.Roots).Any(n => n.IsFolderRefRoot && CustomProjectNode.NormalizeAssetPath(n.ResolveAssetPath()) == normalized);
+            return EnumerateNodes(_model.Roots)
+                .AsValueEnumerable()
+                .Any(n => n.IsFolderRefRoot && CustomProjectNode.NormalizeAssetPath(n.ResolveAssetPath()) == normalized);
         }
 
         private bool RemoveRecursive(List<CustomProjectNode> nodes, string id)
         {
-            for (int i = 0; i < nodes.Count; i++)
+            for (var i = 0; i < nodes.Count; i++)
             {
                 if (nodes[i].Id == id)
                 {
@@ -616,7 +620,7 @@ namespace CustomProjectView
 
         private bool ReplaceNode(string oldId, CustomProjectNode replacement, List<CustomProjectNode> nodes)
         {
-            for (int i = 0; i < nodes.Count; i++)
+            for (var i = 0; i < nodes.Count; i++)
             {
                 if (nodes[i].Id == oldId)
                 {
@@ -636,7 +640,9 @@ namespace CustomProjectView
             if (ancestor == null || candidate == null)
                 return false;
 
-            return ancestor.Children.Any(child => child.Id == candidate.Id || IsDescendant(child, candidate));
+            return ancestor.Children
+                .AsValueEnumerable()
+                .Any(child => child.Id == candidate.Id || IsDescendant(child, candidate));
         }
 
         private void SyncFolderRefsRecursive(List<CustomProjectNode> nodes)
@@ -657,6 +663,7 @@ namespace CustomProjectView
                 return false;
 
             var normalizedPathList = assetPaths
+                .AsValueEnumerable()
                 .Where(path => !string.IsNullOrEmpty(path))
                 .Select(CustomProjectNode.NormalizeAssetPath)
                 .Where(path => !string.IsNullOrEmpty(path))
@@ -667,10 +674,11 @@ namespace CustomProjectView
                 return false;
 
             var folderRefRootList = EnumerateNodes(_model.Roots)
+                .AsValueEnumerable()
                 .Where(node => node.IsFolderRefRoot)
                 .ToList();
 
-            bool syncedAny = false;
+            var syncedAny = false;
 
             foreach (var folderRefRoot in folderRefRootList)
             {
@@ -681,7 +689,7 @@ namespace CustomProjectView
                 if (string.IsNullOrEmpty(folderPath))
                     continue;
 
-                if (!normalizedPathList.Any(path => IsSameOrChildPath(path, folderPath)))
+                if (!normalizedPathList.AsValueEnumerable().Any(path => IsSameOrChildPath(path, folderPath)))
                     continue;
 
                 SyncFolderRef(folderRefRoot);
@@ -719,7 +727,7 @@ namespace CustomProjectView
             if (!Directory.Exists(absPath))
                 return result;
 
-            foreach (var dir in Directory.GetDirectories(absPath).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+            foreach (var dir in Directory.GetDirectories(absPath).AsValueEnumerable().OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
             {
                 var name = Path.GetFileName(dir);
                 if (ShouldExclude(name))
@@ -731,7 +739,7 @@ namespace CustomProjectView
                 result.Add(folderNode);
             }
 
-            foreach (var file in Directory.GetFiles(absPath).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+            foreach (var file in Directory.GetFiles(absPath).AsValueEnumerable().OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
             {
                 var name = Path.GetFileName(file);
                 if (ShouldExclude(name))
@@ -750,7 +758,7 @@ namespace CustomProjectView
 
         private bool HandleAssetMovedRecursive(List<CustomProjectNode> nodes, string guid, string newPath)
         {
-            bool changed = false;
+            var changed = false;
 
             foreach (var node in nodes)
             {
@@ -775,9 +783,9 @@ namespace CustomProjectView
 
         private bool RemoveMissingManualAssetRefs(List<CustomProjectNode> nodes)
         {
-            bool removedAny = false;
+            var removedAny = false;
 
-            for (int i = nodes.Count - 1; i >= 0; i--)
+            for (var i = nodes.Count - 1; i >= 0; i--)
             {
                 var node = nodes[i];
                 if (node.Source == ProjectNodeSource.Manual && node.Kind == ProjectNodeKind.Asset)
@@ -1033,6 +1041,7 @@ namespace CustomProjectView
 
     internal sealed class CustomProjectAssetPostprocessor : AssetPostprocessor
     {
+#pragma warning disable IDE0051, IDE0040
         static void OnPostprocessAllAssets(
             string[] importedAssets,
             string[] deletedAssets,
@@ -1046,9 +1055,9 @@ namespace CustomProjectView
             if (window == null || window.Model == null)
                 return;
 
-            bool changed = false;
+            var changed = false;
 
-            for (int i = 0; i < movedAssets.Length; i++)
+            for (var i = 0; i < movedAssets.Length; i++)
                 changed |= window.Model.HandleAssetMoved(movedFromAssetPaths[i], movedAssets[i], save: false);
 
             foreach (var deleted in deletedAssets)
@@ -1063,6 +1072,7 @@ namespace CustomProjectView
             if (changed)
                 window.RequestRefresh();
         }
+#pragma warning restore IDE0051, IDE0040
     }
 
     internal sealed class CustomProjectViewItem : TreeViewItem<int>
@@ -1133,7 +1143,7 @@ namespace CustomProjectView
                 return null;
 
             var parentDir = Path.GetFileName(dir.TrimEnd('/'));
-            return string.IsNullOrEmpty(parentDir) ? null : $" (/{parentDir})";
+            return string.IsNullOrEmpty(parentDir) ? null : $" ({parentDir}/)";
         }
     }
 
@@ -1141,7 +1151,7 @@ namespace CustomProjectView
     {
         private const string DragSourceKey = "CustomProjectViewDragSource";
         private const string DragNodesKey = "CustomProjectViewNodes";
-        private static readonly GUIContent SharedMeasureContent = new GUIContent();
+        private static readonly GUIContent SharedMeasureContent = new();
 #if UNITY_EDITOR_OSX
         private const string RevealInOsMenuLabel = "Finder で表示";
 #elif UNITY_EDITOR_WIN
@@ -1153,10 +1163,10 @@ namespace CustomProjectView
         private readonly CustomProjectTreeModel _model;
         private readonly CustomProjectViewWindow _window;
 
-        private readonly Dictionary<int, CustomProjectNode> _idToNode = new Dictionary<int, CustomProjectNode>();
-        private readonly Dictionary<string, int> _nodeIdToItemId = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly Dictionary<int, Rect> _idToFoldoutRect = new Dictionary<int, Rect>();
-        private readonly Dictionary<int, Rect> _idToRowRect = new Dictionary<int, Rect>();
+        private readonly Dictionary<int, CustomProjectNode> _idToNode = new();
+        private readonly Dictionary<string, int> _nodeIdToItemId = new(StringComparer.Ordinal);
+        private readonly Dictionary<int, Rect> _idToFoldoutRect = new();
+        private readonly Dictionary<int, Rect> _idToRowRect = new();
         private GUIStyle _labelStyle;
         private GUIStyle _selectedLabelStyle;
         private GUIStyle _missingLabelStyle;
@@ -1232,6 +1242,7 @@ namespace CustomProjectView
         public void SetSearch(string query)
         {
             var previousIds = GetSelection()
+                .AsValueEnumerable()
                 .Select(GetNodeForId)
                 .Where(n => n != null)
                 .Select(n => n.Id)
@@ -1244,6 +1255,7 @@ namespace CustomProjectView
                 return;
 
             var restored = previousIds
+                .AsValueEnumerable()
                 .Select(id => _model.FindNodeById(id))
                 .Where(n => n != null)
                 .Select(GetIdForNode)
@@ -1259,7 +1271,7 @@ namespace CustomProjectView
             SetSelection(new List<int>(), TreeViewSelectionOptions.FireSelectionChanged);
         }
 
-        public bool HasSelection()
+        public new bool HasSelection()
         {
             return GetSelection().Count > 0;
         }
@@ -1389,7 +1401,7 @@ namespace CustomProjectView
             var selectedIds = GetSelection();
             if (selectedIds.Count > 1)
             {
-                var nodes = selectedIds.Select(GetNodeForId).Where(n => n != null && n.CanRemoveFromList).ToList();
+                var nodes = selectedIds.AsValueEnumerable().Select(GetNodeForId).Where(n => n != null && n.CanRemoveFromList).ToList();
                 if (nodes.Count > 0)
                 {
                     ShowMultiSelectionContextMenu(nodes);
@@ -1533,6 +1545,7 @@ namespace CustomProjectView
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
             var nodes = args.draggedItemIDs
+                .AsValueEnumerable()
                 .Select(GetNodeForId)
                 .Where(n => n != null)
                 .ToList();
@@ -1540,7 +1553,7 @@ namespace CustomProjectView
             if (nodes.Count == 0)
                 return false;
 
-            if (nodes.All(n => n.CanMoveInTree))
+            if (nodes.AsValueEnumerable().All(n => n.CanMoveInTree))
                 return true;
 
             return GetDragObjects(nodes).Length > 0;
@@ -1551,13 +1564,14 @@ namespace CustomProjectView
             DragAndDrop.PrepareStartDrag();
 
             var nodes = args.draggedItemIDs
+                .AsValueEnumerable()
                 .Select(GetNodeForId)
                 .Where(n => n != null)
                 .ToList();
 
             DragAndDrop.SetGenericData(DragSourceKey, DragSourceKey);
 
-            if (nodes.All(n => n.CanMoveInTree))
+            if (nodes.AsValueEnumerable().All(n => n.CanMoveInTree))
                 DragAndDrop.SetGenericData(DragNodesKey, nodes);
 
             var objects = GetDragObjects(nodes);
@@ -1575,8 +1589,7 @@ namespace CustomProjectView
                 return DragAndDropVisualMode.Rejected;
 
             var isCustomProjectDrag = Equals(DragAndDrop.GetGenericData(DragSourceKey), DragSourceKey);
-            var internalNodes = DragAndDrop.GetGenericData(DragNodesKey) as List<CustomProjectNode>;
-            if (internalNodes != null)
+            if (DragAndDrop.GetGenericData(DragNodesKey) is List<CustomProjectNode> internalNodes)
             {
                 if (args.performDrop)
                 {
@@ -1606,6 +1619,7 @@ namespace CustomProjectView
         private UnityEngine.Object[] GetDragObjects(IEnumerable<CustomProjectNode> nodes)
         {
             return nodes
+                .AsValueEnumerable()
                 .Select(n => n.ResolveAssetPath())
                 .Where(p => !string.IsNullOrEmpty(p))
                 .Select(p => AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(p))
@@ -1622,6 +1636,7 @@ namespace CustomProjectView
                 return;
 
             var nodes = GetSelection()
+                .AsValueEnumerable()
                 .Select(GetNodeForId)
                 .Where(n => n != null && n.CanRemoveFromList)
                 .ToList();
@@ -1905,12 +1920,12 @@ namespace CustomProjectView
 
         private void DrawRowContent(RowGUIArgs args, CustomProjectViewItem item)
         {
-            DrawFoldout(args, item);
+            DrawFoldout(item);
             DrawIcon(args, item);
             DrawCenteredLabel(args, item);
         }
 
-        private void DrawFoldout(RowGUIArgs args, CustomProjectViewItem item)
+        private void DrawFoldout(CustomProjectViewItem item)
         {
             if (!item.Node.IsContainer)
                 return;
@@ -1987,7 +2002,7 @@ namespace CustomProjectView
             var count = 0;
 
             if (node.IsManualGroup)
-                count += 4;
+                count += 3;
             else if (node.IsFolderRefRoot || (node.Kind == ProjectNodeKind.Folder && node.IsSynced))
                 count += 2;
 
@@ -2005,8 +2020,8 @@ namespace CustomProjectView
 
         private void DrawInlineButtons(Rect rect, CustomProjectNode node, int itemId)
         {
-            float x = rect.x + 2f;
-            float y = rect.y + (rect.height - ButtonW) * 0.5f;
+            var x = rect.x + 2f;
+            var y = rect.y + (rect.height - ButtonW) * 0.5f;
             var style = EditorStyles.iconButton;
 
             if (node.IsManualGroup)
@@ -2052,7 +2067,7 @@ namespace CustomProjectView
             if (node.CanSelectInProject)
             {
                 if (GUI.Button(new Rect(x, y, ButtonW, ButtonW),
-                    new GUIContent(CustomProjectViewIcons.Project, "Project で選択"), style))
+                    new GUIContent(CustomProjectViewIcons.Ping, "Project で選択"), style))
                 {
                     SelectInProject(node);
                 }
@@ -2227,7 +2242,7 @@ namespace CustomProjectView
                 return;
 
             if (path.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase))
-                path = "Assets" + path.Substring(Application.dataPath.Length);
+                path = "Assets" + path[Application.dataPath.Length..];
 
             var guid = AssetDatabase.AssetPathToGUID(path);
             if (string.IsNullOrEmpty(guid))
@@ -2260,9 +2275,6 @@ namespace CustomProjectView
             if (!node.CanRemoveFromList)
                 return;
 
-            if (!EditorUtility.DisplayDialog("確認", $"\"{node.Label}\" をリストから取り除きますか？\n（実ファイルは削除されません）", "取り除く", "キャンセル"))
-                return;
-
             _model.Remove(node);
             Reload();
         }
@@ -2271,18 +2283,6 @@ namespace CustomProjectView
         {
             if (nodes == null || nodes.Count == 0)
                 return;
-
-            var bullets = string.Join("\n", nodes.Take(5).Select(n => $"  • {n.Label}"));
-            if (nodes.Count > 5)
-                bullets += $"\n  … 他 {nodes.Count - 5} 件";
-
-            if (!EditorUtility.DisplayDialog("確認",
-                $"{nodes.Count} 件の項目をリストから取り除きますか？\n（実ファイルは削除されません）\n\n{bullets}",
-                "取り除く",
-                "キャンセル"))
-            {
-                return;
-            }
 
             foreach (var node in nodes)
                 _model.Remove(node);
@@ -2369,19 +2369,20 @@ namespace CustomProjectView
         public static void Open()
         {
             var window = GetWindow<CustomProjectViewWindow>();
-            window.titleContent = new GUIContent("Project Custom", CustomProjectViewIcons.Project);
+            window.titleContent = new GUIContent("Project (Custom)", CustomProjectViewIcons.Project);
             window.Show();
         }
 
         private void OnEnable()
         {
-            if (_treeViewState == null)
-                _treeViewState = new TreeViewState<int>();
+            wantsMouseMove = true;
+
+            _treeViewState ??= new TreeViewState<int>();
 
             Model = new CustomProjectTreeModel();
             Model.Load();
 
-            _searchField = _searchField ?? new SearchField();
+            _searchField ??= new SearchField();
             _treeView = new CustomProjectTreeView(_treeViewState, Model, this);
             _searchField.downOrUpArrowKeyPressed -= _treeView.SetFocusAndEnsureSelectedItem;
             _searchField.downOrUpArrowKeyPressed += _treeView.SetFocusAndEnsureSelectedItem;
@@ -2435,7 +2436,7 @@ namespace CustomProjectView
             if (_treeView == null || !_treeView.HasSelection())
                 return false;
 
-            var activeWindow = EditorWindow.focusedWindow ?? EditorWindow.mouseOverWindow;
+            var activeWindow = (focusedWindow != null) ? focusedWindow : mouseOverWindow;
             if (!IsHierarchyWindow(activeWindow))
                 return false;
 
@@ -2460,6 +2461,9 @@ namespace CustomProjectView
             DrawToolbar();
             DrawSearchBar();
             DrawTreeView();
+
+            if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseLeaveWindow)
+                Repaint();
 
             if (Event.current.type == EventType.MouseDown
                 && _treeViewRect.width > 0
@@ -2510,7 +2514,7 @@ namespace CustomProjectView
 
         private void DrawSearchBar()
         {
-            _searchField = _searchField ?? new SearchField();
+            _searchField ??= new SearchField();
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             try
@@ -2594,7 +2598,6 @@ namespace CustomProjectView
 
     internal sealed class PopupNameDialog : EditorWindow
     {
-        private string _title;
         private string _message;
         private string _value;
         private Action<string> _onConfirm;
@@ -2603,7 +2606,6 @@ namespace CustomProjectView
         public static void Show(string title, string message, string defaultValue, Action<string> onConfirm)
         {
             var win = CreateInstance<PopupNameDialog>();
-            win._title = title;
             win._message = message;
             win._value = defaultValue;
             win._onConfirm = onConfirm;
@@ -2651,5 +2653,5 @@ namespace CustomProjectView
         }
     }
 }
-#endif
+
 
