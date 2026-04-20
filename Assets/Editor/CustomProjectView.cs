@@ -2653,5 +2653,3 @@ namespace F2F.Editor
         }
     }
 }
-
-
