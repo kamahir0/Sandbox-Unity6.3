@@ -86,49 +86,29 @@ namespace RepositoryTest
 
             public override void Configure(IDebugUIBuilder builder)
             {
-                builder.VisualElement(new DebugLabel("Lilja.Repository テスト専用シーン"));
-                builder.VisualElement(new DebugLabel("Monster / Hero / Relic / WorldSettings を Debug UI だけで検証します。"));
+                builder.Label("Lilja.Repository テスト専用シーン");
+                builder.Label("Monster / Hero / Relic / WorldSettings を Debug UI だけで検証します。");
 
-                var monsterButton = new DebugNavigationButton("Monster Repository");
-                monsterButton.clicked += () =>
-                {
-                    DebugMenu.NavigateToTemp(
-                        "Monster Repository",
-                        tempBuilder => new MonsterPageBuilder(_controller._monsterTester, _controller.destroyCancellationToken).Build(tempBuilder));
-                };
-                builder.VisualElement(monsterButton);
+                builder.TempNavigationButton(
+                    "Monster Repository",
+                    tempBuilder => new MonsterPageBuilder(_controller._monsterTester, _controller.destroyCancellationToken).Build(tempBuilder));
 
-                var heroButton = new DebugNavigationButton("Hero Repository");
-                heroButton.clicked += () =>
-                {
-                    DebugMenu.NavigateToTemp(
-                        "Hero Repository",
-                        tempBuilder => new HeroPageBuilder(_controller._heroTester, _controller.destroyCancellationToken).Build(tempBuilder));
-                };
-                builder.VisualElement(heroButton);
+                builder.TempNavigationButton(
+                    "Hero Repository",
+                    tempBuilder => new HeroPageBuilder(_controller._heroTester, _controller.destroyCancellationToken).Build(tempBuilder));
 
-                var relicButton = new DebugNavigationButton("Relic Repository");
-                relicButton.clicked += () =>
-                {
-                    DebugMenu.NavigateToTemp(
-                        "Relic Repository",
-                        tempBuilder => new RelicPageBuilder(_controller._relicTester, _controller.destroyCancellationToken).Build(tempBuilder));
-                };
-                builder.VisualElement(relicButton);
+                builder.TempNavigationButton(
+                    "Relic Repository",
+                    tempBuilder => new RelicPageBuilder(_controller._relicTester, _controller.destroyCancellationToken).Build(tempBuilder));
 
-                var worldSettingsButton = new DebugNavigationButton("WorldSettings Repository");
-                worldSettingsButton.clicked += () =>
-                {
-                    DebugMenu.NavigateToTemp(
-                        "WorldSettings Repository",
-                        tempBuilder => new WorldSettingsPageBuilder(_controller._worldSettingsTester, _controller.destroyCancellationToken).Build(tempBuilder));
-                };
-                builder.VisualElement(worldSettingsButton);
+                builder.TempNavigationButton(
+                    "WorldSettings Repository",
+                    tempBuilder => new WorldSettingsPageBuilder(_controller._worldSettingsTester, _controller.destroyCancellationToken).Build(tempBuilder));
 
                 builder.Foldout("使い方", foldout =>
                 {
-                    foldout.VisualElement(new DebugLabel("起動時にメニューを自動表示します。閉じた後は左下ボタン 3 連打で再表示できます。"));
-                    foldout.VisualElement(new DebugLabel("旧シーン / 旧コントローラは Assets/RepositoryTest/Legacy に残しています。"));
+                    foldout.Label("起動時にメニューを自動表示します。閉じた後は左下ボタン 3 連打で再表示できます。");
+                    foldout.Label("旧シーン / 旧コントローラは Assets/RepositoryTest/Legacy に残しています。");
                 });
             }
         }
@@ -155,63 +135,38 @@ namespace RepositoryTest
 
             public void Build(IDebugUIBuilder builder)
             {
-                builder.VisualElement(new DebugLabel("Monster Entity の CRUD / 一括投入 / 失敗系 / Tx 可視性を試せます。"));
+                builder.Label("Monster Entity の CRUD / 一括投入 / 失敗系 / Tx 可視性を試せます。");
 
-                _statusLabel = new DebugLabel();
-                builder.VisualElement(_statusLabel);
+                _statusLabel = builder.Label();
 
                 builder.Foldout("ストレージ", foldout =>
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var jsonButton = new DebugSecondaryButton("Json");
-                        jsonButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct));
-                        row.VisualElement(jsonButton);
-
-                        var messagePackButton = new DebugSecondaryButton("MessagePack");
-                        messagePackButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct));
-                        row.VisualElement(messagePackButton);
-
-                        var reloadButton = new DebugButton("再読込");
-                        reloadButton.clicked += () => Execute(_tester.ReloadCurrentRepositoryAsync);
-                        row.VisualElement(reloadButton);
+                        row.SecondaryButton("Json", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct)));
+                        row.SecondaryButton("MessagePack", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct)));
+                        row.PrimaryButton("再読込", () => Execute(_tester.ReloadCurrentRepositoryAsync));
                     });
                 });
 
                 builder.Foldout("入力", foldout =>
                 {
-                    _idField = new DebugIntegerField("Id");
-                    _nameField = new DebugTextField("Name");
-                    _levelField = new DebugIntegerField("Level");
-                    _posXField = new DebugIntegerField("Pos X");
-                    _posYField = new DebugIntegerField("Pos Y");
-
-                    foldout.VisualElement(_idField);
-                    foldout.VisualElement(_nameField);
-                    foldout.VisualElement(_levelField);
-                    foldout.VisualElement(_posXField);
-                    foldout.VisualElement(_posYField);
+                    _idField = foldout.IntegerField("Id");
+                    _nameField = foldout.TextField("Name");
+                    _levelField = foldout.IntegerField("Level");
+                    _posXField = foldout.IntegerField("Pos X");
+                    _posYField = foldout.IntegerField("Pos Y");
 
                     foldout.HorizontalScope(row =>
                     {
-                        var createButton = new DebugButton("Create");
-                        createButton.clicked += () => Execute(ct => _tester.CreateMonsterAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(createButton);
-
-                        var readButton = new DebugSecondaryButton("Read");
-                        readButton.clicked += () => Execute(ct => _tester.ReadMonsterAsync(_idField.value, ct));
-                        row.VisualElement(readButton);
+                        row.PrimaryButton("Create", () => Execute(ct => _tester.CreateMonsterAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("Read", () => Execute(ct => _tester.ReadMonsterAsync(_idField.value, ct)));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var updateButton = new DebugButton("Update");
-                        updateButton.clicked += () => Execute(ct => _tester.UpdateMonsterAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(updateButton);
-
-                        var deleteButton = new DebugDangerButton("Delete");
-                        deleteButton.clicked += () => Execute(ct => _tester.DeleteMonsterAsync(_idField.value, ct));
-                        row.VisualElement(deleteButton);
+                        row.PrimaryButton("Update", () => Execute(ct => _tester.UpdateMonsterAsync(ReadDraftFromFields(), ct)));
+                        row.DangerButton("Delete", () => Execute(ct => _tester.DeleteMonsterAsync(_idField.value, ct)));
                     });
                 });
 
@@ -219,55 +174,31 @@ namespace RepositoryTest
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var seedButton = new DebugButton("サンプルリスト作成");
-                        seedButton.clicked += () => Execute(_tester.SeedSampleMonstersAsync);
-                        row.VisualElement(seedButton);
-
-                        var replaceButton = new DebugSecondaryButton("サンプルで置換");
-                        replaceButton.clicked += () => Execute(_tester.ReplaceWithSampleMonstersAsync);
-                        row.VisualElement(replaceButton);
+                        row.PrimaryButton("サンプルリスト作成", () => Execute(_tester.SeedSampleMonstersAsync));
+                        row.SecondaryButton("サンプルで置換", () => Execute(_tester.ReplaceWithSampleMonstersAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var batchButton = new DebugButton("連番 5 体追加");
-                        batchButton.clicked += () => Execute(ct => _tester.CreateMonsterWaveAsync(5, ct));
-                        row.VisualElement(batchButton);
-
-                        var clearButton = new DebugDangerButton("全てクリア");
-                        clearButton.clicked += () => Execute(_tester.ClearAllMonstersAsync);
-                        row.VisualElement(clearButton);
+                        row.PrimaryButton("連番 5 体追加", () => Execute(ct => _tester.CreateMonsterWaveAsync(5, ct)));
+                        row.DangerButton("全てクリア", () => Execute(_tester.ClearAllMonstersAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var duplicateButton = new DebugSecondaryButton("重複 Create");
-                        duplicateButton.clicked += () => Execute(_tester.RunDuplicateCreateScenarioAsync);
-                        row.VisualElement(duplicateButton);
-
-                        var missingUpdateButton = new DebugSecondaryButton("存在しない Update");
-                        missingUpdateButton.clicked += () => Execute(_tester.RunMissingUpdateScenarioAsync);
-                        row.VisualElement(missingUpdateButton);
+                        row.SecondaryButton("重複 Create", () => Execute(_tester.RunDuplicateCreateScenarioAsync));
+                        row.SecondaryButton("存在しない Update", () => Execute(_tester.RunMissingUpdateScenarioAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var rollbackButton = new DebugSecondaryButton("明示 Rollback");
-                        rollbackButton.clicked += () => Execute(_tester.RunRollbackScenarioAsync);
-                        row.VisualElement(rollbackButton);
-
-                        var readYourWriteButton = new DebugSecondaryButton("RW 内 Read");
-                        readYourWriteButton.clicked += () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(readYourWriteButton);
+                        row.SecondaryButton("明示 Rollback", () => Execute(_tester.RunRollbackScenarioAsync));
+                        row.SecondaryButton("RW 内 Read", () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
-                _monsterFoldout = new VirtualFoldout("現在のモンスター一覧");
-                builder.VisualElement(_monsterFoldout);
-
-                var refreshButton = new DebugSecondaryButton("一覧を再描画");
-                refreshButton.clicked += RefreshView;
-                builder.VisualElement(refreshButton);
+                _monsterFoldout = builder.VirtualFoldout("現在のモンスター一覧");
+                builder.SecondaryButton("一覧を再描画", RefreshView);
 
                 RefreshView();
             }
@@ -313,19 +244,13 @@ namespace RepositoryTest
                     {
                         builder.HorizontalScope(row =>
                         {
-                            row.VisualElement(new DebugLabel(_tester.FormatMonster(monster)));
-
-                            var loadButton = new DebugSecondaryButton("入力へ反映");
-                            loadButton.clicked += () =>
+                            row.Label(_tester.FormatMonster(monster));
+                            row.SecondaryButton("入力へ反映", () =>
                             {
                                 _tester.ApplyDraft(MonsterDraft.FromMonster(monster));
                                 RefreshView();
-                            };
-                            row.VisualElement(loadButton);
-
-                            var deleteButton = new DebugDangerButton("削除");
-                            deleteButton.clicked += () => Execute(ct => _tester.DeleteMonsterAsync(monster.Id, ct));
-                            row.VisualElement(deleteButton);
+                            });
+                            row.DangerButton("削除", () => Execute(ct => _tester.DeleteMonsterAsync(monster.Id, ct)));
                         });
                     }));
                 }
@@ -382,71 +307,43 @@ namespace RepositoryTest
 
             public void Build(IDebugUIBuilder builder)
             {
-                builder.VisualElement(new DebugLabel("Hero の Singleton 動作を、CRUD と失敗系シナリオ込みで試せます。"));
+                builder.Label("Hero の Singleton 動作を、CRUD と失敗系シナリオ込みで試せます。");
 
-                _statusLabel = new DebugLabel();
-                builder.VisualElement(_statusLabel);
-
-                _currentHeroLabel = new DebugLabel();
-                builder.VisualElement(_currentHeroLabel);
+                _statusLabel = builder.Label();
+                _currentHeroLabel = builder.Label();
 
                 builder.Foldout("ストレージ", foldout =>
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var jsonButton = new DebugSecondaryButton("Json");
-                        jsonButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct));
-                        row.VisualElement(jsonButton);
-
-                        var messagePackButton = new DebugSecondaryButton("MessagePack");
-                        messagePackButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct));
-                        row.VisualElement(messagePackButton);
-
-                        var reloadButton = new DebugButton("再読込");
-                        reloadButton.clicked += () => Execute(_tester.ReloadCurrentRepositoryAsync);
-                        row.VisualElement(reloadButton);
+                        row.SecondaryButton("Json", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct)));
+                        row.SecondaryButton("MessagePack", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct)));
+                        row.PrimaryButton("再読込", () => Execute(_tester.ReloadCurrentRepositoryAsync));
                     });
                 });
 
                 builder.Foldout("入力", foldout =>
                 {
-                    _nameField = new DebugTextField("Name");
-                    _levelField = new DebugIntegerField("Level");
-                    _posXField = new DebugIntegerField("Pos X");
-                    _posYField = new DebugIntegerField("Pos Y");
-
-                    foldout.VisualElement(_nameField);
-                    foldout.VisualElement(_levelField);
-                    foldout.VisualElement(_posXField);
-                    foldout.VisualElement(_posYField);
+                    _nameField = foldout.TextField("Name");
+                    _levelField = foldout.IntegerField("Level");
+                    _posXField = foldout.IntegerField("Pos X");
+                    _posYField = foldout.IntegerField("Pos Y");
 
                     foldout.HorizontalScope(row =>
                     {
-                        var createButton = new DebugButton("Create");
-                        createButton.clicked += () => Execute(ct => _tester.CreateHeroAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(createButton);
-
-                        var readButton = new DebugSecondaryButton("Read");
-                        readButton.clicked += () => Execute(_tester.ReadHeroAsync);
-                        row.VisualElement(readButton);
+                        row.PrimaryButton("Create", () => Execute(ct => _tester.CreateHeroAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("Read", () => Execute(_tester.ReadHeroAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var updateButton = new DebugButton("Update");
-                        updateButton.clicked += () => Execute(ct => _tester.UpdateHeroAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(updateButton);
-
-                        var deleteButton = new DebugDangerButton("Delete");
-                        deleteButton.clicked += () => Execute(_tester.DeleteHeroAsync);
-                        row.VisualElement(deleteButton);
+                        row.PrimaryButton("Update", () => Execute(ct => _tester.UpdateHeroAsync(ReadDraftFromFields(), ct)));
+                        row.DangerButton("Delete", () => Execute(_tester.DeleteHeroAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var saveButton = new DebugSecondaryButton("Create / Update");
-                        saveButton.clicked += () => Execute(ct => _tester.SaveHeroAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(saveButton);
+                        row.SecondaryButton("Create / Update", () => Execute(ct => _tester.SaveHeroAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
@@ -454,41 +351,24 @@ namespace RepositoryTest
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var sampleButton = new DebugButton("サンプル作成");
-                        sampleButton.clicked += () => Execute(_tester.SaveSampleHeroAsync);
-                        row.VisualElement(sampleButton);
-
-                        var clearButton = new DebugDangerButton("全てクリア");
-                        clearButton.clicked += () => Execute(_tester.ClearAllHeroesAsync);
-                        row.VisualElement(clearButton);
+                        row.PrimaryButton("サンプル作成", () => Execute(_tester.SaveSampleHeroAsync));
+                        row.DangerButton("全てクリア", () => Execute(_tester.ClearAllHeroesAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var duplicateButton = new DebugSecondaryButton("重複 Create");
-                        duplicateButton.clicked += () => Execute(ct => _tester.RunDuplicateCreateScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(duplicateButton);
-
-                        var missingUpdateButton = new DebugSecondaryButton("存在しない Update");
-                        missingUpdateButton.clicked += () => Execute(ct => _tester.RunMissingUpdateScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(missingUpdateButton);
+                        row.SecondaryButton("重複 Create", () => Execute(ct => _tester.RunDuplicateCreateScenarioAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("存在しない Update", () => Execute(ct => _tester.RunMissingUpdateScenarioAsync(ReadDraftFromFields(), ct)));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var rollbackButton = new DebugSecondaryButton("明示 Rollback");
-                        rollbackButton.clicked += () => Execute(ct => _tester.RunRollbackScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(rollbackButton);
-
-                        var readYourWriteButton = new DebugSecondaryButton("RW 内 Read");
-                        readYourWriteButton.clicked += () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(readYourWriteButton);
+                        row.SecondaryButton("明示 Rollback", () => Execute(ct => _tester.RunRollbackScenarioAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("RW 内 Read", () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
-                var refreshButton = new DebugSecondaryButton("状態を再描画");
-                refreshButton.clicked += RefreshView;
-                builder.VisualElement(refreshButton);
+                builder.SecondaryButton("状態を再描画", RefreshView);
 
                 RefreshView();
             }
@@ -567,71 +447,41 @@ namespace RepositoryTest
 
             public void Build(IDebugUIBuilder builder)
             {
-                builder.VisualElement(new DebugLabel("Relic Entity で enum / bool / long / ValueObject をまとめて検証します。"));
+                builder.Label("Relic Entity で enum / bool / long / ValueObject をまとめて検証します。");
 
-                _statusLabel = new DebugLabel();
-                builder.VisualElement(_statusLabel);
+                _statusLabel = builder.Label();
 
                 builder.Foldout("ストレージ", foldout =>
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var jsonButton = new DebugSecondaryButton("Json");
-                        jsonButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct));
-                        row.VisualElement(jsonButton);
-
-                        var messagePackButton = new DebugSecondaryButton("MessagePack");
-                        messagePackButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct));
-                        row.VisualElement(messagePackButton);
-
-                        var reloadButton = new DebugButton("再読込");
-                        reloadButton.clicked += () => Execute(_tester.ReloadCurrentRepositoryAsync);
-                        row.VisualElement(reloadButton);
+                        row.SecondaryButton("Json", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct)));
+                        row.SecondaryButton("MessagePack", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct)));
+                        row.PrimaryButton("再読込", () => Execute(_tester.ReloadCurrentRepositoryAsync));
                     });
                 });
 
                 builder.Foldout("入力", foldout =>
                 {
-                    _idField = new DebugIntegerField("Id");
-                    _nameField = new DebugTextField("Name");
-                    _rarityField = new DebugEnumField("Rarity");
-                    _rarityField.Init(RelicRarity.Common);
-                    _priceField = new DebugLongField("Price");
-                    _attackField = new DebugIntegerField("Attack");
-                    _defenseField = new DebugIntegerField("Defense");
-                    _criticalRateField = new DebugFloatField("Critical Rate");
-                    _equippedToggleButton = new DebugSecondaryButton("Equipped: false");
-                    _equippedToggleButton.clicked += ToggleEquipped;
-
-                    foldout.VisualElement(_idField);
-                    foldout.VisualElement(_nameField);
-                    foldout.VisualElement(_rarityField);
-                    foldout.VisualElement(_priceField);
-                    foldout.VisualElement(_attackField);
-                    foldout.VisualElement(_defenseField);
-                    foldout.VisualElement(_criticalRateField);
-                    foldout.VisualElement(_equippedToggleButton);
+                    _idField = foldout.IntegerField("Id");
+                    _nameField = foldout.TextField("Name");
+                    _rarityField = foldout.EnumField("Rarity", RelicRarity.Common);
+                    _priceField = foldout.LongField("Price");
+                    _attackField = foldout.IntegerField("Attack");
+                    _defenseField = foldout.IntegerField("Defense");
+                    _criticalRateField = foldout.FloatField("Critical Rate");
+                    _equippedToggleButton = foldout.SecondaryButton("Equipped: false", ToggleEquipped);
 
                     foldout.HorizontalScope(row =>
                     {
-                        var createButton = new DebugButton("Create");
-                        createButton.clicked += () => Execute(ct => _tester.CreateRelicAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(createButton);
-
-                        var readButton = new DebugSecondaryButton("Read");
-                        readButton.clicked += () => Execute(ct => _tester.ReadRelicAsync(_idField.value, ct));
-                        row.VisualElement(readButton);
+                        row.PrimaryButton("Create", () => Execute(ct => _tester.CreateRelicAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("Read", () => Execute(ct => _tester.ReadRelicAsync(_idField.value, ct)));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var updateButton = new DebugButton("Update");
-                        updateButton.clicked += () => Execute(ct => _tester.UpdateRelicAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(updateButton);
-
-                        var deleteButton = new DebugDangerButton("Delete");
-                        deleteButton.clicked += () => Execute(ct => _tester.DeleteRelicAsync(_idField.value, ct));
-                        row.VisualElement(deleteButton);
+                        row.PrimaryButton("Update", () => Execute(ct => _tester.UpdateRelicAsync(ReadDraftFromFields(), ct)));
+                        row.DangerButton("Delete", () => Execute(ct => _tester.DeleteRelicAsync(_idField.value, ct)));
                     });
                 });
 
@@ -639,55 +489,31 @@ namespace RepositoryTest
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var seedButton = new DebugButton("サンプルリスト作成");
-                        seedButton.clicked += () => Execute(_tester.SeedSampleRelicsAsync);
-                        row.VisualElement(seedButton);
-
-                        var replaceButton = new DebugSecondaryButton("サンプルで置換");
-                        replaceButton.clicked += () => Execute(_tester.ReplaceWithSampleRelicsAsync);
-                        row.VisualElement(replaceButton);
+                        row.PrimaryButton("サンプルリスト作成", () => Execute(_tester.SeedSampleRelicsAsync));
+                        row.SecondaryButton("サンプルで置換", () => Execute(_tester.ReplaceWithSampleRelicsAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var batchButton = new DebugButton("連番 5 個追加");
-                        batchButton.clicked += () => Execute(ct => _tester.CreateRelicWaveAsync(5, ct));
-                        row.VisualElement(batchButton);
-
-                        var clearButton = new DebugDangerButton("全てクリア");
-                        clearButton.clicked += () => Execute(_tester.ClearAllRelicsAsync);
-                        row.VisualElement(clearButton);
+                        row.PrimaryButton("連番 5 個追加", () => Execute(ct => _tester.CreateRelicWaveAsync(5, ct)));
+                        row.DangerButton("全てクリア", () => Execute(_tester.ClearAllRelicsAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var duplicateButton = new DebugSecondaryButton("重複 Create");
-                        duplicateButton.clicked += () => Execute(_tester.RunDuplicateCreateScenarioAsync);
-                        row.VisualElement(duplicateButton);
-
-                        var missingUpdateButton = new DebugSecondaryButton("存在しない Update");
-                        missingUpdateButton.clicked += () => Execute(_tester.RunMissingUpdateScenarioAsync);
-                        row.VisualElement(missingUpdateButton);
+                        row.SecondaryButton("重複 Create", () => Execute(_tester.RunDuplicateCreateScenarioAsync));
+                        row.SecondaryButton("存在しない Update", () => Execute(_tester.RunMissingUpdateScenarioAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var rollbackButton = new DebugSecondaryButton("明示 Rollback");
-                        rollbackButton.clicked += () => Execute(_tester.RunRollbackScenarioAsync);
-                        row.VisualElement(rollbackButton);
-
-                        var readYourWriteButton = new DebugSecondaryButton("RW 内 Read");
-                        readYourWriteButton.clicked += () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(readYourWriteButton);
+                        row.SecondaryButton("明示 Rollback", () => Execute(_tester.RunRollbackScenarioAsync));
+                        row.SecondaryButton("RW 内 Read", () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
-                _relicFoldout = new VirtualFoldout("現在のレリック一覧");
-                builder.VisualElement(_relicFoldout);
-
-                var refreshButton = new DebugSecondaryButton("一覧を再描画");
-                refreshButton.clicked += RefreshView;
-                builder.VisualElement(refreshButton);
+                _relicFoldout = builder.VirtualFoldout("現在のレリック一覧");
+                builder.SecondaryButton("一覧を再描画", RefreshView);
 
                 RefreshView();
             }
@@ -746,19 +572,13 @@ namespace RepositoryTest
                     {
                         builder.HorizontalScope(row =>
                         {
-                            row.VisualElement(new DebugLabel(_tester.FormatRelic(relic)));
-
-                            var loadButton = new DebugSecondaryButton("入力へ反映");
-                            loadButton.clicked += () =>
+                            row.Label(_tester.FormatRelic(relic));
+                            row.SecondaryButton("入力へ反映", () =>
                             {
                                 _tester.ApplyDraft(RelicDraft.FromRelic(relic));
                                 RefreshView();
-                            };
-                            row.VisualElement(loadButton);
-
-                            var deleteButton = new DebugDangerButton("削除");
-                            deleteButton.clicked += () => Execute(ct => _tester.DeleteRelicAsync(relic.Id, ct));
-                            row.VisualElement(deleteButton);
+                            });
+                            row.DangerButton("削除", () => Execute(ct => _tester.DeleteRelicAsync(relic.Id, ct)));
                         });
                     }));
                 }
@@ -832,77 +652,45 @@ namespace RepositoryTest
 
             public void Build(IDebugUIBuilder builder)
             {
-                builder.VisualElement(new DebugLabel("WorldSettings Entity で singleton + enum / bool / float を検証します。"));
+                builder.Label("WorldSettings Entity で singleton + enum / bool / float を検証します。");
 
-                _statusLabel = new DebugLabel();
-                builder.VisualElement(_statusLabel);
-
-                _currentSettingsLabel = new DebugLabel();
-                builder.VisualElement(_currentSettingsLabel);
+                _statusLabel = builder.Label();
+                _currentSettingsLabel = builder.Label();
 
                 builder.Foldout("ストレージ", foldout =>
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var jsonButton = new DebugSecondaryButton("Json");
-                        jsonButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct));
-                        row.VisualElement(jsonButton);
-
-                        var messagePackButton = new DebugSecondaryButton("MessagePack");
-                        messagePackButton.clicked += () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct));
-                        row.VisualElement(messagePackButton);
-
-                        var reloadButton = new DebugButton("再読込");
-                        reloadButton.clicked += () => Execute(_tester.ReloadCurrentRepositoryAsync);
-                        row.VisualElement(reloadButton);
+                        row.SecondaryButton("Json", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.Json, ct)));
+                        row.SecondaryButton("MessagePack", () => Execute(ct => _tester.InitializeAsync(RepositoryStorageType.MessagePack, ct)));
+                        row.PrimaryButton("再読込", () => Execute(_tester.ReloadCurrentRepositoryAsync));
                     });
                 });
 
                 builder.Foldout("入力", foldout =>
                 {
-                    _regionNameField = new DebugTextField("Region");
-                    _difficultyField = new DebugEnumField("Difficulty");
-                    _difficultyField.Init(WorldDifficulty.Normal);
-                    _spawnRateField = new DebugFloatField("Spawn Rate");
-                    _startXField = new DebugIntegerField("Start X");
-                    _startYField = new DebugIntegerField("Start Y");
-                    _nightModeToggleButton = new DebugSecondaryButton("Night Mode: false");
-                    _nightModeToggleButton.clicked += ToggleNightMode;
-
-                    foldout.VisualElement(_regionNameField);
-                    foldout.VisualElement(_difficultyField);
-                    foldout.VisualElement(_spawnRateField);
-                    foldout.VisualElement(_startXField);
-                    foldout.VisualElement(_startYField);
-                    foldout.VisualElement(_nightModeToggleButton);
+                    _regionNameField = foldout.TextField("Region");
+                    _difficultyField = foldout.EnumField("Difficulty", WorldDifficulty.Normal);
+                    _spawnRateField = foldout.FloatField("Spawn Rate");
+                    _startXField = foldout.IntegerField("Start X");
+                    _startYField = foldout.IntegerField("Start Y");
+                    _nightModeToggleButton = foldout.SecondaryButton("Night Mode: false", ToggleNightMode);
 
                     foldout.HorizontalScope(row =>
                     {
-                        var createButton = new DebugButton("Create");
-                        createButton.clicked += () => Execute(ct => _tester.CreateWorldSettingsAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(createButton);
-
-                        var readButton = new DebugSecondaryButton("Read");
-                        readButton.clicked += () => Execute(_tester.ReadWorldSettingsAsync);
-                        row.VisualElement(readButton);
+                        row.PrimaryButton("Create", () => Execute(ct => _tester.CreateWorldSettingsAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("Read", () => Execute(_tester.ReadWorldSettingsAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var updateButton = new DebugButton("Update");
-                        updateButton.clicked += () => Execute(ct => _tester.UpdateWorldSettingsAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(updateButton);
-
-                        var deleteButton = new DebugDangerButton("Delete");
-                        deleteButton.clicked += () => Execute(_tester.DeleteWorldSettingsAsync);
-                        row.VisualElement(deleteButton);
+                        row.PrimaryButton("Update", () => Execute(ct => _tester.UpdateWorldSettingsAsync(ReadDraftFromFields(), ct)));
+                        row.DangerButton("Delete", () => Execute(_tester.DeleteWorldSettingsAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var saveButton = new DebugSecondaryButton("Create / Update");
-                        saveButton.clicked += () => Execute(ct => _tester.SaveWorldSettingsAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(saveButton);
+                        row.SecondaryButton("Create / Update", () => Execute(ct => _tester.SaveWorldSettingsAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
@@ -910,41 +698,24 @@ namespace RepositoryTest
                 {
                     foldout.HorizontalScope(row =>
                     {
-                        var sampleButton = new DebugButton("サンプル作成");
-                        sampleButton.clicked += () => Execute(_tester.SaveSampleWorldSettingsAsync);
-                        row.VisualElement(sampleButton);
-
-                        var clearButton = new DebugDangerButton("全てクリア");
-                        clearButton.clicked += () => Execute(_tester.ClearAllWorldSettingsAsync);
-                        row.VisualElement(clearButton);
+                        row.PrimaryButton("サンプル作成", () => Execute(_tester.SaveSampleWorldSettingsAsync));
+                        row.DangerButton("全てクリア", () => Execute(_tester.ClearAllWorldSettingsAsync));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var duplicateButton = new DebugSecondaryButton("重複 Create");
-                        duplicateButton.clicked += () => Execute(ct => _tester.RunDuplicateCreateScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(duplicateButton);
-
-                        var missingUpdateButton = new DebugSecondaryButton("存在しない Update");
-                        missingUpdateButton.clicked += () => Execute(ct => _tester.RunMissingUpdateScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(missingUpdateButton);
+                        row.SecondaryButton("重複 Create", () => Execute(ct => _tester.RunDuplicateCreateScenarioAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("存在しない Update", () => Execute(ct => _tester.RunMissingUpdateScenarioAsync(ReadDraftFromFields(), ct)));
                     });
 
                     foldout.HorizontalScope(row =>
                     {
-                        var rollbackButton = new DebugSecondaryButton("明示 Rollback");
-                        rollbackButton.clicked += () => Execute(ct => _tester.RunRollbackScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(rollbackButton);
-
-                        var readYourWriteButton = new DebugSecondaryButton("RW 内 Read");
-                        readYourWriteButton.clicked += () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct));
-                        row.VisualElement(readYourWriteButton);
+                        row.SecondaryButton("明示 Rollback", () => Execute(ct => _tester.RunRollbackScenarioAsync(ReadDraftFromFields(), ct)));
+                        row.SecondaryButton("RW 内 Read", () => Execute(ct => _tester.RunReadYourWriteScenarioAsync(ReadDraftFromFields(), ct)));
                     });
                 });
 
-                var refreshButton = new DebugSecondaryButton("状態を再描画");
-                refreshButton.clicked += RefreshView;
-                builder.VisualElement(refreshButton);
+                builder.SecondaryButton("状態を再描画", RefreshView);
 
                 RefreshView();
             }
